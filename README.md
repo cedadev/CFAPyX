@@ -1,6 +1,17 @@
 # cfa_python_dw
 Sandbox testing of different cf/cfa features in python
 
+## Installation of requirements
+
+```
+# If using a venv
+conda install -c conda-forge udunits2
+
+pip install cf-python cf-plot
+# and/or
+conda install -c conda-forge cf-python cf-plot
+```
+
 ## 08/07/2024 - Day 1
 
 - Successfully generated a CFA file from 5 CMIP6 files.

@@ -21,4 +21,22 @@ conda install -c conda-forge cf-python cf-plot
 First goal is to get to grips with cf.aggregate in order to produce `domain-only` aggregations that can be interpreted
 by cf-python (should be MUCH smaller than any single individual file.)
 
-### Open single NetCDF file and extract domain information
+- NOTE: cf.aggregate and cfa are NOT the same. Aggregations simply combine sets of data, while this investigations specifically look at 'virtual aggregations'
+
+## 09/07/2024 - Day 2
+
+- Running cf.write with cfa engaged using a sample set of CMIP files as a test to see how a sample file will be aggregated.
+- Cf generally failed to virtually aggregate CMIP example datasets
+- Issues with installing editable packages on Jasmin solved in a 'hacky' way with local versions and a template for new tests
+
+## 10/07/2024 - Day 3
+
+Notes inside cf_repos.README
+
+## 11/07/2024 - Day 4
+
+Notes inside xarray_repos.README
+
+
+
+

@@ -1,3 +1,6 @@
 testfiles/*.nc
-local/
-CFA-Python/
+cf_repos/CFA-Python
+cf_repos/cfdm_local
+cf_repos/cf_python
+xarray_repos/xarray
+xarray_repos/filesystem_spec

@@ -6,7 +6,7 @@ import re
 # Could take all global variables and track back to origin as well - could be a useful feature.
 
 function_list = [
-    'xarray.conventions.ensure_not_multiindex'
+    'fsspec.mapping.url_to_fs'
 ]
 
 def extract_function(lines, func):

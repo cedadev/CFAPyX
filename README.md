@@ -37,6 +37,10 @@ Notes inside cf_repos.README
 
 Notes inside xarray_repos.README
 
+Simplest implementation of CFA to Xarray Dataset could be:
+ - Open with xr.open_dataset and post-process inside xarray backend
+ - Dive into xarray netcdf backend to find h5py connection and go from there.
+
 
 
 

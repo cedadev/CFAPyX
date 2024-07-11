@@ -54,8 +54,11 @@ def create(i):
     dimLat.nc_set_variable('lat')
     dimLon.nc_set_variable('lon')
 
-    cf.write(p,f'rain/example{i}.nc')
+    cf.write(p,f'testfiles/rain/example{i}.nc')
 
 
 for i in range(10):
     create(i)
+
+g = cf.read('testfiles/rain/*.nc')
+cf.write(g,'testfiles/rainmaker.nca')

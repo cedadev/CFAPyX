@@ -96,7 +96,17 @@ Summary of current structure:
  - subarrays (maybe)
  - dask array build using a very strange dictionary
 sd
-### CF Fragment Arrays
+
+## 17/07/2024
+
+Fixed the numpy datatype issue (wrong object being used to define dtype)
+
+### Custom Fragment Arrays
+
+- Requires __getitem__ and get_array for selecting some data.
+- Uses netCDF4 library (for NetCDFFragmentWrapper) to load only data required.
+- Slicing takes place BEFORE loading as a numpy array since this is then the required data.
+- All accessing handled by dask array as part of xarray.Variable.array component.
 
 
 

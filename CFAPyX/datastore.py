@@ -37,6 +37,12 @@ class CFADataStore(NetCDF4DataStore):
             "cfa_format"
         )
 
+        r = {} # Real size of dimensions for aggregated variables.
+        for dimension in self.ds.dimensions.keys():
+            if 'f_' in dimension and '_loc' not in dimension:
+                real_dim = dimension.replace('f_','')
+                r[real_dim] = self.ds.dimensions[real_dim].size
+
         for avar in self.ds.variables.keys():
             cfa = False
             if hasattr(self.ds.variables[avar], 'aggregated_dimensions'):
@@ -50,7 +56,7 @@ class CFADataStore(NetCDF4DataStore):
             self.perform_decoding()
 
         return FrozenDict(
-            (k, self.open_variable(k, v)) for k, v in xarray_vars.items()
+            (k, self.open_variable(k, v, r)) for k, v in xarray_vars.items()
         )
 
     def get_attrs(self):
@@ -59,19 +65,32 @@ class CFADataStore(NetCDF4DataStore):
         """
         return FrozenDict((k, self.ds.getncattr(k)) for k in self.ds.ncattrs())
 
-    def open_variable(self, name: str, var):
+    def open_variable(self, name: str, var, real_agg_dims):
         if type(var) == tuple:
             if var[1]:
-                return self.open_cfa_variable(name, var[0])
+                variable = self.open_cfa_variable(name, var[0], real_agg_dims)
             else:
-                return self.open_store_variable(name, var[0])
+                variable = self.open_store_variable(name, var[0])
         else:
-            return self.open_store_variable(name, var)
+            variable = self.open_store_variable(name, var)
+        return variable
 
-    def open_cfa_variable(self, name: str, var):
+    def open_cfa_variable(self, name: str, var, real_agg_dims):
 
-        dimensions = var.dimensions
-        attributes = {k: var.getncattr(k) for k in var.ncattrs()}
+        dimensions  = tuple(real_agg_dims.keys())
+        ndim        = len(dimensions)
+        array_shape = tuple(real_agg_dims.values())
+
+        if hasattr(var, 'units'):
+            units = getattr(var, 'units')
+        else:
+            units = ''
+
+        attributes = {}
+        for k in var.ncattrs():
+            if 'aggregated' not in k:
+                attributes[k] = var.getncattr(k) 
+
         # For CFA-type variables create a new DataStore instance for each fragment - that knows how to load a subsection only.
 
         # Now we've already loaded some elements in _decoded_cfa
@@ -84,10 +103,13 @@ class CFADataStore(NetCDF4DataStore):
         # Note: Cannot combine as variables, must be combined into one LazilyIndexedArray at the point of
         # creating a new Variable.
 
-        # What to do with the array?
         data = indexing.LazilyIndexedArray(
             FragmentArrayWrapper(
-                self._decoded_cfa
+                self._decoded_cfa,
+                ndim=ndim,
+                shape=array_shape,
+                units=units,
+                dtype=var.dtype,
             ))
             
         encoding = {}
@@ -123,7 +145,8 @@ class CFADataStore(NetCDF4DataStore):
         encoding["source"] = self._filename
         encoding["original_shape"] = data.shape
 
-        return Variable(dimensions, data, attributes, encoding)
+        v = Variable(dimensions, data, attributes, encoding)
+        return v
 
     def _get_xarray_fragment(self, filename, address, dtype, units, shape):
         dsF = xarray.open_dataset(filename)
@@ -261,7 +284,7 @@ class CFADataStore(NetCDF4DataStore):
             arr_fragment = self._get_xarray_fragment(
                 filename=finfo['filename'],
                 address=finfo['address'],
-                dtype=np.float64, # from aggregated vars
+                dtype=np.dtype(np.float64), # from aggregated vars
                 shape=(2,180,360), # from aggregated vars
                 units=None, # from aggregated vars
             )

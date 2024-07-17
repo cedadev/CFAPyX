@@ -1,8 +1,85 @@
 
-from xarray.backends import StoreBackendEntrypoint
+from xarray.backends import StoreBackendEntrypoint, BackendEntrypoint
 from xarray.backends.common import AbstractDataStore
 from xarray.core.dataset import Dataset
 from xarray import conventions
+
+from CFAPyX.datastore import CFADataStore
+
+from importlib.metadata import entry_points
+engine = entry_points(group='xarray.backends')
+
+def open_cfa_dataset(
+        filename_or_obj,
+        drop_variables=None,
+        mask_and_scale=None,
+        decode_times=None,
+        concat_characters=None,
+        decode_coords=None,
+        use_cftime=None,
+        decode_timedelta=None,
+        ):
+    """
+    Completes part A by opening the CFA-netCDF file and returns an
+    Xarray virtual dataset with dask arrays that are lazily loaded.
+
+     - Dask arrays make use of the following:
+     # data = indexing.LazilyIndexedArray(CFAArrayWrapper())
+    where the CFAArrayWrapper provides a method to fetch the specific data required
+    for each fragment?
+
+    NOTE: Will likely need some kind of module check for any additional modules, especially
+    non-Python related content. I suggest creating a new module just to handle CFA (CFA-Python is a candidate)
+    and checking for it here.
+
+    """
+    store = CFADataStore.open(filename_or_obj)
+    # Perform post-processing/cfa decoding on the store.ds object which is still
+    # a netcdf4-type dataset from the netcdf4 library
+    store_entrypoint = CFAStoreBackendEntrypoint()
+    ds = store_entrypoint.open_dataset(
+        store,
+        mask_and_scale=mask_and_scale,
+        decode_times=decode_times,
+        concat_characters=concat_characters,
+        decode_coords=decode_coords,
+        drop_variables=drop_variables,
+        use_cftime=use_cftime,
+        decode_timedelta=decode_timedelta,
+    )
+
+    return ds
+
+class CFANetCDFBackendEntrypoint(BackendEntrypoint):
+    def open_dataset(
+            self,
+            filename_or_obj,
+            *,
+            drop_variables=None,
+            mask_and_scale=None,
+            decode_times=None,
+            concat_characters=None,
+            decode_coords=None,
+            use_cftime=None,
+            decode_timedelta=None,
+            # backend specific keyword arguments
+            # do not use 'chunks' or 'cache' here
+        ):
+        """
+        returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
+        CFA aggregated variables into proper arrays.
+        """
+
+        return open_cfa_dataset(
+            filename_or_obj, 
+            drop_variables=drop_variables,
+            mask_and_scale=mask_and_scale,
+            decode_times=decode_times,
+            concat_characters=concat_characters,
+            decode_coords=decode_coords,
+            use_cftime=use_cftime,
+            decode_timedelta=decode_timedelta)
+
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     description = "Open CFA-based Abstract Data Store"
@@ -35,8 +112,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         """
         assert isinstance(cfa_xarray_store, AbstractDataStore)
 
-        # Load the parameters for this NetCDF4DataStore - looking into this
-        #cfa_xarray_store.test_load()
         vars, attrs = cfa_xarray_store.load()
 
         """

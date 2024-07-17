@@ -1,5 +1,5 @@
-# cfa_python_dw
-Sandbox testing of different cf/cfa features in python
+# CFAPyX
+CFA python Xarray module for using CFA files with xarray.
 
 ## Installation of requirements
 
@@ -92,9 +92,12 @@ Summary of current structure:
 ### Things needed in the get_array function:
  - calendar (maybe)
  - chunks - subarray_shapes
- - FragmentArray - DataStore?
+ - NetCDFFragmentArray - DataStore?
  - subarrays (maybe)
  - dask array build using a very strange dictionary
+sd
+### CF Fragment Arrays
+
 
 
 

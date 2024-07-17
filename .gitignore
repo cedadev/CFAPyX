@@ -1,4 +1,5 @@
 testfiles/*.nc*
+testfiles/*.txt*
 testfiles/*/*.nc*
 cf_repos/CFA-Python
 cf_repos/cfdm_local

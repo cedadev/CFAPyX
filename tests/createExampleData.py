@@ -1,13 +1,17 @@
 import cf
 import numpy as np
 
-def create(i):
+def create(i, j, k):
     # Create blank field with standard name
+
+    lat_shift = 90*(j-1)
+    lon_shift = 180*(k-1)
+
     p = cf.Field(properties={
         'standard_name':'rain'
     })
 
-    shape = (2, 180, 360)
+    shape = (2, 90, 180)
     size = np.prod(shape)
 
     domain_axisT   = cf.DomainAxis(shape[0])
@@ -35,13 +39,13 @@ def create(i):
     dimLat = cf.DimensionCoordinate(
         properties={'standard_name': 'latitude',
                     'units'        : 'degrees_north'},
-        data=cf.Data(np.arange(shape[1])-90)
+        data=cf.Data(np.arange(shape[1])+lat_shift)
     )
 
     dimLon = cf.DimensionCoordinate(
         properties={'standard_name': 'longitude',
                     'units'        : 'degrees_east'},
-        data=cf.Data(np.arange(shape[2])-90)
+        data=cf.Data(np.arange(shape[2])+lon_shift)
     )
 
     p.set_construct(dimT)
@@ -54,11 +58,13 @@ def create(i):
     dimLat.nc_set_variable('lat')
     dimLon.nc_set_variable('lon')
 
-    cf.write(p,f'testfiles/rain/example{i}.nc')
+    cf.write(p,f'testfiles/raincube/example{i}_{j}_{k}.nc')
 
 
-for i in range(10):
-    create(i)
+for i in range(2):
+    for j in range(2):
+        for k in range(2):
+            create(i, j, k)
 
-g = cf.read('testfiles/rain/*.nc')
-cf.write(g,'testfiles/rainmaker.nca')
+g = cf.read('testfiles/raincube/*.nc')
+cf.write(g,'testfiles/raincube.nca',cfa=True)

@@ -23,7 +23,7 @@ def open_cfa_dataset(
         ):
     """
     Top-level function which opens a CFA dataset using Xarray. Creates a CFA Datastore 
-    from the `filename_or_obj` provided, then passes this to a CFA StoreBackendEntrypoint
+    from the ``filename_or_obj`` provided, then passes this to a CFA StoreBackendEntrypoint
     to create an Xarray Dataset. Most parameters are not handled by CFA, so only the 
     CFA-relevant ones are described here.
 
@@ -122,8 +122,8 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
                                         aggregated variables and dimensions.
 
         :returns:           An xarray.Dataset object composed of xarray.DataArray objects representing the different
-                            NetCDF variables and dimensions. CFA aggregated variables are decoded unless the `decode_cfa`
-                            parameter in `cfa_options` is false.
+                            NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
+                            parameter in ``cfa_options`` is false.
                                         
 
         """

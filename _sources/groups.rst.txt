@@ -16,5 +16,5 @@ In order to facilitate loading both ``global`` and ``group`` parameters from the
 ``NetCDF4ArrayWrapper`` class from Xarray, where an attempt is made to load the variable from the ``group`` dataset first, but
 if this is unsuccessful then the ``global`` dataset is used.
 
-.. automodule:: CFAPyX.groups
+.. automodule:: CFAPyX.group
     :members:

@@ -144,14 +144,14 @@ CFA-relevant ones are described here.</p>
 configurations. Currently implemented are: substitutions (dict), 
 decode_cfa (bool)</p></li>
 <li><p><strong>group</strong> – (str) The name or path to a NetCDF group. CFA can handle opening 
-from specific groups and will inherit both <cite>group</cite> and <cite>global</cite>
+from specific groups and will inherit both <code class="docutils literal notranslate"><span class="pre">group</span></code> and <code class="docutils literal notranslate"><span class="pre">global</span></code>
 dimensions/attributes.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An xarray.Dataset object composed of xarray.DataArray objects representing the different
-NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <cite>decode_cfa</cite>
-parameter in <cite>cfa_options</cite> is false.</p>
+NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <code class="docutils literal notranslate"><span class="pre">decode_cfa</span></code>
+parameter in <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> is false.</p>
 </dd>
 </dl>
 </dd></dl>

@@ -4,6 +4,6 @@ sphinx_rtd_theme==2.0.0
 scipy==1.10.1
 netCDF4==1.6.5
 h5py==3.11.0
-dask==2024.7.0
+dask==2023.5.0
 cftime==1.6.4
 cfunits==3.3.7

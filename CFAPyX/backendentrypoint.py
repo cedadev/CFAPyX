@@ -18,24 +18,37 @@ def open_cfa_dataset(
         decode_coords=None,
         use_cftime=None,
         decode_timedelta=None,
+        cfa_options={},
+        group=None,
         ):
     """
-    Completes part A by opening the CFA-netCDF file and returns an
-    Xarray virtual dataset with dask arrays that are lazily loaded.
+    Top-level function which opens a CFA dataset using Xarray. Creates a CFA Datastore 
+    from the `filename_or_obj` provided, then passes this to a CFA StoreBackendEntrypoint
+    to create an Xarray Dataset. Most parameters are not handled by CFA, so only the 
+    CFA-relevant ones are described here.
 
-     - Dask arrays make use of the following:
-     # data = indexing.LazilyIndexedArray(CFAArrayWrapper())
-    where the CFAArrayWrapper provides a method to fetch the specific data required
-    for each fragment?
+    :param filename_or_obj:       (str) The path to a CFA-netCDF file to be opened by Xarray
 
-    NOTE: Will likely need some kind of module check for any additional modules, especially
-    non-Python related content. I suggest creating a new module just to handle CFA (CFA-Python is a candidate)
-    and checking for it here.
+    :param cfa_options:           (dict) A set of kwargs provided to CFA which provide additional 
+                                  configurations. Currently implemented are: substitutions (dict), 
+                                  decode_cfa (bool)
 
+    :param group:                 (str) The name or path to a NetCDF group. CFA can handle opening 
+                                  from specific groups and will inherit both `group` and `global`
+                                  dimensions/attributes.
+
+    :returns:       An xarray.Dataset object composed of xarray.DataArray objects representing the different
+                    NetCDF variables and dimensions. CFA aggregated variables are decoded unless the `decode_cfa`
+                    parameter in `cfa_options` is false.
     """
-    store = CFADataStore.open(filename_or_obj)
-    # Perform post-processing/cfa decoding on the store.ds object which is still
-    # a netcdf4-type dataset from the netcdf4 library
+
+    # Load the CFA datastore from the provided file (object not supported).
+    store = CFADataStore.open(filename_or_obj, group=group)
+
+    # Expands cfa_options into individual kwargs for the store.
+    store.cfa_options = cfa_options
+
+    # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
     ds = store_entrypoint.open_dataset(
         store,
@@ -62,11 +75,13 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             decode_coords=None,
             use_cftime=None,
             decode_timedelta=None,
+            cfa_options={},
+            group=None,
             # backend specific keyword arguments
             # do not use 'chunks' or 'cache' here
         ):
         """
-        returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
+        Returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
         CFA aggregated variables into proper arrays.
         """
 
@@ -78,7 +93,9 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             concat_characters=concat_characters,
             decode_coords=decode_coords,
             use_cftime=use_cftime,
-            decode_timedelta=decode_timedelta)
+            decode_timedelta=decode_timedelta,
+            cfa_options=cfa_options,
+            group=group)
 
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
@@ -99,33 +116,24 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     ) -> Dataset:
         """
         Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
-         - cfa_xarray_store.ds is a netcdf4.Dataset type object. The objective is to insert a CFA decoder 
-           into the workflow which maps this to an xarray.Dataset object. See how it is done in CFA-Python
-           or cf-python currently and possibly include one of those implementations *or* a custom implementation
-           here - but any implementation that requires C-libraries to be installed MUST be included in an external
-           package and checked for presence here, so the base xarray version does not acquire additional constraints.
+        Most parameters are not handled by CFA, so only the CFA-relevant ones are described here.
 
-        11/07 - 16:26
-         - store.load(): leads to get_variables() and get_attributes() methods of NetCDF4DataStore.
-                         If these methods are overridden with CFA decoding on aggregated variables, that
-                         could be a good way of implementing the required changes.
+        :param cfa_xarray_store:        (obj) The CFA Datastore object which loads and decodes CFA
+                                        aggregated variables and dimensions.
+
+        :returns:           An xarray.Dataset object composed of xarray.DataArray objects representing the different
+                            NetCDF variables and dimensions. CFA aggregated variables are decoded unless the `decode_cfa`
+                            parameter in `cfa_options` is false.
+                                        
+
         """
         assert isinstance(cfa_xarray_store, AbstractDataStore)
 
+        # Same as NetCDF4 operations, just with the CFA Datastore
         vars, attrs = cfa_xarray_store.load()
+        encoding    = cfa_xarray_store.get_encoding()
 
-        """
-        # From xarray.backends.common AbstractDataStore on load()
-
-        variables = FrozenDict(
-            (_decode_variable_name(k), v) for k, v in self.get_variables().items()
-        )
-        attributes = FrozenDict(self.get_attrs())
-        """
-
-        encoding = cfa_xarray_store.get_encoding()
-
-        # Look into the conventions from xarray.
+        # Ensures variables/attributes comply with CF conventions.
         vars, attrs, coord_names = conventions.decode_cf_variables(
             vars,
             attrs,

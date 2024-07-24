@@ -8,7 +8,7 @@ CFAPyX Documentation
 
 **CFAPyX** is an Xarray add-on module that enables the **CFA-netCDF xarray engine** in python. 
 
-CFAPyX follows the [CFA-conventions](https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md) for properly formatting a CFA-netCDF file to access distributed netCDF data.
+CFAPyX follows the `CFA-conventions <https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md>` for properly formatting a CFA-netCDF file to access distributed netCDF data.
 
 The package can be enabled in xarray when opening a CFA file using the `engine="CFA"` keyword argument. This will decode your CFA-netCDF file into a properly formatted Xarray Dataset, which will lazily load your data from distributed sources when reqired for computation or plotting.
 
@@ -22,15 +22,10 @@ Current support is limited to local netCDF4 formatted files, but future addition
 
    Inspiration for CFA <inspiration>
    Xarray Engine Overview <overview>
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Source:
-
-   Backend Entrypoint <backendentrypoint>
+   CFA Backend Entrypoint <backendentrypoint>
    CFA DataStore <datastore>
    CFA Fragment Array <fragmentarray>
-   netCDF Groups <groups>
+   NetCDF group handling <groups>
    Utilities <utils>
    
 Indices and Tables

@@ -122,16 +122,16 @@ Performing the slice operations on the netCDF4 dataset ensures the minimal amoun
 <p>All of the above is abstracted from the user into the simple <cite>open_dataset</cite> command from Xarray. The dataset which is built looks like any other xarray dataset, which includes the loaded attributes and a Dask array for each variable.
 This only becomes an array of ‘real’ data following a <cite>compute()</cite> or <cite>plot()</cite> method (or equivalent), otherwise the data has yet to be loaded. Performing slices or reduction methods is handled entirely by Dask such that the operations are
 combined and applied at the latest stage for optimal performance.</p>
-<p>If you would like to read more about lazy loading in general, see this <cite>SaturnCloud Blog&lt;https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/&gt;</cite>
-or visit the <cite>Dask Documentation&lt;https://docs.dask.org/en/stable/&gt;</cite>.</p>
-<p>For more detail specifically on CFA, see either the <cite>CFA specifications&lt;https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md&gt;</cite>
+<p>If you would like to read more about lazy loading in general, see this <a href="#id1"><span class="problematic" id="id2">`SaturnCloud Blog&lt;https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/&gt;`_</span></a>
+or visit the <a href="#id3"><span class="problematic" id="id4">`Dask Documentation&lt;https://docs.dask.org/en/stable/&gt;`_</span></a>.</p>
+<p>For more detail specifically on CFA, see either the <a href="#id5"><span class="problematic" id="id6">`CFA specifications&lt;https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md&gt;`_</span></a>
 or our page on the Inspiration for CFA.</p>
 <dl class="simple">
 <dt>Finally if you would like to find out about alternative ways of handling distributed data, specifically for cloud applications, see one of the following:</dt><dd><ul class="simple">
-<li><p><cite>padocc (CEDA) &lt;https://cedadev.github.io/padocc/&gt;</cite>: Pipeline to Aggregate Data for Optimal Cloud Capabilities</p></li>
-<li><p><cite>Kerchunk&lt;https://fsspec.github.io/kerchunk/&gt;</cite>: Reference format</p></li>
-<li><p><cite>Zarr&lt;https://zarr.readthedocs.io/en/stable/&gt;</cite>: Cloud Optimised format</p></li>
-<li><p><cite>Other Cloud Optimised formats &lt;https://guide.cloudnativegeo.org/#:~:text=Scalability%3A%20Cloud%2Doptimized%20formats%20are,to%20work%20with%20large%20datasets.&gt;</cite></p></li>
+<li><p><a class="reference external" href="https://cedadev.github.io/padocc/">padocc (CEDA)</a>: Pipeline to Aggregate Data for Optimal Cloud Capabilities</p></li>
+<li><p><a href="#id7"><span class="problematic" id="id8">`Kerchunk&lt;https://fsspec.github.io/kerchunk/&gt;`_</span></a>: Reference format</p></li>
+<li><p><a href="#id9"><span class="problematic" id="id10">`Zarr&lt;https://zarr.readthedocs.io/en/stable/&gt;`_</span></a>: Cloud Optimised format</p></li>
+<li><p><a class="reference external" href="https://guide.cloudnativegeo.org/#:~:text=Scalability%3A%20Cloud%2Doptimized%20formats%20are,to%20work%20with%20large%20datasets.">Other Cloud Optimised formats</a></p></li>
 </ul>
 </dd>
 </dl>

@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFAPyX Documentation &mdash; CFAPyX Documentation v1.1 documentation</title>
+  <title>CFAPyX Documentation &mdash; CFAPyX v1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -35,7 +35,7 @@
           
           
           <a href="#" class="icon icon-home">
-            CFAPyX Documentation
+            CFAPyX
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -49,13 +49,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Source:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groups.html">netCDF Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 </ul>
 
@@ -65,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">CFAPyX Documentation</a>
+          <a href="#">CFAPyX</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -86,7 +83,7 @@
   <section id="cfapyx-documentation">
 <h1>CFAPyX Documentation<a class="headerlink" href="#cfapyx-documentation" title="Permalink to this heading"></a></h1>
 <p><strong>CFAPyX</strong> is an Xarray add-on module that enables the <strong>CFA-netCDF xarray engine</strong> in python.</p>
-<p>CFAPyX follows the [CFA-conventions](<a class="reference external" href="https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md">https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md</a>) for properly formatting a CFA-netCDF file to access distributed netCDF data.</p>
+<p>CFAPyX follows the <cite>CFA-conventions &lt;https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md&gt;</cite> for properly formatting a CFA-netCDF file to access distributed netCDF data.</p>
 <p>The package can be enabled in xarray when opening a CFA file using the <cite>engine=”CFA”</cite> keyword argument. This will decode your CFA-netCDF file into a properly formatted Xarray Dataset, which will lazily load your data from distributed sources when reqired for computation or plotting.</p>
 <dl class="simple">
 <dt>Current support is limited to local netCDF4 formatted files, but future additions will provide access to:</dt><dd><ul class="simple">
@@ -100,15 +97,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Source:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groups.html">netCDF Groups</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 </ul>
 </div>

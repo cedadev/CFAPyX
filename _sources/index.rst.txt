@@ -7,3 +7,17 @@ CFAPyX - Documentation
 ============================
 
 Welcome to the **CFAPyX** Documentation!
+
+Acknowledgements
+================
+CFAPyX is being developed as part of a joint project between the Centre for Environmental Data Analysis (CEDA) and the NCAS Computational Modelling Services team (NCAS-CMS)
+
+.. image:: _images/ceda.png
+   :width: 300
+   :alt: CEDA Logo
+   :width: 300
+
+.. image:: _images/ncas.png
+   :width: 300
+   :alt: ESA Logo
+   :width: 300

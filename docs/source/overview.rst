@@ -41,16 +41,16 @@ All of the above is abstracted from the user into the simple `open_dataset` comm
 This only becomes an array of 'real' data following a `compute()` or `plot()` method (or equivalent), otherwise the data has yet to be loaded. Performing slices or reduction methods is handled entirely by Dask such that the operations are 
 combined and applied at the latest stage for optimal performance.
 
-If you would like to read more about lazy loading in general, see this `SaturnCloud Blog<https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/>` 
-or visit the `Dask Documentation<https://docs.dask.org/en/stable/>`.
+If you would like to read more about lazy loading in general, see this `SaturnCloud Blog<https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/>`_ 
+or visit the `Dask Documentation<https://docs.dask.org/en/stable/>`_.
 
-For more detail specifically on CFA, see either the `CFA specifications<https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md>` 
+For more detail specifically on CFA, see either the `CFA specifications<https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md>`_ 
 or our page on the Inspiration for CFA.
 
 Finally if you would like to find out about alternative ways of handling distributed data, specifically for cloud applications, see one of the following:
- - `padocc (CEDA) <https://cedadev.github.io/padocc/>`: Pipeline to Aggregate Data for Optimal Cloud Capabilities
- - `Kerchunk<https://fsspec.github.io/kerchunk/>`: Reference format
- - `Zarr<https://zarr.readthedocs.io/en/stable/>`: Cloud Optimised format
- - `Other Cloud Optimised formats <https://guide.cloudnativegeo.org/#:~:text=Scalability%3A%20Cloud%2Doptimized%20formats%20are,to%20work%20with%20large%20datasets.>`
+ - `padocc (CEDA) <https://cedadev.github.io/padocc/>`_: Pipeline to Aggregate Data for Optimal Cloud Capabilities
+ - `Kerchunk<https://fsspec.github.io/kerchunk/>`_: Reference format
+ - `Zarr<https://zarr.readthedocs.io/en/stable/>`_: Cloud Optimised format
+ - `Other Cloud Optimised formats <https://guide.cloudnativegeo.org/#:~:text=Scalability%3A%20Cloud%2Doptimized%20formats%20are,to%20work%20with%20large%20datasets.>`_
 
 

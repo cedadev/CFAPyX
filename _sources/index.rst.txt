@@ -42,9 +42,7 @@ CFAPyX is being developed as part of a joint project between the Centre for Envi
 .. image:: _images/ceda.png
    :width: 300
    :alt: CEDA Logo
-   :width: 300
 
 .. image:: _images/ncas.png
    :width: 300
    :alt: NCAS Logo
-   :width: 300

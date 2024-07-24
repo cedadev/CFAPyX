@@ -50,7 +50,18 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Backend Entrypoint</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint"><code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint.open_dataset"><code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint.open_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint"><code class="docutils literal notranslate"><span class="pre">CFAStoreBackendEntrypoint</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint.open_dataset"><code class="docutils literal notranslate"><span class="pre">CFAStoreBackendEntrypoint.open_dataset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.backendentrypoint.open_cfa_dataset"><code class="docutils literal notranslate"><span class="pre">open_cfa_dataset()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
@@ -81,8 +92,70 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="xarray-backend-entrypoint-for-cfapyx">
-<h1>Xarray Backend Entrypoint for CFAPyX<a class="headerlink" href="#xarray-backend-entrypoint-for-cfapyx" title="Permalink to this heading"></a></h1>
+  <section id="module-CFAPyX.backendentrypoint">
+<span id="xarray-backend-entrypoint-for-cfapyx"></span><h1>Xarray Backend Entrypoint for CFAPyX<a class="headerlink" href="#module-CFAPyX.backendentrypoint" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.backendentrypoint.</span></span><span class="sig-name descname"><span class="pre">CFANetCDFBackendEntrypoint</span></span><a class="headerlink" href="#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint.open_dataset">
+<span class="sig-name descname"><span class="pre">open_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_or_obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_and_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cftime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_timedelta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfa_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint.open_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
+CFA aggregated variables into proper arrays.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.backendentrypoint.</span></span><span class="sig-name descname"><span class="pre">CFAStoreBackendEntrypoint</span></span><a class="headerlink" href="#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint.open_dataset">
+<span class="sig-name descname"><span class="pre">open_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfa_xarray_store</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_and_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cftime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_timedelta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint.open_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
+Most parameters are not handled by CFA, so only the CFA-relevant ones are described here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfa_xarray_store</strong> – (obj) The CFA Datastore object which loads and decodes CFA
+aggregated variables and dimensions.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An xarray.Dataset object composed of xarray.DataArray objects representing the different
+NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <cite>decode_cfa</cite>
+parameter in <cite>cfa_options</cite> is false.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="CFAPyX.backendentrypoint.open_cfa_dataset">
+<span class="sig-prename descclassname"><span class="pre">CFAPyX.backendentrypoint.</span></span><span class="sig-name descname"><span class="pre">open_cfa_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_or_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_and_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cftime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_timedelta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfa_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.backendentrypoint.open_cfa_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Top-level function which opens a CFA dataset using Xarray. Creates a CFA Datastore 
+from the <cite>filename_or_obj</cite> provided, then passes this to a CFA StoreBackendEntrypoint
+to create an Xarray Dataset. Most parameters are not handled by CFA, so only the 
+CFA-relevant ones are described here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename_or_obj</strong> – (str) The path to a CFA-netCDF file to be opened by Xarray</p></li>
+<li><p><strong>cfa_options</strong> – (dict) A set of kwargs provided to CFA which provide additional 
+configurations. Currently implemented are: substitutions (dict), 
+decode_cfa (bool)</p></li>
+<li><p><strong>group</strong> – (str) The name or path to a NetCDF group. CFA can handle opening 
+from specific groups and will inherit both <cite>group</cite> and <cite>global</cite>
+dimensions/attributes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An xarray.Dataset object composed of xarray.DataArray objects representing the different
+NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <cite>decode_cfa</cite>
+parameter in <cite>cfa_options</cite> is false.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

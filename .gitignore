@@ -1,8 +1,6 @@
 testfiles/*.nc*
 testfiles/*.txt*
 testfiles/*/*.nc*
-cf_repos/CFA-Python
-cf_repos/cfdm_local
-cf_repos/cf_python
-xarray_repos/xarray_loc
-xarray_repos/filesystem_spec
+cf_repos
+xarray_repos
+notes

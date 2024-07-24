@@ -39,3 +39,5 @@ html_static_path = ['_static']
 
 #html_logo = '_images/ceda.png'
 html_favicon = '_images/favicon.ico'
+html_a1 = '_images/ceda.png'
+html_a2 = '_images/ncas.png'

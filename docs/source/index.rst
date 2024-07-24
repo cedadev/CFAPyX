@@ -19,5 +19,5 @@ CFAPyX is being developed as part of a joint project between the Centre for Envi
 
 .. image:: _images/ncas.png
    :width: 300
-   :alt: ESA Logo
+   :alt: NCAS Logo
    :width: 300

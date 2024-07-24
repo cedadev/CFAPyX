@@ -1,6 +1,6 @@
-testfiles/*.nc*
-testfiles/*.txt*
-testfiles/*/*.nc*
+testfiles
 cf_repos
 xarray_repos
 notes
+*__pycache__*
+*ipynb_checkpoints*

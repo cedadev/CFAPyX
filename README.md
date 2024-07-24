@@ -108,7 +108,55 @@ Fixed the numpy datatype issue (wrong object being used to define dtype)
 - Slicing takes place BEFORE loading as a numpy array since this is then the required data.
 - All accessing handled by dask array as part of xarray.Variable.array component.
 
+## 22/07/2024
+
+Experiments with substitutions and other cfa options.
+- Now applied when creating the fragment array so the changes apply when fetching aggregated data.
+
+Note: Adding methods to the xarray.Dataset or any subcomponent does not look feasible, therefore CFA attributes or metadata should either
+be explicitly defined as attributes of the xarray variable on definition, or they should be considered hidden for the xarray user. This also
+means xarray should not be used to create/edit CFA files.
+
+### CFA-Compliance Additions to CFAPyX
+
+- Handler for extra terms in aggregated data for a specific variable.
+- Baked-in substitutions into the aggregation definition variables.
+- Handler for 'group' based aggregations where all the aggregated metadata is stored within a group.
+- Coordinate variables additional handling (if necessary)
+
+Hierarchical structure of nested groups (netCDF4 implementation) is not supported in Xarray. The current 'group' implementation has very limited functionality:
+ - Opening a group from a dataset is possible with xarray only if the group is effectively a complete picture of the variable in question.
+ - You are also required to know the group identifier as xarray will not show these.
+ - For CFA-netCDF files, xarray groups will only work if both the `aggregated` and `normal` dimensions are contained within the group.
+ - Examples 4 and 5 from the CFA conventions (https://github.com/NCAS-CMS/cfa-conventions) **will not open properly** with the current implementation.
+
+A bespoke implementation could use:
+ - A global attribute in the netCDF which lists the groups, such that the user could pick a group from there (no good for already-created CFA files.)
+
+ - An expansion of the group structure into individual variables with a `group` or `source_group` attribute. This would remove the appearance of groups for a data user, unless we change the names of the grouped variables to be `<group_name>/<variable>` if that is allowed by xarray.
+
+ - Alternatively investigate absorbing global variables into the group information when implementing in Xarray.
+
+Summary of groups issue and solutions:
+ - Xarray doesn't support non-complete groups (dimensions outside the group are ignored)
+
+Solutions:
+ - Ensure CFA stores complete groups in the next version.
+ - Allow for xarray **group expansion** for viewing - xarray SHOULD NOT be used to create CFA files.
+
+Current Implementation:
+ - CFAPyX now uses `global` and `group` dimensions/attributes, so you can request a specific group as normal, but the `global` dimensions are also loaded as if they were part of the group.
 
 
+## 23/07/2024
 
+Fixes to the FragmentArray class where there were hardcoded values for fragment_dims and ndim, should now mean slicing works properly and across multiple fragmented dimensions.
 
+Performance Testing with Kerchunk shows CFA-netCDF is significantly faster to load (~50%) and is comparable for calculation and plot times, although note here the Kerchunk Engine Lazy Loading issue (https://github.com/fsspec/kerchunk/issues/461). The older method does lazy loading correctly but is slower in all categories.
+
+Next steps:
+ - Handler for extra terms
+ - Baked-in substitutions
+ - Coordinate variables additional handling
+ - Tidy-up/Repo sort
+ - Documentation init.

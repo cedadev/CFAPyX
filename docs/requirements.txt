@@ -7,3 +7,4 @@ h5py==3.11.0
 dask==2023.5.0
 cftime==1.6.4
 cfunits==3.3.7
+xarray==2023.5.0

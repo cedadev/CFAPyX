@@ -3,60 +3,19 @@ from itertools import accumulate, product
 from dask.array.core import normalize_chunks
 
 def chunk_positions(chunks):
-    """Find the position of each chunk.
-
-    .. versionadded:: 3.14.0
-
-    .. seealso:: `chunk_indices`, `chunk_locations`, `chunk_shapes`
-
-    :Parameters:
-
-        chunks: `tuple`
-            The chunk sizes along each dimension, as output by
-            `dask.array.Array.chunks`.
-
-    **Examples**
-
-    >>> chunks = ((1, 2), (9,), (44, 55, 66))
-    >>> for position in cf.data.utils.chunk_positions(chunks):
-    ...     print(position)
-    ...
-    (0, 0, 0)
-    (0, 0, 1)
-    (0, 0, 2)
-    (1, 0, 0)
-    (1, 0, 1)
-    (1, 0, 2)
+    """
+    Determine the position of each chunk. Copied directly from cf-python, version 3.14.0 onwards.
 
     """
     return product(*(range(len(bds)) for bds in chunks))
 
 def chunk_locations(chunks):
-    """Find the shape of each chunk.
+    """Determine the shape of each chunk. Copied directly from cf-python, version 3.15.0 onwards.
 
-    .. versionadded:: 3.15.0
+    :param chunks:          (tuple) The chunk sizes along each dimension, as output by
+                            `dask.array.Array.chunks`.
 
-    .. seealso:: `chunk_indices`, `chunk_positions`, `chunk_shapes`
-
-    :Parameters:
-
-        chunks: `tuple`
-            The chunk sizes along each dimension, as output by
-            `dask.array.Array.chunks`.
-
-    **Examples**
-
-    >>> chunks = ((1, 2), (9,), (4, 5, 6))
-    >>> for location in cf.data.utils.chunk_locations(chunks):
-    ...     print(location)
-    ...
-    ((0, 1), (0, 9), (0, 4))
-    ((0, 1), (0, 9), (4, 9))
-    ((0, 1), (0, 9), (9, 15))
-    ((1, 3), (0, 9), (0, 4))
-    ((1, 3), (0, 9), (4, 9))
-    ((1, 3), (0, 9), (9, 15))
-
+    :returns:       The location/shape of each array chunk within the corresponding fragment file.
     """
     from dask.utils import cached_cumsum
 
@@ -68,19 +27,16 @@ def chunk_locations(chunks):
     return product(*locations)
 
 def fragment_descriptors(fsizes_per_dim, fragment_dims, array_shape):
-    """Return descriptors for every fragment.
+    """
+    Return descriptors for every fragment. Copied from cf-python version 3.14.0 onwards.
 
-    .. versionadded:: 3.14.0
+    :param fsizes_per_dim:          (tuple) Size of the fragment array in each dimension.
 
-    .. seealso:: `subarray_shapes`
+    :param fragment_dims:           (tuple) The indexes of dimensions which are fragmented.
 
-    :Parameters:
+    :param array_shape:             (tuple) The shape of the total array.
 
-        subarray_shapes: `tuple`
-            The subarray sizes along each dimension, as returned
-            by a prior call to `subarray_shapes`.
-
-    :Returns:
+    :returns:
 
         6-`tuple` of iterators
             Each iterator iterates over a particular descriptor
@@ -101,72 +57,6 @@ def fragment_descriptors(fsizes_per_dim, fragment_dims, array_shape):
                 fragment that corresponds to each subarray.
 
             6. The shape of each fragment that overlaps each chunk.
-
-    **Examples**
-
-    An aggregated array with shape (12, 73, 144) has two
-    fragments, both with with shape (6, 73, 144).
-
-    >>> a.shape
-    (12, 73, 144)
-    >>> a.get_fragment_shape()
-    (2, 1, 1)
-    >>> a.fragmented_dimensions()
-    [0]
-    >>> subarray_shapes = a.subarray_shapes({1: 40})
-    >>> print(subarray_shapes)
-    ((6, 6), (40, 33), (144,))
-    >>> (
-    ...  u_indices,
-    ...  u_shapes,
-    ...  f_indices,
-    ...  s_locations,
-    ...  f_locations,
-    ...  f_shapes,
-    ... ) = a.subarrays(subarray_shapes)
-    >>> for i in u_indices:
-    ...    print(i)
-    ...
-    (slice(0, 6, None), slice(0, 40, None), slice(0, 144, None))
-    (slice(0, 6, None), slice(40, 73, None), slice(0, 144, None))
-    (slice(6, 12, None), slice(0, 40, None), slice(0, 144, None))
-    (slice(6, 12, None), slice(40, 73, None), slice(0, 144, None))
-
-    >>> for i in u_shapes
-    ...    print(i)
-    ...
-    (6, 40, 144)
-    (6, 33, 144)
-    (6, 40, 144)
-    (6, 33, 144)
-    >>> for i in f_indices:
-    ...    print(i)
-    ...
-    (slice(None, None, None), slice(0, 40, None), slice(0, 144, None))
-    (slice(None, None, None), slice(40, 73, None), slice(0, 144, None))
-    (slice(None, None, None), slice(0, 40, None), slice(0, 144, None))
-    (slice(None, None, None), slice(40, 73, None), slice(0, 144, None))
-    >>> for i in s_locations:
-    ...    print(i)
-    ...
-    (0, 0, 0)
-    (0, 1, 0)
-    (1, 0, 0)
-    (1, 1, 0)
-    >>> for i in f_locations:
-    ...    print(i)
-    ...
-    (0, 0, 0)
-    (0, 0, 0)
-    (1, 0, 0)
-    (1, 0, 0)
-    >>> for i in f_shapes:
-    ...    print(i)
-    ...
-    (6, 73, 144)
-    (6, 73, 144)
-    (6, 73, 144)
-    (6, 73, 144)
 
     """
 
@@ -219,8 +109,10 @@ def fragment_descriptors(fsizes_per_dim, fragment_dims, array_shape):
     )
 
 def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregated_data, ndim, dtype):
-    """Create what is later referred to as 'chunks'. Originally taken from
-    cf.data.array.CFANetCDFArray as subarray_shapes (added 3.14.0)
+    """
+    Create what is later referred to as 'chunks'. Copied from cf-python version 3.14.0 onwards.
+
+    **Requires updating**.
 
     :Parameters:
 

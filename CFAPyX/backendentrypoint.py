@@ -34,12 +34,12 @@ def open_cfa_dataset(
                                   decode_cfa (bool)
 
     :param group:                 (str) The name or path to a NetCDF group. CFA can handle opening 
-                                  from specific groups and will inherit both `group` and `global`
+                                  from specific groups and will inherit both ``group`` and ``global``
                                   dimensions/attributes.
 
     :returns:       An xarray.Dataset object composed of xarray.DataArray objects representing the different
-                    NetCDF variables and dimensions. CFA aggregated variables are decoded unless the `decode_cfa`
-                    parameter in `cfa_options` is false.
+                    NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
+                    parameter in ``cfa_options`` is false.
     """
 
     # Load the CFA datastore from the provided file (object not supported).

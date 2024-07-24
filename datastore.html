@@ -51,7 +51,14 @@
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA DataStore</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA DataStore</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.datastore.CFADataStore"><code class="docutils literal notranslate"><span class="pre">CFADataStore</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.datastore.CFADataStore.get_attrs"><code class="docutils literal notranslate"><span class="pre">CFADataStore.get_attrs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.datastore.CFADataStore.get_variables"><code class="docutils literal notranslate"><span class="pre">CFADataStore.get_variables()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
@@ -81,8 +88,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="cfa-datastore-in-xarray">
-<h1>CFA Datastore in Xarray<a class="headerlink" href="#cfa-datastore-in-xarray" title="Permalink to this heading"></a></h1>
+  <section id="module-CFAPyX.datastore">
+<span id="cfa-datastore-in-xarray"></span><h1>CFA Datastore in Xarray<a class="headerlink" href="#module-CFAPyX.datastore" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="CFAPyX.datastore.CFADataStore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.datastore.</span></span><span class="sig-name descname"><span class="pre">CFADataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock=CombinedLock([&lt;SerializableLock:</span> <span class="pre">177fbbef-4214-4b65-9601-cffb090b52dc&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;SerializableLock:</span> <span class="pre">494d4961-a571-4b8f-a2fd-a2c08c24b196&gt;])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoclose=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.datastore.CFADataStore" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.datastore.CFADataStore.get_attrs">
+<span class="sig-name descname"><span class="pre">get_attrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.datastore.CFADataStore.get_attrs" title="Permalink to this definition"></a></dt>
+<dd><p>Optional override for get_attrs - may be required for aggregated variables.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.datastore.CFADataStore.get_variables">
+<span class="sig-name descname"><span class="pre">get_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.datastore.CFADataStore.get_variables" title="Permalink to this definition"></a></dt>
+<dd><p>Optional override for get_variables method - may not be needed</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

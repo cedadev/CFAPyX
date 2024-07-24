@@ -52,7 +52,17 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Fragment Array</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Fragment Array</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.fragmentarray.FragmentWrapper"><code class="docutils literal notranslate"><span class="pre">FragmentWrapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.fragmentarray.FragmentWrapper.open"><code class="docutils literal notranslate"><span class="pre">FragmentWrapper.open()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.fragmentarray.NetCDFFragmentWrapper"><code class="docutils literal notranslate"><span class="pre">NetCDFFragmentWrapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.fragmentarray.NetCDFFragmentWrapper.open"><code class="docutils literal notranslate"><span class="pre">NetCDFFragmentWrapper.open()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
 </ul>
@@ -81,8 +91,44 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="cfa-fragment-arrays-and-wrappers">
-<h1>CFA Fragment Arrays and Wrappers<a class="headerlink" href="#cfa-fragment-arrays-and-wrappers" title="Permalink to this heading"></a></h1>
+  <section id="module-CFAPyX.fragmentarray">
+<span id="cfa-fragment-arrays-and-wrappers"></span><h1>CFA Fragment Arrays and Wrappers<a class="headerlink" href="#module-CFAPyX.fragmentarray" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="CFAPyX.fragmentarray.FragmentWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.fragmentarray.</span></span><span class="sig-name descname"><span class="pre">FragmentWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.fragmentarray.FragmentWrapper" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Possible attributes to add:</dt><dd><ul class="simple">
+<li><p>Units (special class)</p></li>
+<li><p>aggregated_Units</p></li>
+<li><p>size</p></li>
+</ul>
+</dd>
+</dl>
+<p>Possible Methods/Properties:
+_atol (prop)
+_components (prop)
+_conform_to_aggregated_units (method)
+_custom (prop)
+_dask_meta (prop)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.fragmentarray.FragmentWrapper.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.fragmentarray.FragmentWrapper.open" title="Permalink to this definition"></a></dt>
+<dd><p>Must be implemented by child class to properly open different file types.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="CFAPyX.fragmentarray.NetCDFFragmentWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.fragmentarray.</span></span><span class="sig-name descname"><span class="pre">NetCDFFragmentWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.fragmentarray.NetCDFFragmentWrapper" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="CFAPyX.fragmentarray.NetCDFFragmentWrapper.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.fragmentarray.NetCDFFragmentWrapper.open" title="Permalink to this definition"></a></dt>
+<dd><p>Must be implemented by child class to properly open different file types.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

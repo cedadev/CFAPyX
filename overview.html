@@ -90,47 +90,47 @@
   <section id="the-cfa-xarray-engine">
 <h1>The CFA-Xarray Engine<a class="headerlink" href="#the-cfa-xarray-engine" title="Permalink to this heading"></a></h1>
 <p>CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will
-collect the package and add it to a list of backends on performing <cite>import xarray</cite>.</p>
+collect the package and add it to a list of backends on performing <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">xarray</span></code>.</p>
 <section id="entrypoint">
 <h2>1. Entrypoint<a class="headerlink" href="#entrypoint" title="Permalink to this heading"></a></h2>
-<p>The <cite>CFANetCDFBackendEntrypoint()</cite> class provides a method called <cite>open_dataset</cite> which feeds the output of <cite>open_cfa_dataset</cite> directly back into xarray.
+<p>The <code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint()</span></code> class provides a method called <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> which feeds the output of <code class="docutils literal notranslate"><span class="pre">open_cfa_dataset</span></code> directly back into xarray.
 There are other methods which may be useful to implement in the future, but for now only the basic opener is used.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Most CFA classes in this module inherit from equivalent NetCDF4 classes directly from Xarray, since only a small number of additional or override
 methods are required. There is therefore a large number of methods with CFA classes that are not used directly within this package.</p>
 </div>
-<p>Opening a CFA dataset requires opening the CFA-netCDF file into an Xarray-based CFADataStore object which is then used as the <cite>store</cite> attribute in later methods inherited from parent Xarray/NetCDF classes.</p>
+<p>Opening a CFA dataset requires opening the CFA-netCDF file into a <code class="docutils literal notranslate"><span class="pre">CFADataStore</span></code> object (inherits from Xarray’s <code class="docutils literal notranslate"><span class="pre">NetCDF4DataStore</span></code>) which is then used as the <code class="docutils literal notranslate"><span class="pre">store</span></code> attribute in later methods inherited from parent Xarray/NetCDF classes.</p>
 </section>
 <section id="datastore">
 <h2>2. Datastore<a class="headerlink" href="#datastore" title="Permalink to this heading"></a></h2>
-<p>The <cite>CFA Datastore</cite> handles all unpacking and decoding of CFA variables, as well as handling global and group variables where a group is present. The <cite>aggregated dimensions</cite> and <cite>attributes</cite> present in a
-CFA-netCDF file are unpacked for each variable and returned from <cite>get_variables</cite> as an xarray <cite>FrozenDict</cite> object of xarray <cite>Variable</cite> objects. Each Variable is defined using the dimensions, attributes
+<p>The <code class="docutils literal notranslate"><span class="pre">CFA</span> <span class="pre">Datastore</span></code> handles all unpacking and decoding of CFA variables, as well as handling global and group variables where a group is present. The <code class="docutils literal notranslate"><span class="pre">aggregated</span> <span class="pre">dimensions</span></code> and <code class="docutils literal notranslate"><span class="pre">attributes</span></code> present in a
+CFA-netCDF file are unpacked for each variable and returned from <code class="docutils literal notranslate"><span class="pre">get_variables</span></code> as an xarray <code class="docutils literal notranslate"><span class="pre">FrozenDict</span></code> object of xarray <code class="docutils literal notranslate"><span class="pre">Variable</span></code> objects. Each Variable is defined using the dimensions, attributes
 and encoding from the CFA file, but the data is more complicated.</p>
 </section>
 <section id="data-from-fragments">
 <h2>3. Data from Fragments<a class="headerlink" href="#data-from-fragments" title="Permalink to this heading"></a></h2>
-<p>Xarray comes with an included <cite>LazilyIndexedArray</cite> wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn’t loaded immediately upon creating the Xarray variable.
-CFAPyX provides an Array-like wrapper class called <cite>FragmentArrayWrapper</cite> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
-set of distributed <cite>Fragments</cite>. CFAPyX handles these fragments as individual <cite>FragmentWrapper</cite> objects, which are provided to the higher level Xarray wrapper by way of a Dask array, which is created with the Variable.</p>
-<p>This means most of the complicated maths to relate an array segment to specific fragments is actually handled by Dask, the only thing the <cite>FragmentWrapper</cite> objects have to do is act like indexable Arrays that only load the data when they are indexed.
-This is done using the python <cite>netCDF4</cite> library to load the associated <strong>fragment file</strong> for this fragment, selecting the specific variable (from <em>cfa_address</em>) and loading a selection of the array as a numpy array.
+<p>Xarray comes with an included <code class="docutils literal notranslate"><span class="pre">LazilyIndexedArray</span></code> wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn’t loaded immediately upon creating the Xarray variable.
+CFAPyX provides an Array-like wrapper class called <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
+set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. CFAPyX handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">FragmentWrapper</span></code> objects, which are provided to the higher level Xarray wrapper by way of a Dask array, which is created with the Variable.</p>
+<p>This means most of the complicated maths to relate an array segment to specific fragments is actually handled by Dask, the only thing the <code class="docutils literal notranslate"><span class="pre">FragmentWrapper</span></code> objects have to do is act like indexable Arrays that only load the data when they are indexed.
+This is done using the python <code class="docutils literal notranslate"><span class="pre">netCDF4</span></code> library to load the associated <strong>fragment file</strong> for this fragment, selecting the specific variable (from <cite>cfa_address</cite>) and loading a selection of the array as a numpy array.
 Performing the slice operations on the netCDF4 dataset ensures the minimal amount of memory chunks are loaded from the file, since this is built into the netCDF4 library.</p>
 </section>
 <section id="result">
 <h2>4. Result<a class="headerlink" href="#result" title="Permalink to this heading"></a></h2>
-<p>All of the above is abstracted from the user into the simple <cite>open_dataset</cite> command from Xarray. The dataset which is built looks like any other xarray dataset, which includes the loaded attributes and a Dask array for each variable.
-This only becomes an array of ‘real’ data following a <cite>compute()</cite> or <cite>plot()</cite> method (or equivalent), otherwise the data has yet to be loaded. Performing slices or reduction methods is handled entirely by Dask such that the operations are
+<p>All of the above is abstracted from the user into the simple <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> command from Xarray. The dataset which is built looks like any other xarray dataset, which includes the loaded attributes and a Dask array for each variable.
+This only becomes an array of ‘real’ data following a <code class="docutils literal notranslate"><span class="pre">compute()</span></code> or <code class="docutils literal notranslate"><span class="pre">plot()</span></code> method (or equivalent), otherwise the data has yet to be loaded. Performing slices or reduction methods is handled entirely by Dask such that the operations are
 combined and applied at the latest stage for optimal performance.</p>
-<p>If you would like to read more about lazy loading in general, see this <a href="#id1"><span class="problematic" id="id2">`SaturnCloud Blog&lt;https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/&gt;`_</span></a>
-or visit the <a href="#id3"><span class="problematic" id="id4">`Dask Documentation&lt;https://docs.dask.org/en/stable/&gt;`_</span></a>.</p>
-<p>For more detail specifically on CFA, see either the <a href="#id5"><span class="problematic" id="id6">`CFA specifications&lt;https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md&gt;`_</span></a>
+<p>If you would like to read more about lazy loading in general, see this <a class="reference external" href="https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/">SaturnCloud Blog</a>
+or visit the <a class="reference external" href="https://docs.dask.org/en/stable/">Dask Documentation</a>.</p>
+<p>For more detail specifically on CFA, see either the <a class="reference external" href="https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md">CFA specifications</a>
 or our page on the Inspiration for CFA.</p>
 <dl class="simple">
 <dt>Finally if you would like to find out about alternative ways of handling distributed data, specifically for cloud applications, see one of the following:</dt><dd><ul class="simple">
 <li><p><a class="reference external" href="https://cedadev.github.io/padocc/">padocc (CEDA)</a>: Pipeline to Aggregate Data for Optimal Cloud Capabilities</p></li>
-<li><p><a href="#id7"><span class="problematic" id="id8">`Kerchunk&lt;https://fsspec.github.io/kerchunk/&gt;`_</span></a>: Reference format</p></li>
-<li><p><a href="#id9"><span class="problematic" id="id10">`Zarr&lt;https://zarr.readthedocs.io/en/stable/&gt;`_</span></a>: Cloud Optimised format</p></li>
+<li><p><a class="reference external" href="https://fsspec.github.io/kerchunk/">Kerchunk</a>: Reference format</p></li>
+<li><p><a class="reference external" href="https://zarr.readthedocs.io/en/stable/">Zarr</a>: Cloud Optimised format</p></li>
 <li><p><a class="reference external" href="https://guide.cloudnativegeo.org/#:~:text=Scalability%3A%20Cloud%2Doptimized%20formats%20are,to%20work%20with%20large%20datasets.">Other Cloud Optimised formats</a></p></li>
 </ul>
 </dd>

@@ -7,6 +7,8 @@ def create(i, j, k):
     lat_shift = 90*(j-1)
     lon_shift = 180*(k-1)
 
+    wrapper = cf.Domain()
+
     p = cf.Field(properties={
         'standard_name':'rain'
     })
@@ -52,13 +54,13 @@ def create(i, j, k):
     p.set_construct(dimLat)
     p.set_construct(dimLon)
 
-    p.nc_set_variable('p')
+    p.nc_set_variable('/rain1/p')
 
-    dimT.nc_set_variable('time')
-    dimLat.nc_set_variable('lat')
-    dimLon.nc_set_variable('lon')
+    dimT.nc_set_variable('/rain1/time')
+    dimLat.nc_set_variable('/rain1/lat')
+    dimLon.nc_set_variable('/rain1/lon')
 
-    cf.write(p,f'testfiles/raincube/example{i}_{j}_{k}.nc')
+    cf.write(p,f'testfiles/raincube/example{i}_{j}_{k}.nc', group=True)
 
 
 for i in range(2):
@@ -66,5 +68,7 @@ for i in range(2):
         for k in range(2):
             create(i, j, k)
 
+
+
 g = cf.read('testfiles/raincube/*.nc')
-cf.write(g,'testfiles/raincube.nca',cfa=True)
+cf.write(g,'testfiles/raincube.nca',cfa=True, group=True)

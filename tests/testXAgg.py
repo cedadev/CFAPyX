@@ -1,5 +1,10 @@
 import xarray as xr
 
-ds = xr.open_dataset('ScenarioMIP_CNRM-CERFACS_CNRM-ESM2-1_ssp119_r1i1p1f2_3hr_huss_gr_CFA1.0.nc')
+loc = '/'.join(__file__.split('/')[:-2])
 
-print(ds)
+ds = xr.open_dataset(f'{loc}/testfiles/raincube.nca', engine='CFA', group='rain1',
+                     cfa_options={'substitutions':"cfa_python_dw:CFAPyX", "decode_cfa":True})
+
+p = ds['p'].sel(time=slice(1,3),latitude=slice(50,54), longitude=slice(0,9))
+pq = p.mean(dim='time')
+pq.plot()

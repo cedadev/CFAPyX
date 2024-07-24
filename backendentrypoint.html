@@ -121,8 +121,8 @@ aggregated variables and dimensions.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>An xarray.Dataset object composed of xarray.DataArray objects representing the different
-NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <cite>decode_cfa</cite>
-parameter in <cite>cfa_options</cite> is false.</p>
+NetCDF variables and dimensions. CFA aggregated variables are decoded unless the <code class="docutils literal notranslate"><span class="pre">decode_cfa</span></code>
+parameter in <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> is false.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -133,7 +133,7 @@ parameter in <cite>cfa_options</cite> is false.</p>
 <dt class="sig sig-object py" id="CFAPyX.backendentrypoint.open_cfa_dataset">
 <span class="sig-prename descclassname"><span class="pre">CFAPyX.backendentrypoint.</span></span><span class="sig-name descname"><span class="pre">open_cfa_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_or_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_and_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cftime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_timedelta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfa_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CFAPyX.backendentrypoint.open_cfa_dataset" title="Permalink to this definition"></a></dt>
 <dd><p>Top-level function which opens a CFA dataset using Xarray. Creates a CFA Datastore 
-from the <cite>filename_or_obj</cite> provided, then passes this to a CFA StoreBackendEntrypoint
+from the <code class="docutils literal notranslate"><span class="pre">filename_or_obj</span></code> provided, then passes this to a CFA StoreBackendEntrypoint
 to create an Xarray Dataset. Most parameters are not handled by CFA, so only the 
 CFA-relevant ones are described here.</p>
 <dl class="field-list simple">

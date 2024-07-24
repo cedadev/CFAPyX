@@ -83,6 +83,18 @@
              
   <section id="handling-netcdf4-groups-in-cfapyx">
 <h1>Handling netCDF4 Groups in CFAPyX<a class="headerlink" href="#handling-netcdf4-groups-in-cfapyx" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Xarray package currently does not handle multiple NetCDF groups in the same way as other packages like
+cf-python. In Xarray, a group can be extracted from a NetCDF file as an enclosed <cite>Dataset</cite> object, but typically
+only the <code class="docutils literal notranslate"><span class="pre">group</span></code> content is retrieved. Any so-called <code class="docutils literal notranslate"><span class="pre">global</span></code> dimensions/attributes are not loaded.</p>
+<p>In CFAPyX, the <code class="docutils literal notranslate"><span class="pre">global</span></code> and <code class="docutils literal notranslate"><span class="pre">group</span></code> parameters are both loaded into the final dataset, such that any parameters
+which are shared between groups can be accessed. This is vital in particular for decoding grouped aggregated variables,
+where the aggregated variables link to global parameters.</p>
+</div>
+<p>In order to facilitate loading both <code class="docutils literal notranslate"><span class="pre">global</span></code> and <code class="docutils literal notranslate"><span class="pre">group</span></code> parameters from the CFA dataset, a small change to the standard
+<code class="docutils literal notranslate"><span class="pre">NetCDF4ArrayWrapper</span></code> class from Xarray, where an attempt is made to load the variable from the <code class="docutils literal notranslate"><span class="pre">group</span></code> dataset first, but
+if this is unsuccessful then the <code class="docutils literal notranslate"><span class="pre">global</span></code> dataset is used.</p>
 </section>
 
 

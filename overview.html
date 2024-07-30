@@ -91,6 +91,7 @@
 <h1>The CFA-Xarray Engine<a class="headerlink" href="#the-cfa-xarray-engine" title="Permalink to this heading"></a></h1>
 <p>CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will
 collect the package and add it to a list of backends on performing <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">xarray</span></code>.</p>
+<img alt="CFAPyX Structure v2024.7.30" src="_images/structure_2024.7.30.png" />
 <section id="entrypoint">
 <h2>1. Entrypoint<a class="headerlink" href="#entrypoint" title="Permalink to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint()</span></code> class provides a method called <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> which feeds the output of <code class="docutils literal notranslate"><span class="pre">open_cfa_dataset</span></code> directly back into xarray.

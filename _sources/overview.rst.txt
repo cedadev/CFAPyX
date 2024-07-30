@@ -5,6 +5,9 @@ The CFA-Xarray Engine
 CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will 
 collect the package and add it to a list of backends on performing ``import xarray``.
 
+.. image:: _images/structure_2024.7.30.png
+   :alt: CFAPyX Structure v2024.7.30
+
 1. Entrypoint
 -------------
 The ``CFANetCDFBackendEntrypoint()`` class provides a method called ``open_dataset`` which feeds the output of ``open_cfa_dataset`` directly back into xarray.

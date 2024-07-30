@@ -161,7 +161,7 @@ def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregat
             index = [0] * ndim
             for n in range(n_fragments):
                 index[dim] = n
-                loc = aggregated_data[tuple(index)]["location"][dim]
+                loc = aggregated_data[tuple(index)]["location"][dim] # Update for CF-1.12
                 fragment_size = loc[1] - loc[0]
                 fs.append(fragment_size)
 

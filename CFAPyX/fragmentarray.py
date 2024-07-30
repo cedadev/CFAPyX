@@ -1,9 +1,11 @@
 from CFAPyX.utils import OneOrMoreList
 from CFAPyX.decoder import fragment_shapes, fragment_descriptors
+from CFAPyX.active import CFAActiveArray
 
 import dask.array as da
 from dask.array.core import getter
 from dask.base import tokenize
+from dask.utils import SerializableLock
 
 from itertools import product
 
@@ -13,21 +15,42 @@ import numpy as np
 
 class FragmentArrayWrapper():
 
-    def __init__(self, decoded_cfa, ndim, shape, units, dtype):
+    def __init__(self, decoded_cfa, ndim, shape, units, dtype, cfa_options=None):
 
         self.aggregated_data = decoded_cfa['aggregated_data']
         self.fragment_shape  = decoded_cfa['fragment_shape']
 
         fragments      = list(self.aggregated_data.keys())
-        self.sources   = [self.aggregated_data[i]['filename'] for i in fragments]
-        self.names     = OneOrMoreList([self.aggregated_data[i]['address'] for i in fragments])
 
         # Required parameters list
         self.ndim  = ndim
         self.shape = shape
         self.units = units
         self.dtype = dtype
+
+        self.fragment_dims = tuple([i for i in range(self.ndim) if self.fragment_shape[i] != 1])
+
+        if cfa_options:
+            self.cfa_options = cfa_options
+            self.apply_cfa_options(**cfa_options)
+
         self.__array_function__ = self.get_array
+
+    def apply_cfa_options(
+            self,
+            substitutions=None,
+            decode_cfa=None
+            ):
+        
+        if substitutions:
+
+            if type(substitutions) != list:
+                substitutions = [substitutions]
+
+            for s in substitutions:
+                base, substitution = s.split(':')
+                for f in self.aggregated_data.keys():
+                    self.aggregated_data[f]['filename'] = self.aggregated_data[f]['filename'].replace(base, substitution)
 
     @property
     def shape(self):
@@ -75,27 +98,20 @@ class FragmentArrayWrapper():
         calendar = None # Fix later
 
         aggregated_data = self.aggregated_data
-        
-        #chunks = subarray_shapes()
 
         # For now expect to deal only with NetCDF Files
 
         fsizes_per_dim = fragment_shapes(
             shapes = None,
             array_shape = self.shape,
-            fragment_dims = (0,),
+            fragment_dims = self.fragment_dims,
             fragment_shape = self.fragment_shape,
             aggregated_data = aggregated_data,
-            ndim=3,
+            ndim=self.ndim,
             dtype=np.dtype(np.float64)
 
         )
-        fragment_dims = (0,)
-
         dsk = {}
-
-        # Replace with CFAPyX custom class
-        #from cf.data.fragment import NetCDFFragmentArray
 
         for (
             u_indices,
@@ -104,9 +120,9 @@ class FragmentArrayWrapper():
             fragment_location,
             fragment_location,
             fragment_shape,
-        ) in zip(*fragment_descriptors(fsizes_per_dim, fragment_dims, self.shape)):
+        ) in zip(*fragment_descriptors(fsizes_per_dim, self.fragment_dims, self.shape)):
             kwargs = aggregated_data[fragment_location].copy()
-            kwargs.pop("location",None)
+            kwargs.pop("location",None) # Update for CF-1.12
 
             fragment_format = kwargs.pop("format",None)
             # Assume nc format for now.
@@ -126,14 +142,14 @@ class FragmentArrayWrapper():
             key = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[key] = fragment
             dsk[name + fragment_location] = (
-                getter,
+                getter, # From dask docs
                 key,
                 f_indices,
                 False,
-                getattr(fragment, "_lock", False)
+                getattr(fragment, "_lock", False) # Check version cf-python
             )
 
-        return da.Array(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
+        return CFAActiveArray(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
 
 def get_fragment_wrapper(format, **kwargs):
     if format == 'nc':
@@ -144,7 +160,6 @@ def get_fragment_wrapper(format, **kwargs):
         )
 
 class FragmentWrapper():
-
     """
     Possible attributes to add:
      - Units (special class)
@@ -187,15 +202,19 @@ class FragmentWrapper():
         self.dtype    = dtype
         self.shape    = shape
         self.size     = product(shape)
+        self.ndim     = len(shape)
+
+        # Required by dask for thread-safety.
+        self._lock    = SerializableLock()
 
         self.fragment_location   = fragment_location
-        self.aggregated_units    = aggregated_units
+        self.aggregated_units    = aggregated_units # cfunits conform method.
         self.aggregated_calendar = aggregated_calendar
         
     def __getitem__(self, selection):
-        ds = self.get_array(extent=selection)
+        ds = self.get_array(extent=tuple(selection))
         return ds
-    
+
     def get_array(self, extent=None):
         ds = self.open()
         # Use extent to just select the section and variable I'd actually like to deal with here.
@@ -208,16 +227,29 @@ class FragmentWrapper():
                 f"FragmentWrapper.get_array supplied '{extent}' "
                 f"and '{self.extent}' as selections."
             )
+        
+        if '/' in self.address:
+            # Assume we're dealing with groups but we just need the data for this variable.
+
+            addr = self.address.split('/')
+            group = '/'.join(addr[1:-1])
+            varname = addr[-1]
+
+            ds = ds.groups[group]
+
+        else:
+            varname = self.address
 
         try:
-            array = ds.variables[self.address]
+            array = ds.variables[varname]
         except KeyError:
             raise ValueError(
                 f"CFA fragment '{self.fragment_location}' does not contain "
-                f"the variable '{self.address}'."
+                f"the variable '{varname}'."
             )
         
         if extent:
+            print(f'Post-processed Extent: {extent}')
             try:
                 # This may not be loading the data in the most efficient way.
                 # Current: Slice the NetCDF-Dataset object then write to numpy.
@@ -240,5 +272,5 @@ class FragmentWrapper():
         raise NotImplementedError
     
 class NetCDFFragmentWrapper(FragmentWrapper):
-    def open(self):
+    def open(self): # get lock/release lock
         return netCDF4.Dataset(self.filename, mode='r')

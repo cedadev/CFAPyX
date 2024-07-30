@@ -1,76 +1,134 @@
-from xarray.backends import NetCDF4ArrayWrapper
-
 from contextlib import suppress
 
-def netcdf4_create_group(dataset, name):
+class PropertyWrapper:
     """
-    Create a new named group within a given NetCDF4.Dataset object.
+    Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can handle
+    either ``global`` or ``group`` based variables.
     """
-    return dataset.createGroup(name)
 
+    def __init__(self, prop_sets):
 
-def nc4_require_group(ds, group, mode, create_group=netcdf4_create_group):
-    """
-    Private Xarray function to handle extraction of a group from a NetCDF dataset. In CFAPyX,
-    we also save the rest of the dataset in the CFADataStore so no ``global`` parameters are lost.
+        # Note: core_ds refers to either the group, or the global ds if there is no group requested.
 
-    :param ds:              (obj) A NetCDF4.Dataset object from which to extract a group Dataset.
+        self._core_props = prop_sets[0]
 
-    :param group:           (str) The name or path to a group in a CFA-NetCDF file.
+        props = {}
+        for prop in prop_sets:
+            props = props | prop
 
-    :param mode:            (str) Option to create a group within the dataset if one is not yet present.
+        self._properties = props
 
-    :param create_group:    (func) Function to use when creating a group within an existing dataset.
+    def __getitem__(self, item):
+        """
+        Requesting a named or indexed variable within ds.variables, needs
+        to be handled for the two sets of variables.
+        """
 
-    :returns:       NetCDF4.Dataset object which consists of just a single group.
-    """
-    if group in {None, "", "/"}:
-        # use the root group
-        return ds
-    else:
-        # make sure it's a string
-        if not isinstance(group, str):
-            raise ValueError("group must be a string or None")
-        # support path-like syntax
-        path = group.strip("/").split("/")
-        for key in path:
-            try:
-                ds = ds.groups[key]
-            except KeyError as e:
-                if mode != "r":
-                    ds = create_group(ds, key)
-                else:
-                    # wrap error to provide slightly more helpful message
-                    raise OSError(f"group not found: {key}", e)
-        return ds
+        if type(item) == int:
+            item = list(self.keys())[item]
+
+        if item in self._properties:
+            return self._properties[item]
+        else:
+            raise ValueError(
+                f'"{item}" not present in Dataset.'
+            )
+        
+    def keys(self):
+        """
+        Requesting the set of keys should return the set of both keys combined in a ``dict_keys`` object.
+        """
+        return self._properties.keys()
     
-class CFANetCDF4ArrayWrapper(NetCDF4ArrayWrapper):
-    """
-    Array-wrapper for NetCDF4 standard (non-aggregated) variables, where the variable may
-    come from either a ``group`` or ``global`` datastore. All other functionality is consistent
-    with ``xarray.backends.NetCDF4ArrayWrapper``.
-    """
+    def items(self):
+        return self._properties.items()
 
-    def get_array(self, needs_lock=True):
-        """
-        Perform the get_array operation for this Variable wrapper, where the array is retrieved from
-        the dataset stored in the DataStore object, which is contained by the wrapper instance.
-        """
-
-        # Acquire the main dataset:
-        # - If group is requested, ds represents the group and global_ds is loaded to self.datastore.
-        # - If no group requested, ds represents the global dataset.
-        ds = self.datastore._acquire(needs_lock)
-
+    def __getattr__(self, attr):
         try:
-            variable = ds.variables[self.variable_name]
-        except KeyError:
+            return getattr(self._core_props, attr)
+        except:
+            raise AttributeError(
+                f'No such attribute: "{attr}'
+            )
+        
+class GroupedDatasetWrapper:
+    """
+    Wrapper object for the CFADataStore ``ds`` parameter, required to bypass the issue
+    with groups in Xarray, where all variables outside the group are ignored.
+    """
+    def __init__(self, var_sets, ds_sets):
+
+        self.variables = PropertyWrapper(
+            var_sets,
+        )
+
+        self._ds_sets = ds_sets
+
+    @classmethod
+    def open(cls, root, group, mode):
+
+        if group in {None, "", "/"}:
+            # use the root group
+            return root
+        else:
+            # make sure it's a string
+            if not isinstance(group, str):
+                raise ValueError("group must be a string or None")
+            
+            # support path-like syntax
+            path = group.strip("/").split("/")
+            var_sets = [root.variables]
+            ds_sets = [root]
+
+            for part in path:
+                try:
+                    var_sets.append(root.groups[part].variables)
+                    ds_sets.append(root.groups[part])
+                    root = root.groups[part]
+                except KeyError as e:
+                    raise ValueError(
+                        f'Group path "{part}" not found in this dataset.'
+                    )
+
+        return cls(var_sets, ds_sets)
+
+    @property
+    def dimensions(self):
+        dims = {}
+        for ds in self._ds_sets:
+            dims = dims | dict(ds.dimensions)
+        return dims
+
+    def ncattrs(self):
+        attrs = []
+        for ds in self._ds_sets:
+            attrs += list(ds.ncattrs()) # Determine return type
+        return attrs
+
+    def getncattr(self, k):
+        for ds in self._ds_sets:
             try:
-                variable = self.datastore.global_ds.variables[self.variable_name]
-            except KeyError:
-                raise NotImplementedError
-        variable.set_auto_maskandscale(False)
-        # only added in netCDF4-python v1.2.8
-        with suppress(AttributeError):
-            variable.set_auto_chartostring(False)
-        return variable
+                return ds.getncattr(k)
+            except:
+                pass
+        raise AttributeError(
+            f'Attribute "{k}" not found.'
+        )
+
+    @property
+    def variables(self):
+        return self._variables
+    
+    @variables.setter
+    def variables(self, value):
+        self._variables = value
+
+    def __getattr__(self, name):
+        for ds in self._ds_sets:
+            try:
+                return getattr(ds, name)
+            except:
+                pass
+        raise AttributeError(
+            f'Attribute "{name}" not found.'
+        )

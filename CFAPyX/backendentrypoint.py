@@ -64,6 +64,10 @@ def open_cfa_dataset(
     return ds
 
 class CFANetCDFBackendEntrypoint(BackendEntrypoint):
+
+    description = "Open CFA-netCDF files (.nca) using CFA-PyX in Xarray"
+    url = "https://cedadev.github.io/CFAPyX/"
+
     def open_dataset(
             self,
             filename_or_obj,

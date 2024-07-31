@@ -64,6 +64,10 @@ class GroupedDatasetWrapper:
 
         self._ds_sets = ds_sets
 
+        self.Conventions = ''
+        if hasattr(ds_sets[0],'Conventions'):
+            self.Conventions = ds_sets[0].Conventions
+
     @classmethod
     def open(cls, root, group, mode):
 

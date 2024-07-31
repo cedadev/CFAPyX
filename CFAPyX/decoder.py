@@ -2,15 +2,15 @@ from itertools import accumulate, product
 
 from dask.array.core import normalize_chunks
 
-def chunk_positions(chunks):
+def get_fragment_positions(fragments):
     """
-    Determine the position of each chunk. Copied directly from cf-python, version 3.14.0 onwards.
+    Determine the position of each array fragment. Copied directly from cf-python, version 3.14.0 onwards.
 
     """
-    return product(*(range(len(bds)) for bds in chunks))
+    return product(*(range(len(bds)) for bds in fragments))
 
-def chunk_locations(chunks):
-    """Determine the shape of each chunk. Copied directly from cf-python, version 3.15.0 onwards.
+def get_fragment_shapes(fragments):
+    """Determine the shape of each fragment. Copied directly from cf-python, version 3.15.0 onwards.
 
     :param chunks:          (tuple) The chunk sizes along each dimension, as output by
                             `dask.array.Array.chunks`.
@@ -19,10 +19,10 @@ def chunk_locations(chunks):
     """
     from dask.utils import cached_cumsum
 
-    cumdims = [cached_cumsum(bds, initial_zero=True) for bds in chunks]
+    cumdims = [cached_cumsum(bds, initial_zero=True) for bds in fragments]
     locations = [
         [(s, s + dim) for s, dim in zip(starts, shapes)]
-        for starts, shapes in zip(cumdims, chunks)
+        for starts, shapes in zip(cumdims, fragments)
     ]
     return product(*locations)
 

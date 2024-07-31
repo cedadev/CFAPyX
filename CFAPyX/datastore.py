@@ -17,7 +17,7 @@ import os
 
 from CFAPyX.utils import _ensure_fill_value_valid
 from CFAPyX.fragmentarray import FragmentArrayWrapper
-from CFAPyX.decoder import chunk_locations, chunk_positions
+from CFAPyX.decoder import get_fragment_shapes, get_fragment_positions
 
 from CFAPyX.group import GroupedDatasetWrapper
 
@@ -40,16 +40,25 @@ class CFADataStore(NetCDF4DataStore):
         with self._manager.acquire_context(needs_lock) as root:
             ds = GroupedDatasetWrapper.open(root, self._group, self._mode)
 
+        self.conventions = ds.Conventions
+
         return ds
+    
+    @property
+    def conventions(self):
+        return self._conventions
+    
+    @conventions.setter
+    def conventions(self, value):
+        self._conventions = value
 
     def get_variables(self):
         """
         Fetch the netCDF4.Dataset variables and perform some CFA decoding if necessary.
-        .. Note:: 
-        
-            ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which has flattened 
-            the group structure and allows fetching of variables and attributes from the whole group tree
-            from which a specific group may inherit.
+
+        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which has flattened 
+        the group structure and allows fetching of variables and attributes from the whole group tree
+        from which a specific group may inherit.
 
         :returns:       A ``FrozenDict`` Xarray object of the names of all variables, and methods to fetch those
                         variables, depending on if those variables are standard NetCDF4 or CFA Aggregated variables.
@@ -244,86 +253,94 @@ class CFADataStore(NetCDF4DataStore):
         v = Variable(dimensions, data, attributes, encoding)
         return v
 
-    def _get_xarray_fragment(self, filename, address, dtype, units, shape):
-        dsF = xarray.open_dataset(filename)
-        fragment = dsF[address]
-        assert fragment.shape == shape
-        assert fragment.dtype == dtype
+    def _perform_decoding(self, shape, address, location, value=None, cformat=None, substitutions=None, shape_label='shape'):
+        """
+        Private method for performing the decoding of the standard ``fragment array variables``. Any 
+        convention version-specific adjustments should be made prior to decoding with this function, namely
+        in the public method of the same name.
 
-        if hasattr(fragment, 'units'):
-            assert fragment.units == units
-        elif units != None:
-            print("Warning: Fragment does not contain units, while units were expected")
+        :param shape:       (obj) The integer-valued ``shape`` fragment array variable defines the shape of each fragment's
+                            data in its canonical form. CF-1.12 section 2.8.1
 
-        return fragment
+        :param address:     (obj) The ``address`` fragment array variable, that may have any data type, defines how to find
+                            each fragment within its fragment dataset. CF-1.12 section 2.8.1
 
-    def _perform_decoding(self, location, address, file, cformat, term, substitutions=None):
+        :param location:    (obj) The string-valued ``location`` fragment array variable defines the locations of fragment 
+                            datasets using Uniform Resource Identifiers (URIs). CF-1.12 section 2.8.1
+
+        :param value:       (obj) *Optional* unique data value to fill a fragment array where the data values within the fragment
+                            are all the same.
+
+        :param cformat:     (str) *Optional* ``format`` argument if provided by the CFA-netCDF or cfa-options parameters.
+                            CFA-0.6.2
+
+        :param substitutions:
+
+
+        """
+        
         aggregated_data = {}
 
-        ndim = location.shape[0]
+        # Shape of the `shape` fragment array variable.
+        ndim = shape.shape[0]
 
-        chunks = [i.compressed().tolist() for i in location]
-        shape = [sum(c) for c in chunks]
-        positions = chunk_positions(chunks)
-        locations = chunk_locations(chunks)
+        # Extract non-padded fragment sizes per dimension.
+        fragment_size_per_dim = [i.compressed().tolist() for i in shape]
 
-        if term is not None:
+        # Derive the total shape of the fragment array in all fragmented dimensions.
+        fragment_array_shape    = [sum(fsize) for fsize in fragment_size_per_dim]
+
+        # Obtain the positions of each fragment
+        fragment_positions = get_fragment_positions(fragment_size_per_dim)
+        fragment_shapes    = get_fragment_shapes(fragment_size_per_dim)
+
+        if value is not None:
             # --------------------------------------------------------
             # This fragment contains a constant value, not file
             # locations.
             # --------------------------------------------------------
-            term = str(term)
-            fragment_shape = term.shape
+            raise NotImplementedError
+            fragment_shape = value.shape
             aggregated_data = {
-                frag_loc: {
-                    "location": loc,
-                    "fill_value": term[frag_loc].item(),
+                frag_shape: {
+                    "shape": s,
+                    "fill_value": value[frag_shape].item(),
                     "format": "full",
                 }
-                for frag_loc, loc in zip(positions, locations)
+                for frag_shape, s in zip(fragment_positions, fragment_shapes)
             }
         else:
 
+            # Old way of getting rid of a single non-fragmented dimension tagged on at the end?
+            """
             extra_dimension = file.ndim > ndim
             if extra_dimension:
                 # There is an extra non-fragment dimension
                 fragment_shape = file.shape[:-1]
             else:
                 fragment_shape = file.shape
+            """
+            fragment_shape = shape.shape #?
 
-            #print(f.shape, a.getValue(), a.dtype)
-
-            if not address.ndim:
-                addr = address.getValue()
-                adtype = np.array(addr).dtype
+            if not address.ndim: # Scalar address
+                addr    = address.getValue()
+                adtype  = np.array(addr).dtype
                 address = np.full(fragment_shape, addr, dtype=adtype)
 
-            if not cformat.ndim:
-                # Properly convert into numpy types
-                cft = cformat.getValue()
-                npdtype = np.array(cft).dtype
-                cformat = np.full(fragment_shape, cft, dtype=npdtype)
+            if cformat:
+                if not cformat.ndim: #
+                    cft = cformat.getValue()
+                    npdtype = np.array(cft).dtype
+                    cformat = np.full(fragment_shape, cft, dtype=npdtype)
 
-            if extra_dimension:
-                aggregated_data = {
-                    frag_loc: {
-                        "location": loc,
-                        "filename": file[frag_loc].tolist(),
-                        "address": address[frag_loc].tolist(),
-                        "format": cformat[frag_loc].item(),
-                    }
-                    for frag_loc, loc in zip(positions, locations)
+            for frag_dim, frag_shape in zip(fragment_positions, fragment_shapes):
+                aggregated_data[frag_shape] = {
+                    "shape"    : frag_shape,
+                    "location" : location[frag_dim],
+                    "address"  : address[frag_dim]
                 }
-            else:
-                aggregated_data = {
-                    frag_loc: {
-                        "location": loc,
-                        "filename": file[frag_loc],
-                        "address": address[frag_loc],
-                        "format": cformat[frag_loc],
-                    }
-                    for frag_loc, loc in zip(positions, locations)
-                }
+                if cformat:
+                    aggregated_data[frag_shape]["format"] = cformat[frag_dim]
 
             # Apply string substitutions to the fragment filenames
             if substitutions:
@@ -334,66 +351,29 @@ class CFADataStore(NetCDF4DataStore):
         return fragment_shape, aggregated_data
 
     def perform_decoding(self):
-
+        """
+        Public method ``perform_decoding`` involves extracting the aggregated information 
+        parameters and assembling the required information for actual decoding.
+        .. Note:
+        """
+        cformat = None
         try:
-            location = self.ds.variables['cfa_location']
-            file     = self.ds.variables['cfa_file']
-            address  = self.ds.variables['cfa_address']
-            cformat  = self.ds.variables['cfa_format']
+            if 'CFA-0.6.2' in self.conventions:
+                shape        = self.ds.variables['cfa_location']
+                location     = self.ds.variables['cfa_file']
+                cformat      = self.ds.variables['cfa_format']
+            else: # Default to CF-1.12
+                shape        = self.ds.variables['cfa_shape']
+                location     = self.ds.variables['cfa_location']
+            address      = self.ds.variables['cfa_address']
         except:
             raise ValueError(
-                "Unable to locate CFA Decoding instructions"
+                f"Unable to locate CFA Decoding instructions with conventions: {self.conventions}"
             )
 
-        fragment_shape, aggregated_data = self._perform_decoding(location, address, file, cformat, term=None, substitutions=xarray_subs)
+        fragment_shape, aggregated_data = self._perform_decoding(shape, address, location, cformat=cformat, value=None, substitutions=xarray_subs)
 
         self._decoded_cfa = {
             'fragment_shape': fragment_shape,
             'aggregated_data': aggregated_data
         }
-
-    def test_load(self):
-
-        param1 = self.ds.ncattrs()
-        param2 = self.ds.variables
-
-        ## CFA Instruction Variables
-
-        # Location is the most complicated to deal with - must be expanded.
-        location = self.ds.variables['cfa_location']
-        file     = self.ds.variables['cfa_file']
-        address  = self.ds.variables['cfa_address']
-        cformat  = self.ds.variables['cfa_format']
-
-        ## Aggregated Variables
-        #aggregated_vars = {avar: self.ds.variables[avar] for avar in self.ds.dimensions.keys() if hasattr(self.ds.variables[avar], 'aggregated_dimensions')}
-
-
-        ## Aggregation Dimensions
-        # Important aggregation dimensions start with 'f_' - assumption!
-        #cfa_dims = {cfd: self.ds.dimensions[cfd] for cfd in self.ds.dimensions.keys() if 'f_' in cfd}
-        std_dims = [d for d in self.ds.dimensions.keys() if 'f_' not in d]
-
-        fragment_shape, aggregated_data = self._perform_decoding(location, address, file, cformat, None, substitutions=xarray_subs)
-
-        fragments = []
-        # Recheck how cf-python does the decoding.
-
-        concat_dims = [std_dims[i] for i in range(len(fragment_shape)) if fragment_shape[i] > 1]
-
-        for fragment in aggregated_data.keys():
-            finfo = aggregated_data[fragment]
-            arr_fragment = self._get_xarray_fragment(
-                filename=finfo['filename'],
-                address=finfo['address'],
-                dtype=np.dtype(np.float64), # from aggregated vars
-                shape=(2,180,360), # from aggregated vars
-                units=None, # from aggregated vars
-            )
-
-            # Open all fragments as xarray sections and combine into a single data array
-            fragments.append(arr_fragment)
-
-        agg_ds = xarray.combine_nested(fragments, concat_dims)
-        
-        return None

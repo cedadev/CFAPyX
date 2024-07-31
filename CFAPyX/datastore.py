@@ -145,8 +145,11 @@ class CFADataStore(NetCDF4DataStore):
         self._decode_cfa    = decode_cfa
 
     @property
-    def decode_cfa(self):
-        return self._decode_cfa
+    def decoded_cfa(self):
+        return self._decoded_cfa
+    
+    def has_decoded_cfa(self):
+        self._decoded_cfa = True
 
     def open_variable(self, name: str, var, real_agg_dims):
         """
@@ -209,7 +212,8 @@ class CFADataStore(NetCDF4DataStore):
         ## Array-like object 
         data = indexing.LazilyIndexedArray(
             FragmentArrayWrapper(
-                self._decoded_cfa,
+                self._fragment_array_shape,
+                self._fragment_info,
                 ndim=ndim,
                 shape=array_shape,
                 units=units,
@@ -276,10 +280,12 @@ class CFADataStore(NetCDF4DataStore):
 
         :param substitutions:
 
+        :returns:       (fragment_info) A dictionary of fragment metadata where each key is the coordinates of a fragment in index space and the value
+                        is a dictionary of the attributes specific to that fragment.
 
         """
         
-        aggregated_data = {}
+        fragment_info = {}
 
         # Shape of the `shape` fragment array variable.
         ndim = shape.shape[0]
@@ -290,8 +296,10 @@ class CFADataStore(NetCDF4DataStore):
         # Derive the total shape of the fragment array in all fragmented dimensions.
         fragment_array_shape    = [sum(fsize) for fsize in fragment_size_per_dim]
 
-        # Obtain the positions of each fragment
+        # Obtain the positions of each fragment in index space.
         fragment_positions = get_fragment_positions(fragment_size_per_dim)
+
+        # Obtain the corresponding shape of each indexed fragment.
         fragment_shapes    = get_fragment_shapes(fragment_size_per_dim)
 
         if value is not None:
@@ -299,15 +307,14 @@ class CFADataStore(NetCDF4DataStore):
             # This fragment contains a constant value, not file
             # locations.
             # --------------------------------------------------------
-            raise NotImplementedError
-            fragment_shape = value.shape
-            aggregated_data = {
-                frag_shape: {
-                    "shape": s,
-                    "fill_value": value[frag_shape].item(),
+            fragment_array_shape = value.shape
+            fragment_info = {
+                frag_pos: {
+                    "shape": frag_shape,
+                    "fill_value": value[frag_pos].item(),
                     "format": "full",
                 }
-                for frag_shape, s in zip(fragment_positions, fragment_shapes)
+                for frag_pos, frag_shape in zip(fragment_positions, fragment_shapes)
             }
         else:
 
@@ -320,42 +327,46 @@ class CFADataStore(NetCDF4DataStore):
             else:
                 fragment_shape = file.shape
             """
-            fragment_shape = shape.shape #?
+            constructor_shape = shape.shape #?
 
             if not address.ndim: # Scalar address
                 addr    = address.getValue()
                 adtype  = np.array(addr).dtype
-                address = np.full(fragment_shape, addr, dtype=adtype)
+                address = np.full(constructor_shape, addr, dtype=adtype)
 
             if cformat:
                 if not cformat.ndim: #
                     cft = cformat.getValue()
                     npdtype = np.array(cft).dtype
-                    cformat = np.full(fragment_shape, cft, dtype=npdtype)
+                    cformat = np.full(constructor_shape, cft, dtype=npdtype)
 
-            for frag_dim, frag_shape in zip(fragment_positions, fragment_shapes):
-                aggregated_data[frag_shape] = {
+            for frag_pos, frag_shape in zip(fragment_positions, fragment_shapes):
+                fragment_info[frag_pos] = {
                     "shape"    : frag_shape,
-                    "location" : location[frag_dim],
-                    "address"  : address[frag_dim]
+                    "location" : location[frag_pos], # Not as easy as this to index the location/address/cformats in their present shapes.
+                    "address"  : address[frag_pos]
                 }
                 if cformat:
-                    aggregated_data[frag_shape]["format"] = cformat[frag_dim]
+                    fragment_info[frag_pos]["format"] = cformat[frag_pos]
 
             # Apply string substitutions to the fragment filenames
             if substitutions:
-                for value in aggregated_data.values():
+                for value in fragment_info.values():
                     for base, sub in substitutions.items():
-                        value["filename"] = value["filename"].replace(base, sub)
+                        value["location"] = value["location"].replace(base, sub)
 
-        return fragment_shape, aggregated_data
+        self._fragment_info = fragment_info
+        self._fragment_array_shape = fragment_array_shape
+        self.has_decoded_cfa()
 
     def perform_decoding(self):
         """
         Public method ``perform_decoding`` involves extracting the aggregated information 
         parameters and assembling the required information for actual decoding.
-        .. Note:
         """
+
+        # Identify variable names from the aggregation variable in question, rather than relying on hardcoded values.
+
         cformat = None
         try:
             if 'CFA-0.6.2' in self.conventions:
@@ -371,9 +382,4 @@ class CFADataStore(NetCDF4DataStore):
                 f"Unable to locate CFA Decoding instructions with conventions: {self.conventions}"
             )
 
-        fragment_shape, aggregated_data = self._perform_decoding(shape, address, location, cformat=cformat, value=None, substitutions=xarray_subs)
-
-        self._decoded_cfa = {
-            'fragment_shape': fragment_shape,
-            'aggregated_data': aggregated_data
-        }
+        self._perform_decoding(shape, address, location, cformat=cformat, value=None, substitutions=xarray_subs)

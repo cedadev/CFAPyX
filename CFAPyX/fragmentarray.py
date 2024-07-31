@@ -1,5 +1,5 @@
 from CFAPyX.utils import OneOrMoreList
-from CFAPyX.decoder import fragment_shapes, fragment_descriptors
+from CFAPyX.decoder import get_nfrags_per_dim, fragment_descriptors
 from CFAPyX.active import CFAActiveArray
 
 import dask.array as da
@@ -15,12 +15,12 @@ import numpy as np
 
 class FragmentArrayWrapper():
 
-    def __init__(self, decoded_cfa, ndim, shape, units, dtype, cfa_options=None):
+    def __init__(self, fragment_info, fragment_array_shape, ndim, shape, units, dtype, cfa_options=None):
 
-        self.aggregated_data = decoded_cfa['aggregated_data']
-        self.fragment_shape  = decoded_cfa['fragment_shape']
+        self.fragment_info = fragment_info
+        self.fragment_array_shape  = fragment_array_shape
 
-        fragments      = list(self.aggregated_data.keys())
+        fragments      = list(self.fragment_info.keys())
 
         # Required parameters list
         self.ndim  = ndim
@@ -28,7 +28,7 @@ class FragmentArrayWrapper():
         self.units = units
         self.dtype = dtype
 
-        self.fragment_dims = tuple([i for i in range(self.ndim) if self.fragment_shape[i] != 1])
+        self.fragmented_dim_indexes = tuple([i for i in range(self.ndim) if self.fragment_shape[i] != 1])
 
         if cfa_options:
             self.cfa_options = cfa_options
@@ -49,8 +49,8 @@ class FragmentArrayWrapper():
 
             for s in substitutions:
                 base, substitution = s.split(':')
-                for f in self.aggregated_data.keys():
-                    self.aggregated_data[f]['filename'] = self.aggregated_data[f]['filename'].replace(base, substitution)
+                for f in self.fragment_info.keys():
+                    self.fragment_info[f]['filename'] = self.fragment_info[f]['filename'].replace(base, substitution)
 
     @property
     def shape(self):
@@ -97,51 +97,44 @@ class FragmentArrayWrapper():
 
         calendar = None # Fix later
 
-        aggregated_data = self.aggregated_data
+        # Fragment info dict at this point
+        fragment_info = self.fragment_info
 
         # For now expect to deal only with NetCDF Files
 
-        fsizes_per_dim = fragment_shapes(
-            shapes = None,
+        nfrags_per_dim = get_nfrags_per_dim(
             array_shape = self.shape,
-            fragment_dims = self.fragment_dims,
-            fragment_shape = self.fragment_shape,
-            aggregated_data = aggregated_data,
+            fragmented_dim_indexes = self.fragmented_dim_indexes,
+            fragment_array_shape = self.fragment_array_shape,
+            fragment_info = fragment_info,
             ndim=self.ndim,
-            dtype=np.dtype(np.float64)
-
+            dtype=np.dtype(np.float64),
+            explicit_shapes = None
         )
+
+        # dict of array-like objects to pass to the dask Array constructor.
         dsk = {}
 
-        for (
-            u_indices,
-            u_shape,
-            f_indices,
-            fragment_location,
-            fragment_location,
-            fragment_shape,
-        ) in zip(*fragment_descriptors(fsizes_per_dim, self.fragment_dims, self.shape)):
-            kwargs = aggregated_data[fragment_location].copy()
-            kwargs.pop("location",None) # Update for CF-1.12
+        for finfo in self.fragment_info.keys():
 
-            fragment_format = kwargs.pop("format",None)
-            # Assume nc format for now.
-
-            kwargs['fragment_location'] = fragment_location
-            kwargs['extent'] = None
+            # Needs f_indices
+            
+            fragment_format   = 'nc'
+            fragment_shape    = self.fragment_info[finfo]['shape']
+            fragment_position = finfo
 
             fragment = get_fragment_wrapper(
                 fragment_format,
                 dtype=dtype,
                 shape=fragment_shape,
+                position=fragment_position,
                 aggregated_units=units,
                 aggregated_calendar=calendar,
-                **kwargs
             )
 
             key = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[key] = fragment
-            dsk[name + fragment_location] = (
+            dsk[name + fragment_position] = (
                 getter, # From dask docs
                 key,
                 f_indices,
@@ -149,7 +142,7 @@ class FragmentArrayWrapper():
                 getattr(fragment, "_lock", False) # Check version cf-python
             )
 
-        return CFAActiveArray(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
+        return CFAActiveArray(dsk, name[0], chunks=nfrags_per_dim, dtype=dtype)
 
 def get_fragment_wrapper(format, **kwargs):
     if format == 'nc':
@@ -160,31 +153,19 @@ def get_fragment_wrapper(format, **kwargs):
         )
 
 class FragmentWrapper():
-    """
-    Possible attributes to add:
-     - Units (special class)
-     - aggregated_Units
-     - size
-    
-    Possible Methods/Properties:
-    _atol (prop)
-    _components (prop)
-    _conform_to_aggregated_units (method)
-    _custom (prop)
-    _dask_meta (prop)
-    
-    """
+
+    description = "Wrapper class for individual Fragment retrievals. May incorporate Active Storage routines as applicable methods called via Dask."
 
     def __init__(self,
                  filename,
                  address,
                  extent=None,
-                 fragment_location=None,
                  dtype=None,
                  shape=None,
+                 position=None,
                  aggregated_units=None,
-                 aggregated_calendar=None,
-                 **kwargs):
+                 aggregated_calendar=None
+            ):
         
         """
         Wrapper object for the 'array' section of a fragment. Contains some metadata to ensure the
@@ -207,7 +188,7 @@ class FragmentWrapper():
         # Required by dask for thread-safety.
         self._lock    = SerializableLock()
 
-        self.fragment_location   = fragment_location
+        self.position = position
         self.aggregated_units    = aggregated_units # cfunits conform method.
         self.aggregated_calendar = aggregated_calendar
         
@@ -244,7 +225,7 @@ class FragmentWrapper():
             array = ds.variables[varname]
         except KeyError:
             raise ValueError(
-                f"CFA fragment '{self.fragment_location}' does not contain "
+                f"CFA fragment '{self.position}' does not contain "
                 f"the variable '{varname}'."
             )
         
@@ -260,7 +241,7 @@ class FragmentWrapper():
             except IndexError:
                 raise ValueError(
                     f"Unable to select required 'extent' of {self.extent} "
-                    f"from fragment {self.fragment_location} with shape {array.shape}"
+                    f"from fragment {self.position} with shape {array.shape}"
                 )
         else:
             var = np.array(array)

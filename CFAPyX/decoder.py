@@ -2,12 +2,19 @@ from itertools import accumulate, product
 
 from dask.array.core import normalize_chunks
 
-def get_fragment_positions(fragments):
+def get_fragment_positions(fragment_size_per_dim):
     """
-    Determine the position of each array fragment. Copied directly from cf-python, version 3.14.0 onwards.
+    Get the positions in index space for each fragment.
+
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length 
+                                        equal to the number of array dimensions, second dimension is a list of the
+                                        fragment sizes for the corresponding array dimension.
+
+    :returns:       A list of tuples representing the positions of all the fragments in index space given by the
+                    fragment_size_per_dim.
 
     """
-    return product(*(range(len(bds)) for bds in fragments))
+    return product(*(range(len(sizes)) for sizes in fragment_size_per_dim))
 
 def get_fragment_shapes(fragments):
     """Determine the shape of each fragment. Copied directly from cf-python, version 3.15.0 onwards.
@@ -108,7 +115,16 @@ def fragment_descriptors(fsizes_per_dim, fragment_dims, array_shape):
         product(*f_shapes),
     )
 
-def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregated_data, ndim, dtype):
+# def get_nfrags_per_dim
+# shapes is explicit_shapes
+def get_nfrags_per_dim(
+        array_shape,
+        fragment_array_shape,
+        fragmented_dim_indexes, 
+        fragment_info, 
+        ndim, 
+        dtype, 
+        explicit_shapes=None):
     """
     Create what is later referred to as 'chunks'. Copied from cf-python version 3.14.0 onwards.
 
@@ -116,8 +132,8 @@ def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregat
 
     :Parameters:
 
-        shapes: `int`, sequence, `dict` or `str`, optional
-            Define the chunk shapes.
+        explicit_shapes: `int`, sequence, `dict` or `str`, optional
+            Define the chunk explicit_shapes.
 
             Any value accepted by the *chunks* parameter of the
             `dask.array.from_array` function is allowed.
@@ -128,11 +144,11 @@ def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregat
 
         array_shape: 
 
-        fragment_dims:
+        fragmented_dim_indexes:
 
-        fragment_shape:
+        fragment_array_shape:
 
-        aggregated_data:
+        fragment_info:
 
         ndim:
 
@@ -145,23 +161,22 @@ def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregat
     """
             
     from numbers import Number
-
     from dask.array.core import normalize_chunks
 
     # Create the base chunks.
     fsizes_per_dim = []
 
     for dim, (n_fragments, size) in enumerate(
-        zip(fragment_shape, array_shape)
+        zip(fragment_array_shape, array_shape)
     ):
-        if dim in fragment_dims:
+        if dim in fragmented_dim_indexes:
             # This aggregated dimension is spanned by more than
             # one fragment.
             fs = []
             index = [0] * ndim
             for n in range(n_fragments):
                 index[dim] = n
-                loc = aggregated_data[tuple(index)]["location"][dim] # Update for CF-1.12
+                loc = fragment_info[tuple(index)]["location"][dim] # Update for CF-1.12
                 fragment_size = loc[1] - loc[0]
                 fs.append(fragment_size)
 
@@ -172,27 +187,27 @@ def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregat
             # that it will get overwrittten.
             fsizes_per_dim.append(None)
 
-    ## Handle custom shapes for the fragments.
+    ## Handle explicit shapes for the fragments.
 
-    if isinstance(shapes, (str, Number)) or shapes is None:
-        fsizes_per_dim = [ # For each dimension, use fs or shapes if the dimension is fragmented or not respectively.
-            fs if i in fragment_dims else shapes for i, fs in enumerate(fsizes_per_dim)
+    if isinstance(explicit_shapes, (str, Number)) or explicit_shapes is None:
+        fsizes_per_dim = [ # For each dimension, use fs or explicit_shapes if the dimension is fragmented or not respectively.
+            fs if i in fragmented_dim_indexes else explicit_shapes for i, fs in enumerate(fsizes_per_dim)
         ]
-    elif isinstance(shapes, dict):
+    elif isinstance(explicit_shapes, dict):
         fsizes_per_dim = [
-            fsizes_per_dim[i] if i in fragment_dims else shapes.get(i, "auto")
+            fsizes_per_dim[i] if i in fragmented_dim_indexes else explicit_shapes.get(i, "auto")
             for i, fs in enumerate(fsizes_per_dim)
         ]
     else:
-        # Shapes is a sequence
-        if len(shapes) != ndim:
+        # explicit_shapes is a sequence
+        if len(explicit_shapes) != ndim:
             raise ValueError(
-                f"Wrong number of 'shapes' elements in {shapes}: "
-                f"Got {len(shapes)}, expected {ndim}"
+                f"Wrong number of 'explicit_shapes' elements in {explicit_shapes}: "
+                f"Got {len(explicit_shapes)}, expected {ndim}"
             )
 
         fsizes_per_dim = [
-            fs if i in fragment_dims else shapes[i] for i, fs in enumerate(fsizes_per_dim)
+            fs if i in fragmented_dim_indexes else explicit_shapes[i] for i, fs in enumerate(fsizes_per_dim)
         ]
 
     return normalize_chunks(fsizes_per_dim, shape=array_shape, dtype=dtype)

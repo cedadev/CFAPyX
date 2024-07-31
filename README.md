@@ -160,3 +160,111 @@ Next steps:
  - Coordinate variables additional handling
  - Tidy-up/Repo sort
  - Documentation init.
+
+## 24/07/2024
+
+Sorted group handling, initially used two ds variables within the `DataStore` class but this did not function as needed with Xarray because of a private non-inheritable class. Instead I created a wrapper class for the netCDF4 dataset, with a separate wrapper for the `variables` property to deliver the behaviour I needed. Namely to provide access to all variables and attributes in the group requested plus all past groups up to and including the root group.
+
+## 25-6/07/2024
+Not considered part of the placement - worked on PADOCC related content/features.
+
+## 30/07/2024
+
+- Class Diagram describing the CFAPyX package.
+
+Notes on CF Conventions: Aggregation Variables:
+ - Aggregation variable formed by combining multiple fragments in external files.
+ - Aggregation variable contains no data, only instructions.
+ - Use cases (as a list instead?)
+ - "An aggregation variable must 'present as' a scalar 'within the aggregation file'. It acts as a container...
+ - "The dimension of a coordinate variable of an aggregation data variable must be 'included as' one of the aggregated dimensions of the aggregation variable.
+ - `FragmentArrayWrapper` class already conforms to CF conventions on the **conceptual** fragment array.
+ - Should correct fragment_dims/fsizes_per_dim to array_dims/fragment_dims.
+
+### Reader Application Features
+ - Value: Add the `value` aggregated variable, with handling of the broadcast across the shape of the variable's `canonical form`.
+ - Dimensions: Inserting missing size 1 dimensions into fragment data or dropping specific slices from indexing. Defined for each fragment using the fragment shape (expected shape) and other attributes.
+ - Data: Transforming fragment data into the correct type if needed.
+ - Missing: Handle known missing fragments.
+ - Units: Conversion with cf-units to the aggregated_units for each `fragment`.
+ - Unpacking: Specified by the aggregated variable attributes or otherwise ignored.
+
+### CFA 0.6.2 Terminology Transition
+
+- cfa_location  # Now changed to `shape`
+- cfa_file      # Now changed to `location`
+- cfa_address   # No change.
+- cfa_format    # Dropped
+
+### Handling of CFA 0.6.2 or CF 1.12
+
+Add check for `ds.Conventions` into CFADataStore to identify terms in the `NetCDF4.Dataset`. Subsequent scripts and classes should use terminology standardised to CF-1.12 for variable names and references.
+
+## 31/07/2024
+
+Summary of CF-1.12 adjustments:
+ - Terminology in Datastore/Fragments/decoder
+ - decoded_cfa in Datastore (split)
+ - Add handling `value`.
+ - Add handling size 1 dimensions (drop extent slice)
+ - Transformations of data and units.
+ - Missing fragments handling.
+ - Fragment unpacking.
+ - Standardise naming conventions within dicts.
+
+### Active Storage Investigation
+
+Note: duck array is any numpy-like custom array to Xarray (in this case Dask)
+
+ - xarray.core.duck_array_ops mean : 681.
+
+ - DataArrayAggregations: 1664 (xarray.core._aggregations) - Not overridable but shows the required override for DataArray within Xarray.
+
+ - _construct_dataarray in Dataset could be altered to give DataArray-like object?
+
+Created CFAActiveDataset, and CFAActiveDataArray for aggregated variables, to enable bypassing the `duck_array_ops.mean` method and adding a custom mean function.
+Added cfa_active_mean function instead of `duck_array_ops.mean` which just calls the `active_mean` method for the `CFAActiveArray` object:
+ - `CFAActiveDataset`: replaces `xarray.Dataset`
+ - `CFAActiveDataArray`: replaces `xarray.DataArray`
+ - `CFAActiveArray`: replaces `dask.array.Array`.
+
+`CFAActiveArray.active_mean` should return a dask-Array-like object with an additional layer to the dask graph with the mean calculation required which involves:
+ - Passing the mean calculation to each fragment (which can internally perform the Active steps.)
+ - Compiling the outputs into whatever the correct final shape array is.
+ - Do all of this at the `compute()` step so not when initially called. (Hence adding to the dask graph)
+
+### CFAPyX - CF-1.12 Terminology
+
+`fragment_size_per_dim` : The non-padded fragment sizes for each dimension (fragmented or otherwise).
+
+fragment space : The coordinate system that refers to individual fragments. Each coordinate i, j, k refers to the number of fragments in each of the associated dimensions.
+Non fragmented dimensions should take the value 0 in that dimension for all fragments. Otherwise the indices (i,j,k...) will range from 0 to the number of fragments in
+that corresponding dimension minus 1 (since we are starting from zero.)
+
+`fragment_array_shape` : The total shape of the fragment array in `fragment space`.
+
+`fragment_position(s)` : A single or list of tuple values where each value is the index of a fragment in `fragment space`
+
+`fragment_shape(s)`    : A single or list of tuple values where each value is the `array shape` of the array fragment.
+
+array shape : The shape of a real data array.
+
+`frag_pos/frag_shape`  : The identifier for an individual fragment position or shape (see above) when iterating across all or some fragments.
+
+`nfrags_per_dim`       : The total number of fragments in each dimension (1 for non-fragmented dimensions.)
+
+`fragmented_dim_indexes` : The indexes of dimensions which are fragmented (0,1,2 etc.) in axis `index space`.
+
+`fragment_info`        : A dictionary of fragment metadata where each key is the coordinates of a fragment in index space and the value
+is a dictionary of the attributes specific to that fragment.
+
+`constructor_shape`    : A tuple object representing the full shape of the `fragment array variables` where in some cases (i.e all 
+fragments having the same value) this shape can be used to expand the array into the proper shape. May not be the most efficient way of
+implementing this though, could instead use a get_location/address method and provide the `frag_pos` and whole location/address `fragment array variable`.
+
+
+#### Terminology quick notes:
+ fragment_shape in fragment_shapes() may be the total fragment_array_shape. Also rename this function to get_fragment_... (sizes per dim?)
+
+ fsizes_per_dim is actually number of fragments per dim (nfrags_per_dim).
+

@@ -4,6 +4,11 @@ import numpy as np
 from xarray.core.dataset import Dataset
 from xarray.core.dataarray import DataArray
 
+def active_mean_test(arr, **kwargs):
+
+    # Currently given the results of indexing the fragments, rather than the fragments themselves.
+    return arr.active_mean(**kwargs)
+
 class CFAActiveArray(da.Array):
 
     description = "CFA wrapper to the xarray.Dataset dask array, enabling the use of Active Storage."
@@ -15,6 +20,9 @@ class CFAActiveArray(da.Array):
     # take place elsewhere
 
     def copy(self):
+        """
+        Require the ability to copy this class type and return a CFAActiveArray
+        """
         return CFAActiveArray(self.dask, self.name, self.chunks, meta=self)
     
     def __getitem__(self, index):
@@ -22,7 +30,22 @@ class CFAActiveArray(da.Array):
         return CFAActiveArray(arr.dask, arr.name, arr.chunks, meta=arr)
     
     def active_mean(self, axis, skipna=None):
-        q = self.__dask_layers__()
+
+        keys = self.__dask_keys__()
+        graph = self.__dask_graph__()
+        layers = self.__dask_layers__()
+
+        blocks  = self.to_delayed().ravel()
+        test_shape = (1,)
+        results = [
+            da.from_delayed(
+                active_mean_test(b), 
+                test_shape,
+                dtype=self.dtype
+            ) for b in blocks]
+        
+        ddf     = da.concatenate(results)
+        ddf.compute()
         # Mean across each fragment
         # Combine means
 

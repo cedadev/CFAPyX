@@ -5,7 +5,7 @@ from CFAPyX.active import CFAActiveArray
 import dask.array as da
 from dask.array.core import getter
 from dask.base import tokenize
-from dask.utils import SerializableLock
+from dask.utils import SerializableLock, is_arraylike
 
 from itertools import product
 
@@ -109,7 +109,6 @@ class FragmentArrayWrapper():
             aggregated_data = aggregated_data,
             ndim=self.ndim,
             dtype=np.dtype(np.float64)
-
         )
         dsk = {}
 
@@ -142,7 +141,7 @@ class FragmentArrayWrapper():
             key = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[key] = fragment
             dsk[name + fragment_location] = (
-                getter, # From dask docs
+                fragment_getter,
                 key,
                 f_indices,
                 False,
@@ -150,6 +149,19 @@ class FragmentArrayWrapper():
             )
 
         return CFAActiveArray(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
+    
+def fragment_getter(a, b, asarray=True, lock=None):
+    if isinstance(b, tuple) and any(x is None for x in b):
+        b2 = tuple(x for x in b if x is not None)
+        b3 = tuple(
+            None if x is None else slice(None, None)
+            for x in b
+        )
+        return fragment_getter(a, b2, asarray=asarray, lock=lock)[b3]
+
+    # Don't need the lock here anymore.
+    a.set_extent(b)
+    return a
 
 def get_fragment_wrapper(format, **kwargs):
     if format == 'nc':
@@ -211,9 +223,19 @@ class FragmentWrapper():
         self.aggregated_units    = aggregated_units # cfunits conform method.
         self.aggregated_calendar = aggregated_calendar
         
+    def active_mean(self, **kwargs):
+        x = 1
+        return 1
+    
+    def set_extent(self, value):
+        self.extent = value
+
     def __getitem__(self, selection):
         ds = self.get_array(extent=tuple(selection))
         return ds
+    
+    def __array__(self):
+        return self.get_array()
 
     def get_array(self, extent=None):
         ds = self.open()
@@ -221,12 +243,14 @@ class FragmentWrapper():
 
         if not extent:
             extent = self.extent
-        if extent and self.extent:
+        elif extent and self.extent:
             raise NotImplementedError(
                 "Nested selections not supported. "
                 f"FragmentWrapper.get_array supplied '{extent}' "
                 f"and '{self.extent}' as selections."
             )
+        else:
+            pass
         
         if '/' in self.address:
             # Assume we're dealing with groups but we just need the data for this variable.
@@ -249,7 +273,6 @@ class FragmentWrapper():
             )
         
         if extent:
-            print(f'Post-processed Extent: {extent}')
             try:
                 # This may not be loading the data in the most efficient way.
                 # Current: Slice the NetCDF-Dataset object then write to numpy.
@@ -272,5 +295,6 @@ class FragmentWrapper():
         raise NotImplementedError
     
 class NetCDFFragmentWrapper(FragmentWrapper):
+    # Needs to handle the locking/unlocking here
     def open(self): # get lock/release lock
         return netCDF4.Dataset(self.filename, mode='r')

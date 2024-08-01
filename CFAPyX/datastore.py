@@ -139,6 +139,18 @@ class CFADataStore(NetCDF4DataStore):
     def decode_cfa(self):
         return self._decode_cfa
 
+    @property
+    def active_options(self):
+        """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
+        return {}
+    
+    @active_options.setter
+    def active_options(self, value):
+        self._set_active_options(**value)
+
+    def _set_active_options(self, use_active=False):
+        self._use_active = use_active
+
     def open_variable(self, name: str, var, real_agg_dims):
         """
         Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable or as a
@@ -205,7 +217,7 @@ class CFADataStore(NetCDF4DataStore):
                 shape=array_shape,
                 units=units,
                 dtype=var.dtype,
-                cfa_options=self.cfa_options,
+                cfa_options=self.cfa_options
             ))
             
         encoding = {}
@@ -243,19 +255,6 @@ class CFADataStore(NetCDF4DataStore):
 
         v = Variable(dimensions, data, attributes, encoding)
         return v
-
-    def _get_xarray_fragment(self, filename, address, dtype, units, shape):
-        dsF = xarray.open_dataset(filename)
-        fragment = dsF[address]
-        assert fragment.shape == shape
-        assert fragment.dtype == dtype
-
-        if hasattr(fragment, 'units'):
-            assert fragment.units == units
-        elif units != None:
-            print("Warning: Fragment does not contain units, while units were expected")
-
-        return fragment
 
     def _perform_decoding(self, location, address, file, cformat, term, substitutions=None):
         aggregated_data = {}
@@ -351,49 +350,3 @@ class CFADataStore(NetCDF4DataStore):
             'fragment_shape': fragment_shape,
             'aggregated_data': aggregated_data
         }
-
-    def test_load(self):
-
-        param1 = self.ds.ncattrs()
-        param2 = self.ds.variables
-
-        ## CFA Instruction Variables
-
-        # Location is the most complicated to deal with - must be expanded.
-        location = self.ds.variables['cfa_location']
-        file     = self.ds.variables['cfa_file']
-        address  = self.ds.variables['cfa_address']
-        cformat  = self.ds.variables['cfa_format']
-
-        ## Aggregated Variables
-        #aggregated_vars = {avar: self.ds.variables[avar] for avar in self.ds.dimensions.keys() if hasattr(self.ds.variables[avar], 'aggregated_dimensions')}
-
-
-        ## Aggregation Dimensions
-        # Important aggregation dimensions start with 'f_' - assumption!
-        #cfa_dims = {cfd: self.ds.dimensions[cfd] for cfd in self.ds.dimensions.keys() if 'f_' in cfd}
-        std_dims = [d for d in self.ds.dimensions.keys() if 'f_' not in d]
-
-        fragment_shape, aggregated_data = self._perform_decoding(location, address, file, cformat, None, substitutions=xarray_subs)
-
-        fragments = []
-        # Recheck how cf-python does the decoding.
-
-        concat_dims = [std_dims[i] for i in range(len(fragment_shape)) if fragment_shape[i] > 1]
-
-        for fragment in aggregated_data.keys():
-            finfo = aggregated_data[fragment]
-            arr_fragment = self._get_xarray_fragment(
-                filename=finfo['filename'],
-                address=finfo['address'],
-                dtype=np.dtype(np.float64), # from aggregated vars
-                shape=(2,180,360), # from aggregated vars
-                units=None, # from aggregated vars
-            )
-
-            # Open all fragments as xarray sections and combine into a single data array
-            fragments.append(arr_fragment)
-
-        agg_ds = xarray.combine_nested(fragments, concat_dims)
-        
-        return None

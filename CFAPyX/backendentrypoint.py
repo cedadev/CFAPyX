@@ -5,7 +5,7 @@ from xarray.core.dataset import Dataset
 from xarray import conventions
 
 from CFAPyX.datastore import CFADataStore
-from CFAPyX.active import CFAActiveDataset
+from XarrayActive import ActiveDataset
 
 from importlib.metadata import entry_points
 #engine = entry_points(group='xarray.backends')
@@ -62,6 +62,7 @@ def open_cfa_dataset(
         drop_variables=drop_variables,
         use_cftime=use_cftime,
         decode_timedelta=decode_timedelta,
+        is_active=store.is_active
     )
 
     return ds
@@ -122,6 +123,7 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         drop_variables=None,
         use_cftime=None,
         decode_timedelta=None,
+        is_active=False,
     ) -> Dataset:
         """
         Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
@@ -156,7 +158,11 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         )
 
         # Create the xarray.Dataset object here.
-        ds = CFAActiveDataset(vars, attrs=attrs)
+        if is_active:
+            ds = ActiveDataset(vars, attrs=attrs)
+        else:
+            ds = Dataset(vars, attrs=attrs)
+            
         ds = ds.set_coords(coord_names.intersection(vars))
         ds.set_close(cfa_xarray_store.close)
         ds.encoding = encoding

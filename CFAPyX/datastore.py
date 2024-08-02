@@ -19,7 +19,7 @@ from CFAPyX.utils import _ensure_fill_value_valid
 from CFAPyX.fragmentarray import FragmentArrayWrapper
 from CFAPyX.decoder import chunk_locations, chunk_positions
 
-from CFAPyX.group import GroupedDatasetWrapper
+from CFAPyX.group import CFAGroupWrapper
 
 
 xarray_subs = {
@@ -38,7 +38,7 @@ class CFADataStore(NetCDF4DataStore):
         Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)
         """
         with self._manager.acquire_context(needs_lock) as root:
-            ds = GroupedDatasetWrapper.open(root, self._group, self._mode)
+            ds = CFAGroupWrapper.open(root, self._group, self._mode)
 
         return ds
 
@@ -47,7 +47,7 @@ class CFADataStore(NetCDF4DataStore):
         Fetch the netCDF4.Dataset variables and perform some CFA decoding if necessary.
         .. Note:: 
         
-            ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which has flattened 
+            ``ds`` is now a ``CFAGroupWrapper`` object from ``CFAPyX.group`` which has flattened 
             the group structure and allows fetching of variables and attributes from the whole group tree
             from which a specific group may inherit.
 
@@ -100,10 +100,30 @@ class CFADataStore(NetCDF4DataStore):
 
     def get_attrs(self):
         """
-        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``GroupedDatasetWrapper`` in 
+        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``CFAGroupWrapper`` in 
         the case of using a group or nested group tree.
         """
         return FrozenDict((k, self.ds.getncattr(k)) for k in self.ds.ncattrs())
+
+    @property
+    def active_options(self):
+        """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
+        return {
+            'use_active': self._use_active,
+        }
+    
+    @property
+    def is_active(self):
+        if hasattr(self, '_use_active'):
+            return self._use_active
+        return False
+    
+    @active_options.setter
+    def active_options(self, value):
+        self._set_active_options(**value)
+
+    def _set_active_options(self, use_active=False):
+        self._use_active = use_active
 
     @property
     def cfa_options(self):
@@ -138,18 +158,6 @@ class CFADataStore(NetCDF4DataStore):
     @property
     def decode_cfa(self):
         return self._decode_cfa
-
-    @property
-    def active_options(self):
-        """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
-        return {}
-    
-    @active_options.setter
-    def active_options(self, value):
-        self._set_active_options(**value)
-
-    def _set_active_options(self, use_active=False):
-        self._use_active = use_active
 
     def open_variable(self, name: str, var, real_agg_dims):
         """
@@ -217,7 +225,8 @@ class CFADataStore(NetCDF4DataStore):
                 shape=array_shape,
                 units=units,
                 dtype=var.dtype,
-                cfa_options=self.cfa_options
+                cfa_options=self.cfa_options,
+                active_options=self.active_options,
             ))
             
         encoding = {}

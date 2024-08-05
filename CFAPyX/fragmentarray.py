@@ -6,17 +6,17 @@ VERSION = 1.0
 
 from CFAPyX.utils import OneOrMoreList
 from CFAPyX.decoder import get_nfrags_per_dim, fragment_descriptors
-from CFAPyX.active import CFAActiveArray
+
+#from XarrayActive import DaskActiveArray
 
 import dask.array as da
 from dask.array.core import getter
 from dask.base import tokenize
-from dask.utils import SerializableLock
+from dask.utils import SerializableLock, is_arraylike
+from dask.array.reductions import numel
 
 from itertools import product
-
 import netCDF4
-
 import numpy as np
 
 class FragmentArrayWrapper():
@@ -40,7 +40,23 @@ class FragmentArrayWrapper():
             self.cfa_options = cfa_options
             self.apply_cfa_options(**cfa_options)
 
+        self.active_options = active_options
+
         self.__array_function__ = self.get_array
+
+    @property
+    def active_options(self):
+        """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
+        return {
+            'use_active': self._use_active,
+        }
+    
+    @active_options.setter
+    def active_options(self, value):
+        self._set_active_options(**value)
+
+    def _set_active_options(self, use_active=False):
+        self._use_active = use_active
 
     def apply_cfa_options(
             self,
@@ -118,6 +134,7 @@ class FragmentArrayWrapper():
             explicit_shapes = None
         )
 
+
         # dict of array-like objects to pass to the dask Array constructor.
         dsk = {}
 
@@ -141,14 +158,31 @@ class FragmentArrayWrapper():
             key = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[key] = fragment
             dsk[name + fragment_position] = (
-                getter, # From dask docs
+                getter, # From dask docs - replaces fragment_getter
                 key,
                 f_indices,
                 False,
                 getattr(fragment, "_lock", False) # Check version cf-python
             )
 
-        return CFAActiveArray(dsk, name[0], chunks=nfrags_per_dim, dtype=dtype)
+        if self._use_active:
+            darr = DaskActiveArray(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
+        else:
+            darr = da.Array(dsk, name[0], chunks=fsizes_per_dim, dtype=dtype)
+        return darr
+    
+def fragment_getter(a, b, asarray=True, lock=None):
+    if isinstance(b, tuple) and any(x is None for x in b):
+        b2 = tuple(x for x in b if x is not None)
+        b3 = tuple(
+            None if x is None else slice(None, None)
+            for x in b
+        )
+        return fragment_getter(a, b2, asarray=asarray, lock=lock)[b3]
+
+    # Don't need the lock here anymore.
+    a.set_extent(b)
+    return a
 
 def get_fragment_wrapper(format, **kwargs):
     if format == 'nc':
@@ -158,10 +192,96 @@ def get_fragment_wrapper(format, **kwargs):
             f"Fragment type '{format}' not supported"
         )
 
-class FragmentWrapper():
+# Private class to hold all CFA-specific Active routines.
+class _ActiveFragment:
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError
 
-    description = "Wrapper class for individual Fragment retrievals. May incorporate Active Storage routines as applicable methods called via Dask."
+    def _standard_mean(self, axis=None, skipna=None, **kwargs):
+        """
+        Standard Mean routine matches the normal routine for dask, required at this
+        stage if Active mean not available.
+        """
+        size = 1
+        for i in axis:
+            size *= self.shape[i]
 
+        arr = np.array(self)
+        if skipna:
+            total = np.nanmean(arr, axis=axis, **kwargs) *size
+        else:
+            total = np.mean(arr, axis=axis, **kwargs) *size
+        return {'n': self._numel(arr, axis=axis), 'total': total}
+
+    def _numel(self, axis=None):
+        if not axis:
+            return self.size
+        
+        size = 1
+        for i in axis:
+            size *= self.shape[i]
+        newshape = list(self.shape)
+        newshape[axis] = 1
+
+        return np.full(newshape, size)
+
+    def active_mean(self, axis=None, skipna=None, **kwargs):
+        """
+        Use PyActiveStorage package functionality to perform mean of this Fragment.
+
+        :param axis:        (int) The axis over which to perform the active_mean operation.
+
+        :param skipna:      (bool) Skip NaN values when calculating the mean.
+
+        :returns:       A ``duck array`` (numpy-like) with the reduced array or scalar value, 
+                        as specified by the axis parameter.
+        """
+        try:
+            from activestorage.active import Active
+        except:
+            # Unable to import Active package. Default to using normal mean.
+            print("ActiveWarning: Unable to import active module - defaulting to standard method.")
+            return self._standard_mean(axis=axis, skipna=skipna, **kwargs)
+            
+        active = Active(self.filename, self.address)
+        active.method = "mean"
+        extent = self.get_extent()
+
+        if not axis is None:
+            return {'n': self._numel(axis=axis), 'total': active[extent]}
+
+        # Experimental Recursive requesting to get each 1D column along the axis being requested.
+        range_recursives = []
+        for dim in range(self.ndim):
+            if dim != axis:
+                range_recursives.append(range(extent[dim].start, extent[dim].stop+1))
+            else:
+                range_recursives.append(extent[dim])
+        results = np.array(self._get_elements(active, range_recursives, hyperslab=[]))
+
+        return {'n': self._numel(axis=axis), 'total': results}
+
+    def _get_elements(self, active, recursives, hyperslab=[]):
+        dimarray = []
+        current = recursives[0]
+        if not len(recursives) > 1:
+
+            # Perform active slicing and meaning here.
+            return active[hyperslab]
+
+        if type(current) == slice:
+            newslab = hyperslab + [current]
+            dimarray.append(self._get_elements(active, recursives[1:], hyperslab=newslab))
+
+        else:
+            for i in current:
+                newslab = hyperslab + [slice(i, i+1)]
+                dimarray.append(self._get_elements(active, recursives[1:], hyperslab=newslab))
+
+        return dimarray
+
+
+class FragmentWrapper(_ActiveFragment):
     def __init__(self,
                  filename,
                  address,
@@ -198,9 +318,36 @@ class FragmentWrapper():
         self.aggregated_units    = aggregated_units # cfunits conform method.
         self.aggregated_calendar = aggregated_calendar
         
+    @property
+    def shape(self):
+        # Apply extent to shape.
+        current_shape = []
+        if not self.extent:
+            return self._shape
+        for e in self.extent:
+            current_shape.append(int((e.stop - e.start)/e.step))
+        return tuple(current_shape)
+
+    @shape.setter
+    def shape(self, value):
+        self._shape = value
+
+    def get_extent(self):
+        if self.extent:
+            return self.extent
+        else:
+            return (slice(0,self.shape[i]-1) for i in range(self.ndim))
+    
+    def set_extent(self, value):
+        self.extent = value
+
     def __getitem__(self, selection):
-        ds = self.get_array(extent=tuple(selection))
-        return ds
+        self.set_extent(selection)
+        #ds = self.get_array(extent=tuple(selection))
+        return self
+    
+    def __array__(self):
+        return self.get_array()
 
     def get_array(self, extent=None):
         ds = self.open()
@@ -208,12 +355,12 @@ class FragmentWrapper():
 
         if not extent:
             extent = self.extent
-        if extent and self.extent:
-            raise NotImplementedError(
-                "Nested selections not supported. "
-                f"FragmentWrapper.get_array supplied '{extent}' "
-                f"and '{self.extent}' as selections."
-            )
+        elif extent and self.extent:
+            # New extent overrides previously given extent which should
+            # just be stored and not yet applied.
+            pass
+        else:
+            pass
         
         if '/' in self.address:
             # Assume we're dealing with groups but we just need the data for this variable.
@@ -236,7 +383,6 @@ class FragmentWrapper():
             )
         
         if extent:
-            print(f'Post-processed Extent: {extent}')
             try:
                 # This may not be loading the data in the most efficient way.
                 # Current: Slice the NetCDF-Dataset object then write to numpy.
@@ -259,5 +405,7 @@ class FragmentWrapper():
         raise NotImplementedError
     
 class NetCDFFragmentWrapper(FragmentWrapper):
+    # Needs to handle the locking/unlocking here
     def open(self): # get lock/release lock
         return netCDF4.Dataset(self.filename, mode='r')
+

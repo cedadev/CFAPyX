@@ -5,6 +5,7 @@ from xarray.core.dataset import Dataset
 from xarray import conventions
 
 from CFAPyX.datastore import CFADataStore
+from XarrayActive import ActiveDataset
 
 from importlib.metadata import entry_points
 #engine = entry_points(group='xarray.backends')
@@ -19,6 +20,7 @@ def open_cfa_dataset(
         use_cftime=None,
         decode_timedelta=None,
         cfa_options={},
+        active_options={},
         group=None,
         ):
     """
@@ -46,7 +48,8 @@ def open_cfa_dataset(
     store = CFADataStore.open(filename_or_obj, group=group)
 
     # Expands cfa_options into individual kwargs for the store.
-    store.cfa_options = cfa_options
+    store.cfa_options    = cfa_options
+    store.active_options = active_options
 
     # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
@@ -59,6 +62,7 @@ def open_cfa_dataset(
         drop_variables=drop_variables,
         use_cftime=use_cftime,
         decode_timedelta=decode_timedelta,
+        is_active=store.is_active
     )
 
     return ds
@@ -80,6 +84,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=None,
             decode_timedelta=None,
             cfa_options={},
+            active_options={},
             group=None,
             # backend specific keyword arguments
             # do not use 'chunks' or 'cache' here
@@ -99,6 +104,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=use_cftime,
             decode_timedelta=decode_timedelta,
             cfa_options=cfa_options,
+            active_options=active_options,
             group=group)
 
 
@@ -117,6 +123,7 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         drop_variables=None,
         use_cftime=None,
         decode_timedelta=None,
+        is_active=False,
     ) -> Dataset:
         """
         Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
@@ -151,7 +158,11 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         )
 
         # Create the xarray.Dataset object here.
-        ds = Dataset(vars, attrs=attrs)
+        if is_active:
+            ds = ActiveDataset(vars, attrs=attrs)
+        else:
+            ds = Dataset(vars, attrs=attrs)
+            
         ds = ds.set_coords(coord_names.intersection(vars))
         ds.set_close(cfa_xarray_store.close)
         ds.encoding = encoding

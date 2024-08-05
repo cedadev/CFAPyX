@@ -19,7 +19,7 @@ from CFAPyX.utils import _ensure_fill_value_valid
 from CFAPyX.fragmentarray import FragmentArrayWrapper
 from CFAPyX.decoder import get_fragment_shapes, get_fragment_positions
 
-from CFAPyX.group import GroupedDatasetWrapper
+from CFAPyX.group import CFAGroupWrapper
 
 
 xarray_subs = {
@@ -38,7 +38,7 @@ class CFADataStore(NetCDF4DataStore):
         Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)
         """
         with self._manager.acquire_context(needs_lock) as root:
-            ds = GroupedDatasetWrapper.open(root, self._group, self._mode)
+            ds = CFAGroupWrapper.open(root, self._group, self._mode)
 
         self.conventions = ds.Conventions
 
@@ -109,10 +109,30 @@ class CFADataStore(NetCDF4DataStore):
 
     def get_attrs(self):
         """
-        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``GroupedDatasetWrapper`` in 
+        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``CFAGroupWrapper`` in 
         the case of using a group or nested group tree.
         """
         return FrozenDict((k, self.ds.getncattr(k)) for k in self.ds.ncattrs())
+
+    @property
+    def active_options(self):
+        """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
+        return {
+            'use_active': self._use_active,
+        }
+    
+    @property
+    def is_active(self):
+        if hasattr(self, '_use_active'):
+            return self._use_active
+        return False
+    
+    @active_options.setter
+    def active_options(self, value):
+        self._set_active_options(**value)
+
+    def _set_active_options(self, use_active=False):
+        self._use_active = use_active
 
     @property
     def cfa_options(self):
@@ -219,6 +239,7 @@ class CFADataStore(NetCDF4DataStore):
                 units=units,
                 dtype=var.dtype,
                 cfa_options=self.cfa_options,
+                active_options=self.active_options,
             ))
             
         encoding = {}

@@ -1,6 +1,6 @@
 from contextlib import suppress
 
-class PropertyWrapper:
+class VariableWrapper:
     """
     Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can handle
     either ``global`` or ``group`` based variables.
@@ -51,14 +51,14 @@ class PropertyWrapper:
                 f'No such attribute: "{attr}'
             )
         
-class GroupedDatasetWrapper:
+class CFAGroupWrapper:
     """
     Wrapper object for the CFADataStore ``ds`` parameter, required to bypass the issue
     with groups in Xarray, where all variables outside the group are ignored.
     """
     def __init__(self, var_sets, ds_sets):
 
-        self.variables = PropertyWrapper(
+        self.variables = VariableWrapper(
             var_sets,
         )
 

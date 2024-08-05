@@ -1,3 +1,9 @@
+__author__    = "Daniel Westwood"
+__contact__   = "daniel.westwood@stfc.ac.uk"
+__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+
+VERSION = 1.0
+
 from CFAPyX.utils import OneOrMoreList
 from CFAPyX.decoder import get_nfrags_per_dim, fragment_descriptors
 from CFAPyX.active import CFAActiveArray

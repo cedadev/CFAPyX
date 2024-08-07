@@ -37,7 +37,7 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
-#html_logo = '_images/ceda.png'
+html_logo = '_images/CFAPyX_nobg.png'
 html_favicon = '_images/CFAPyX.ico'
 html_a1 = '_images/ceda.png'
 html_a2 = '_images/ncas.png'

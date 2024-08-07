@@ -16,7 +16,7 @@ copyright = ('2022-2024, Centre of Environmental Data Analysis Developers,'
              'UK Research and Innovation (UKRI). '
              'BSD 2-Clause License. All rights reserved.')
 author = 'Daniel Westwood'
-release = 'v1.1'
+release = '2024.7.31'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -38,6 +38,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 #html_logo = '_images/ceda.png'
-html_favicon = '_images/favicon.ico'
+html_favicon = '_images/CFAPyX.ico'
 html_a1 = '_images/ceda.png'
 html_a2 = '_images/ncas.png'
+html_a3 = '_images/CFAPyX_nobg.png'

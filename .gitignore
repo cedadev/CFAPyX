@@ -4,3 +4,8 @@ xarray_repos
 notes
 *.pyc
 *ipynb_checkpoints*
+CFAPyX/__pycache__/
+CFAPyX.egg-info/
+.vscode/
+testing/
+*.png

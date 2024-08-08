@@ -56,13 +56,13 @@ class CFADataStore(NetCDF4DataStore):
 
     @property
     def _active_chunks(self):
-        if hasattr(self,'_active_chunks'):
-            return self._active_chunks
+        if hasattr(self,'__active_chunks'):
+            return self.__active_chunks
         return None
     
     @_active_chunks.setter
     def _active_chunks(self, value):
-        self._active_chunks = value
+        self.__active_chunks = value
 
     @property
     def cfa_options(self):

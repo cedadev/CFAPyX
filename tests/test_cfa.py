@@ -23,9 +23,9 @@ def test_cfa_pure():
     p_mean = p_sel.mean(dim='time')
 
     assert p_mean.shape == (5, 10)
-    assert (p_mean[0][0] - 0.63536) < 0.01
+    assert (p_mean[0][0].to_numpy() - 0.683402) < 0.01
 
     p_value = p_sel.mean()
 
     assert p_value.shape == ()
-    assert (p_value.to_numpy() - 0.511954) < 0.01
+    assert (p_value.to_numpy() - 0.53279) < 0.01

@@ -7,7 +7,7 @@ from contextlib import suppress
 class VariableWrapper:
     """
     Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can handle
-    either ``global`` or ``group`` based variables.
+    either ``global`` or ``group`` based variables .
     """
 
     def __init__(self, prop_sets):

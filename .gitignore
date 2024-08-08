@@ -8,4 +8,3 @@ CFAPyX/__pycache__/*.pyc
 CFAPyX.egg-info/
 .vscode/
 testing/
-*.png

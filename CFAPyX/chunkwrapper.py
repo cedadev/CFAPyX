@@ -140,7 +140,7 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
 
         :param dtype:       (obj) The datatype of the values represented in this Array-like class.
 
-        :param units:       (obj) The units of the values represented in this Array-like class
+        :param units:       (obj) The units of the values represented in this Array-like class.
 
         :param shape:       (tuple) The shape of the array or subarray represented by this class.
 

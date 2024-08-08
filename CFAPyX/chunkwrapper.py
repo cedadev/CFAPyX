@@ -272,11 +272,12 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
             filenames = [filenames]
 
         # Tidy code - never going to be many filenames
-        local  = [l for l in filenames if '://' not in l]
-        remote = [r for r in filenames if '://' in r]
+        local    = [l for l in filenames if '://' not in l]
+        remote   = [r for r in filenames if '://' in r]
+        relative = [d for d in filenames if d[:5] not in ('https','s3://','file:')]
 
-        # Prioritise remote options first if any are present.
-        filenames = remote + local
+        # Prioritise relative then remote options first if any are present.
+        filenames = relative + remote + local
 
         for filename in filenames:
             try:

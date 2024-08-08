@@ -28,4 +28,4 @@ def test_cfa_pure():
     p_value = p_sel.mean()
 
     assert p_value.shape == ()
-    assert (p_value - 0.511954) < 0.01
+    assert (p_value.to_numpy() - 0.511954) < 0.01

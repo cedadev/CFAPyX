@@ -21,7 +21,7 @@ import os
 import re
 
 from CFAPyX.fragmentarray import FragmentArrayWrapper
-from CFAPyX.decoder import get_fragment_shapes, get_fragment_positions, get_fragment_extents
+from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
 
 from CFAPyX.group import CFAGroupWrapper
 
@@ -42,7 +42,7 @@ class CFADataStore(NetCDF4DataStore):
     def active_options(self):
         """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
         return {
-            'use_active': self._use_active,
+            'use_active': self.use_active,
             'chunks': self._active_chunks,
         }
     
@@ -51,7 +51,7 @@ class CFADataStore(NetCDF4DataStore):
         self._set_active_options(**value)
 
     def _set_active_options(self, use_active=False, chunks=None):
-        self._use_active = use_active
+        self.use_active = use_active
         self._active_chunks = chunks
 
     @property

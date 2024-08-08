@@ -228,7 +228,7 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
         """
         return data
     
-    def __array__(self):
+    def __array__(self, *args, **kwargs):
         """
         Retrieves the array of data for this variable chunk, casted into a Numpy array. Use of this method 
         breaks the ``Active chain`` by retrieving all the data before any methods can be applied.
@@ -236,6 +236,19 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
         :returns:       A numpy array of the data for the correct variable with correctly applied selections
                         defined by the ``extent`` parameter.
         """
+
+        # Unexplained xarray behaviour:
+        # If using xarray indexing, __array__ should not have a positional 'dtype' option.
+        # If casting DataArray to numpy, __array__ requires a positional 'dtype' option.
+        dtype = None
+        if args:
+            dtype = args[0]
+
+        if dtype != self.dtype:
+            raise ValueError(
+                'Requested datatype does not match this chunk'
+            )
+
         ds = self.open()
 
         if '/' in self.address:

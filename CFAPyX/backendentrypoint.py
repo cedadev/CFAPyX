@@ -1,3 +1,6 @@
+__author__    = "Daniel Westwood"
+__contact__   = "daniel.westwood@stfc.ac.uk"
+__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 from xarray.backends import StoreBackendEntrypoint, BackendEntrypoint
 from xarray.backends.common import AbstractDataStore
@@ -5,7 +8,6 @@ from xarray.core.dataset import Dataset
 from xarray import conventions
 
 from CFAPyX.datastore import CFADataStore
-from XarrayActive import ActiveDataset
 
 from importlib.metadata import entry_points
 #engine = entry_points(group='xarray.backends')
@@ -62,7 +64,7 @@ def open_cfa_dataset(
         drop_variables=drop_variables,
         use_cftime=use_cftime,
         decode_timedelta=decode_timedelta,
-        is_active=store.is_active
+        use_active=store.use_active
     )
 
     return ds
@@ -110,7 +112,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     description = "Open CFA-based Abstract Data Store"
-    url = "https://docs.xarray.dev/en/stable/generated/xarray.backends.StoreBackendEntrypoint.html"
+    url = "https://cedadev.github.io/CFAPyX/"
 
     def open_dataset(
         self,
@@ -123,7 +125,7 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         drop_variables=None,
         use_cftime=None,
         decode_timedelta=None,
-        is_active=False,
+        use_active=False,
     ) -> Dataset:
         """
         Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
@@ -135,7 +137,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         :returns:           An xarray.Dataset object composed of xarray.DataArray objects representing the different
                             NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
                             parameter in ``cfa_options`` is false.
-                                        
 
         """
         assert isinstance(cfa_xarray_store, AbstractDataStore)
@@ -158,8 +159,15 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         )
 
         # Create the xarray.Dataset object here.
-        if is_active:
-            ds = ActiveDataset(vars, attrs=attrs)
+        if use_active:
+            try:
+                from XarrayActive import ActiveDataset
+
+                ds = ActiveDataset(vars, attrs=attrs)
+            except ImportError:
+                raise ImportError(
+                    '"ActiveDataset" from XarrayActive failed to import - please ensure you have the XarrayActive package installed.'
+                )
         else:
             ds = Dataset(vars, attrs=attrs)
             

@@ -12,7 +12,7 @@ def test_cfa_pure():
     assert not hasattr(ds,'location')
     
     assert 'p' in ds
-    assert ds['p'].shape == (4, 90, 180)
+    assert ds['p'].shape == (20, 180, 360)
 
     p_sel = ds['p'].sel(time=slice(1,3),latitude=slice(50,54), longitude=slice(0,9))
 
@@ -23,9 +23,9 @@ def test_cfa_pure():
     p_mean = p_sel.mean(dim='time')
 
     assert p_mean.shape == (5, 10)
-    assert (p_mean[0] - 0.3979965) < 0.01
+    assert (p_mean[0] - 0.63536) < 0.01
 
     p_value = p_sel.mean()
 
     assert p_value.shape == ()
-    assert (p_value - 0.51319) < 0.01
+    assert (p_value - 0.511954) < 0.01

@@ -1,3 +1,7 @@
+__author__    = "Daniel Westwood"
+__contact__   = "daniel.westwood@stfc.ac.uk"
+__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+
 from xarray.backends import ( 
     NetCDF4DataStore
 )
@@ -14,10 +18,10 @@ import xarray
 import netCDF4
 import numpy as np
 import os
+import re
 
-from CFAPyX.utils import _ensure_fill_value_valid
 from CFAPyX.fragmentarray import FragmentArrayWrapper
-from CFAPyX.decoder import get_fragment_shapes, get_fragment_positions
+from CFAPyX.decoder import get_fragment_shapes, get_fragment_positions, get_fragment_extents
 
 from CFAPyX.group import CFAGroupWrapper
 
@@ -27,112 +31,38 @@ xarray_subs = {
 }
 
 class CFADataStore(NetCDF4DataStore):
+
     """
     DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines directly 
-    related to the specific variables and attributes, but uses CFAPyX.utils for some of the aggregation
-    metadata decoding.
+    related to the specific variables and attributes. The class __init__ method cannot easily be 
+    overriden, so properties are used instead for specific variables that may be un-set at time of use.
     """
-
-    def _acquire(self, needs_lock=True):
-        """
-        Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)
-        """
-        with self._manager.acquire_context(needs_lock) as root:
-            ds = CFAGroupWrapper.open(root, self._group, self._mode)
-
-        self.conventions = ds.Conventions
-
-        return ds
-    
-    @property
-    def conventions(self):
-        return self._conventions
-    
-    @conventions.setter
-    def conventions(self, value):
-        self._conventions = value
-
-    def get_variables(self):
-        """
-        Fetch the netCDF4.Dataset variables and perform some CFA decoding if necessary.
-
-        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which has flattened 
-        the group structure and allows fetching of variables and attributes from the whole group tree
-        from which a specific group may inherit.
-
-        :returns:       A ``FrozenDict`` Xarray object of the names of all variables, and methods to fetch those
-                        variables, depending on if those variables are standard NetCDF4 or CFA Aggregated variables.
-        """
-
-        xarray_vars = {}
-        r = {} # Real size of dimensions for aggregated variables.
-
-        if not self.decode_cfa:
-            return FrozenDict(
-                (k, self.open_variable(k, v, r)) for k, v in self.ds.variables.items()
-            )
-
-        ## Proceed with decoding CFA content.
-
-        if not hasattr(self, '_decoded_cfa'):
-            self.perform_decoding()
-
-        standardised_terms = (
-            "cfa_location",
-            "cfa_file",
-            "cfa_address",
-            "cfa_format"
-        )
-
-        ## Decide which dimensions and variables can be ignored when constructing the CFA Dataset.
-
-
-        ## Obtain the list of fragmented dimensions and their real sizes.
-        for dimension in self.ds.dimensions.keys():
-            if 'f_' in dimension and '_loc' not in dimension:
-                real_dim = dimension.replace('f_','')
-                r[real_dim] = self.ds.dimensions[real_dim].size
-
-        ## Ignore variables in the set of standardised terms.
-        for avar in self.ds.variables.keys():
-            cfa = False
-            ## CF-Compliant method of identifying aggregated variables.
-            if hasattr(self.ds.variables[avar], 'aggregated_dimensions'):
-                cfa = True
-
-            if avar not in standardised_terms:
-                xarray_vars[avar] = (self.ds.variables[avar], cfa)
-
-        return FrozenDict(
-            (k, self.open_variable(k, v, r)) for k, v in xarray_vars.items()
-        )
-
-    def get_attrs(self):
-        """
-        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``CFAGroupWrapper`` in 
-        the case of using a group or nested group tree.
-        """
-        return FrozenDict((k, self.ds.getncattr(k)) for k in self.ds.ncattrs())
 
     @property
     def active_options(self):
         """Property of the datastore that relates private option variables to the standard ``active_options`` parameter."""
         return {
             'use_active': self._use_active,
+            'chunks': self._active_chunks,
         }
-    
-    @property
-    def is_active(self):
-        if hasattr(self, '_use_active'):
-            return self._use_active
-        return False
     
     @active_options.setter
     def active_options(self, value):
         self._set_active_options(**value)
 
-    def _set_active_options(self, use_active=False):
+    def _set_active_options(self, use_active=False, chunks=None):
         self._use_active = use_active
+        self._active_chunks = chunks
+
+    @property
+    def _active_chunks(self):
+        if hasattr(self,'_active_chunks'):
+            return self._active_chunks
+        return None
+    
+    @_active_chunks.setter
+    def _active_chunks(self, value):
+        self._active_chunks = value
 
     @property
     def cfa_options(self):
@@ -164,121 +94,46 @@ class CFADataStore(NetCDF4DataStore):
         self._substitutions = substitutions
         self._decode_cfa    = decode_cfa
 
-    @property
-    def decoded_cfa(self):
-        return self._decoded_cfa
-    
-    def has_decoded_cfa(self):
-        self._decoded_cfa = True
-
-    def open_variable(self, name: str, var, real_agg_dims):
+    def _acquire(self, needs_lock=True):
         """
-        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable or as a
-        CFA aggregated variable which requires additional decoding.
-
-        :param name:        (str) A named NetCDF4 variable.
-
-        :param var:         (obj) The NetCDF4.Variable object or a tuple with the contents
-                            ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that determines
-                            if the variable is a CFA or standard variable.
-
-        :param real_agg_dims:       (dict) Named fragment dimensions with their corresponding sizes in 
-                                    array space.
-
-        :returns:       The variable object opened as either a standard store variable or CFA aggregated variable.
+        Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)
         """
-        if type(var) == tuple:
-            if var[1] and self.decode_cfa:
-                variable = self.open_cfa_variable(name, var[0], real_agg_dims)
-            else:
-                variable = self.open_store_variable(name, var[0])
+        with self._manager.acquire_context(needs_lock) as root:
+            ds = CFAGroupWrapper.open(root, self._group, self._mode)
+
+        self.conventions = ds.Conventions
+
+        return ds
+
+    def _decode_feature_data(self, feature_data, readd={}):
+        """
+        Decode the value of an object which is expected to be of the form of a 
+        ``feature: variable`` blank-separated element list.
+        """
+        parts = re.split(': | ',feature_data)
+
+        # Anything that uses a ':' needs to be readded after the previous step.
+        for k, v in readd:
+            for p in parts:
+                p.replace(k,v)
+
+        return {k: v for k, v in zip(parts[0::2], parts[1::2])}
+
+    def _check_applied_conventions(self, agg_data):
+        if 'CFA-0.6.2' in self.conventions:
+            required = ('shape', 'location', 'address')
         else:
-            variable = self.open_store_variable(name, var)
-        return variable
+            required = ('location', 'file', 'format')
 
-    def open_cfa_variable(self, name: str, var, real_agg_dims):
-        """
-        Open a CFA Aggregated variable with the correct parameters to create an Xarray ``Variable`` instance.
+        for feature in required:
+            if feature not in agg_data:
+                raise ValueError(
+                    f'CFA-netCDF file is not compliant with {self.conventions} '
+                    f'Required aggregated data features: "{required}", '
+                    f'Received "{tuple(agg_data.keys())}"'
+                )
 
-        :param name:        (str) A named NetCDF4 variable.
-
-        :param var:         (obj) The NetCDF4.Variable object or a tuple with the contents
-                            ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that determines
-                            if the variable is a CFA or standard variable.
-
-        :param real_agg_dims:       (dict) Named fragment dimensions with their corresponding sizes in 
-                                    array space.
-
-        :returns:           An xarray ``Variable`` instance constructed from the attributes provided here, and
-                            data provided by a ``FragmentArrayWrapper`` which is indexed by Xarray's ``LazilyIndexedArray`` class.
-        """
-
-        ## Array Metadata
-        dimensions  = tuple(real_agg_dims.keys())
-        ndim        = len(dimensions)
-        array_shape = tuple(real_agg_dims.values())
-
-        if hasattr(var, 'units'):
-            units = getattr(var, 'units')
-        else:
-            units = ''
-
-        ## Get non-aggregated attributes.
-        attributes = {}
-        for k in var.ncattrs():
-            if 'aggregated' not in k:
-                attributes[k] = var.getncattr(k) 
-
-        ## Array-like object 
-        data = indexing.LazilyIndexedArray(
-            FragmentArrayWrapper(
-                self._fragment_array_shape,
-                self._fragment_info,
-                ndim=ndim,
-                shape=array_shape,
-                units=units,
-                dtype=var.dtype,
-                cfa_options=self.cfa_options,
-                active_options=self.active_options,
-            ))
-            
-        encoding = {}
-        if isinstance(var.datatype, netCDF4.EnumType):
-            encoding["dtype"] = np.dtype(
-                data.dtype,
-                metadata={
-                    "enum": var.datatype.enum_dict,
-                    "enum_name": var.datatype.name,
-                },
-            )
-        else:
-            encoding["dtype"] = var.dtype
-        _ensure_fill_value_valid(data, attributes)
-        # netCDF4 specific encoding; save _FillValue for later
-        filters = var.filters()
-        if filters is not None:
-            encoding.update(filters)
-        chunking = var.chunking()
-        if chunking is not None:
-            if chunking == "contiguous":
-                encoding["contiguous"] = True
-                encoding["chunksizes"] = None
-            else:
-                encoding["contiguous"] = False
-                encoding["chunksizes"] = tuple(chunking)
-                encoding["preferred_chunks"] = dict(zip(var.dimensions, chunking))
-        # TODO: figure out how to round-trip "endian-ness" without raising
-        # warnings from netCDF4
-        # encoding['endian'] = var.endian()
-        pop_to(attributes, encoding, "least_significant_digit")
-        # save source so __repr__ can detect if it's local or not
-        encoding["source"] = self._filename
-        encoding["original_shape"] = data.shape
-
-        v = Variable(dimensions, data, attributes, encoding)
-        return v
-
-    def _perform_decoding(self, shape, address, location, value=None, cformat=None, substitutions=None, shape_label='shape'):
+    def _perform_decoding(self, shape, address, location, array_shape, value=None, cformat='', substitutions=None):
         """
         Private method for performing the decoding of the standard ``fragment array variables``. Any 
         convention version-specific adjustments should be made prior to decoding with this function, namely
@@ -308,99 +163,265 @@ class CFADataStore(NetCDF4DataStore):
         
         fragment_info = {}
 
-        # Shape of the `shape` fragment array variable.
-        ndim = shape.shape[0]
-
         # Extract non-padded fragment sizes per dimension.
         fragment_size_per_dim = [i.compressed().tolist() for i in shape]
 
         # Derive the total shape of the fragment array in all fragmented dimensions.
-        fragment_array_shape    = [sum(fsize) for fsize in fragment_size_per_dim]
+        fragment_space    = [len(fsize) for fsize in fragment_size_per_dim]
 
         # Obtain the positions of each fragment in index space.
         fragment_positions = get_fragment_positions(fragment_size_per_dim)
 
-        # Obtain the corresponding shape of each indexed fragment.
-        fragment_shapes    = get_fragment_shapes(fragment_size_per_dim)
+        global_extent, extent, shapes = get_fragment_extents(fragment_size_per_dim, array_shape)
 
         if value is not None:
             # --------------------------------------------------------
             # This fragment contains a constant value, not file
             # locations.
             # --------------------------------------------------------
-            fragment_array_shape = value.shape
+            fragment_space = value.shape
             fragment_info = {
                 frag_pos: {
-                    "shape": frag_shape,
+                    "shape": shapes[frag_pos],
                     "fill_value": value[frag_pos].item(),
+                    "global_extent": global_extent[frag_pos],
+                    "extent": extent[frag_pos],
                     "format": "full",
                 }
-                for frag_pos, frag_shape in zip(fragment_positions, fragment_shapes)
+                for frag_pos in fragment_positions
             }
-        else:
 
-            # Old way of getting rid of a single non-fragmented dimension tagged on at the end?
-            """
-            extra_dimension = file.ndim > ndim
-            if extra_dimension:
-                # There is an extra non-fragment dimension
-                fragment_shape = file.shape[:-1]
-            else:
-                fragment_shape = file.shape
-            """
-            constructor_shape = shape.shape #?
+            return fragment_info, fragment_space
 
-            if not address.ndim: # Scalar address
-                addr    = address.getValue()
-                adtype  = np.array(addr).dtype
-                address = np.full(constructor_shape, addr, dtype=adtype)
+        constructor_shape = location.shape
 
-            if cformat:
-                if not cformat.ndim: #
-                    cft = cformat.getValue()
-                    npdtype = np.array(cft).dtype
-                    cformat = np.full(constructor_shape, cft, dtype=npdtype)
+        if not address.ndim: # Scalar address
+            addr    = address.getValue()
+            adtype  = np.array(addr).dtype
+            address = np.full(constructor_shape, addr, dtype=adtype)
 
-            for frag_pos, frag_shape in zip(fragment_positions, fragment_shapes):
-                fragment_info[frag_pos] = {
-                    "shape"    : frag_shape,
-                    "location" : location[frag_pos], # Not as easy as this to index the location/address/cformats in their present shapes.
-                    "address"  : address[frag_pos]
-                }
-                if cformat:
-                    fragment_info[frag_pos]["format"] = cformat[frag_pos]
+        if cformat != '':
+            if not cformat.ndim:
+                cft = cformat.getValue()
+                npdtype = np.array(cft).dtype
+                cformat = np.full(constructor_shape, cft, dtype=npdtype)
 
-            # Apply string substitutions to the fragment filenames
-            if substitutions:
-                for value in fragment_info.values():
-                    for base, sub in substitutions.items():
-                        value["location"] = value["location"].replace(base, sub)
+        for frag_pos in fragment_positions:
 
-        self._fragment_info = fragment_info
-        self._fragment_array_shape = fragment_array_shape
-        self.has_decoded_cfa()
+            fragment_info[frag_pos] = {
+                "shape"    : shapes[frag_pos],
+                "location" : location[frag_pos],
+                "address"  : address[frag_pos],
+                "extent"   : extent[frag_pos],
+                "global_extent": global_extent[frag_pos]
+            }
+            if hasattr(cformat, 'shape'):
+                fragment_info[frag_pos]["format"] = cformat[frag_pos]
 
-    def perform_decoding(self):
+        # Apply string substitutions to the fragment filenames
+        if substitutions:
+            for value in fragment_info.values():
+                for base, sub in substitutions.items():
+                    value["location"] = value["location"].replace(base, sub)
+
+        return fragment_info, fragment_space
+
+    # Public class methods
+
+    def perform_decoding(self, array_shape, agg_data):
         """
         Public method ``perform_decoding`` involves extracting the aggregated information 
         parameters and assembling the required information for actual decoding.
         """
 
-        # Identify variable names from the aggregation variable in question, rather than relying on hardcoded values.
+        # If not raised an error in checking, we can continue.
+        self._check_applied_conventions(agg_data)
 
-        cformat = None
+        cformat = ''
+        value   = None
         try:
             if 'CFA-0.6.2' in self.conventions:
-                shape        = self.ds.variables['cfa_location']
-                location     = self.ds.variables['cfa_file']
-                cformat      = self.ds.variables['cfa_format']
+                shape        = self.ds.variables[agg_data['location']]
+                location     = self.ds.variables[agg_data['file']]
+                cformat      = self.ds.variables[agg_data['format']]
             else: # Default to CF-1.12
-                shape        = self.ds.variables['cfa_shape']
-                location     = self.ds.variables['cfa_location']
-            address      = self.ds.variables['cfa_address']
+                shape        = self.ds.variables[agg_data['shape']]
+                location     = self.ds.variables[agg_data['location']]
+                if 'value' in agg_data:
+                    value    = self.ds.variables[agg_data['value']]
+
+            address = self.ds.variables[agg_data['address']]
         except:
             raise ValueError(
-                f"Unable to locate CFA Decoding instructions with conventions: {self.conventions}"
+                'One or more aggregated data features specified could not be found in the data: '
+                f'"{tuple(agg_data.keys())}"'
+            )
+        
+        subs = {}
+        if hasattr(location, 'substitutions'):
+            subs = location.substitutions.replace('https://', 'https@//')
+            subs = self._decode_feature_data(subs, readd={'https://':'https@//'})
+
+        return self._perform_decoding(shape, address, location, array_shape, 
+                                      cformat=cformat, value=value, 
+                                      substitutions = xarray_subs | subs) # Combine with known defaults for using in xarray.
+
+    def get_variables(self):
+        """
+        Fetch the netCDF4.Dataset variables and perform some CFA decoding if necessary.
+
+        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which has flattened 
+        the group structure and allows fetching of variables and attributes from the whole group tree
+        from which a specific group may inherit.
+
+        :returns:       A ``FrozenDict`` Xarray object of the names of all variables, and methods to fetch those
+                        variables, depending on if those variables are standard NetCDF4 or CFA Aggregated variables.
+        """
+
+        if not self._decode_cfa:
+            return FrozenDict(
+                (k, self.open_variable(k, v)) for k, v in self.ds.variables.items()
             )
 
-        self._perform_decoding(shape, address, location, cformat=cformat, value=None, substitutions=xarray_subs)
+        # Determine CFA-aggregated variables
+        all_vars, real_vars, fragment_array_vars = {}, {}, {}
+
+        ## Ignore variables in the set of standardised terms.
+        for avar in self.ds.variables.keys():
+            cfa = False
+            ## CF-Compliant method of identifying aggregated variables.
+            if hasattr(self.ds.variables[avar], 'aggregated_dimensions'):
+                cfa = True
+
+                agg_data = self.ds.variables[avar].aggregated_data.split(' ')
+
+                for vname in agg_data:
+                    fragment_array_vars[vname.split(':')[1]] = 0
+                
+            all_vars[avar] = (self.ds.variables[avar], cfa)
+
+        # Ignore fragment array variables at this stage of decoding.
+        for var in all_vars.keys():
+            if var not in fragment_array_vars:
+                real_vars[var] = all_vars[var]
+
+
+        return FrozenDict(
+            (k, self.open_variable(k, v)) for k, v in real_vars.items()
+        )
+
+    def get_attrs(self):
+        """
+        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or ``CFAGroupWrapper`` in 
+        the case of using a group or nested group tree.
+        """
+        return FrozenDict((k, self.ds.getncattr(k)) for k in self.ds.ncattrs())
+
+    def open_variable(self, name: str, var):
+        """
+        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable or as a
+        CFA aggregated variable which requires additional decoding.
+
+        :param name:        (str) A named NetCDF4 variable.
+
+        :param var:         (obj) The NetCDF4.Variable object or a tuple with the contents
+                            ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that determines
+                            if the variable is a CFA or standard variable.
+
+        :returns:       The variable object opened as either a standard store variable or CFA aggregated variable.
+        """
+        if type(var) == tuple:
+            if var[1] and self._decode_cfa:
+                variable = self.open_cfa_variable(name, var[0])
+            else:
+                variable = self.open_store_variable(name, var[0])
+        else:
+            variable = self.open_store_variable(name, var)
+        return variable
+
+    def open_cfa_variable(self, name: str, var):
+        """
+        Open a CFA Aggregated variable with the correct parameters to create an Xarray ``Variable`` instance.
+
+        :param name:        (str) A named NetCDF4 variable.
+
+        :param var:         (obj) The NetCDF4.Variable object or a tuple with the contents
+                            ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that determines
+                            if the variable is a CFA or standard variable.
+
+        :returns:           An xarray ``Variable`` instance constructed from the attributes provided here, and
+                            data provided by a ``FragmentArrayWrapper`` which is indexed by Xarray's ``LazilyIndexedArray`` class.
+        """
+
+        real_dims = {d: self.ds.dimensions[d].size for d in var.aggregated_dimensions.split(' ')}
+        agg_data  = self._decode_feature_data(var.aggregated_data)
+
+        ## Array Metadata
+        dimensions  = tuple(real_dims.keys())
+        array_shape = tuple(real_dims.values())
+
+        fragment_info, fragment_space = self.perform_decoding(array_shape, agg_data)
+
+        units = ''
+        if hasattr(var, 'units'):
+            units = getattr(var, 'units')
+        if hasattr(var, 'aggregated_units'):
+            units = getattr(var, 'aggregated_units')
+
+        ## Get non-aggregated attributes.
+        attributes = {}
+        for k in var.ncattrs():
+            if 'aggregated' not in k:
+                attributes[k] = var.getncattr(k) 
+
+        ## Array-like object 
+        data = indexing.LazilyIndexedArray(
+            FragmentArrayWrapper(
+                fragment_info,
+                fragment_space,
+                shape=array_shape,
+                units=units,
+                dtype=var.dtype,
+                cfa_options=self.cfa_options,
+                active_options=self.active_options,
+                dask_chunks=self._active_chunks,
+                dims=dimensions,
+            ))
+            
+        encoding = {}
+        if isinstance(var.datatype, netCDF4.EnumType):
+            encoding["dtype"] = np.dtype(
+                data.dtype,
+                metadata={
+                    "enum": var.datatype.enum_dict,
+                    "enum_name": var.datatype.name,
+                },
+            )
+        else:
+            encoding["dtype"] = var.dtype
+
+        if data.dtype.kind == "S" and "_FillValue" in attributes:
+            attributes["_FillValue"] = np.bytes_(attributes["_FillValue"])
+
+        filters = var.filters()
+        if filters is not None:
+            encoding.update(filters)
+        chunking = var.chunking()
+        if chunking is not None:
+            if chunking == "contiguous":
+                encoding["contiguous"] = True
+                encoding["chunksizes"] = None
+            else:
+                encoding["contiguous"] = False
+                encoding["chunksizes"] = tuple(chunking)
+                encoding["preferred_chunks"] = dict(zip(var.dimensions, chunking))
+        # TODO: figure out how to round-trip "endian-ness" without raising
+        # warnings from netCDF4
+        # encoding['endian'] = var.endian()
+        pop_to(attributes, encoding, "least_significant_digit")
+        # save source so __repr__ can detect if it's local or not
+        encoding["source"] = self._filename
+        encoding["original_shape"] = data.shape
+
+        v = Variable(dimensions, data, attributes, encoding)
+        return v

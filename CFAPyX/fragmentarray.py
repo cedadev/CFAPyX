@@ -425,15 +425,17 @@ class CFAChunk(ChunkWrapper):
         Create a new instance of this class from its own methods and attributes, and apply
         a new extent to the copy if required.
         """
+        kwargs = self.get_kwargs()
+        if extent:
+            kwargs['extent'] = self._combine_slices(extent)
+
         new = CFAChunk(
             self.filename,
             self.address,
             aggregated_units=self.aggregated_units,
             aggregated_calendar=self.aggregated_calendar,
-            **super().get_kwargs()
+            **kwargs
         )
-        if extent:
-            return new[extent]
         return new
 
     def _post_process_data(self, data):

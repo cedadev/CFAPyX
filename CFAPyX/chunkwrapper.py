@@ -35,6 +35,15 @@ class ArrayLike:
     @property
     def ndim(self):
         return len(self.shape)
+    
+    def copy(self, **kwargs):
+        raise NotImplementedError
+    
+    def get_kwargs(self):
+        return {
+            'units':self.units,
+            'dtype':self.dtype
+        }
 
 class SuperLazyArrayLike(ArrayLike):
 
@@ -91,11 +100,24 @@ class SuperLazyArrayLike(ArrayLike):
         This is considered ``SuperLazy`` because Dask already loads dask subarrays lazily, but a further lazy
         approach is required when applying Active methods.
         """
-        self._extent = self._combine_slices(selection)
-        return self
+        newextent = self._combine_slices(selection)
+        return self.copy(newextent)
     
     def get_extent(self):
         return self._extent
+
+    def copy(self, newextent=None):
+        """
+        Each chunk class must overwrite this class to get the best performance with multiple slicing operations.
+        """
+        kwargs = self.get_kwargs()
+        if newextent:
+            kwargs['extent'] = self._combine_slices(newextent)
+
+        new_instance = SuperLazyArrayLike(
+            **kwargs
+            )
+        return new_instance
 
     @property
     def shape(self):
@@ -179,9 +201,24 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
             'units': self.units,
             'shape': self.shape,
             'position': self.position,
-            'extent': self.extent,
+            'extent': self._extent,
             'format': self.format
         }
+    
+    def copy(self, newextent=None):
+        """
+        Each chunk class must overwrite this class to get the best performance with multiple slicing operations.
+        """
+        kwargs = self.get_kwargs()
+        if newextent:
+            kwargs['extent'] = self._combine_slices(newextent)
+
+        new_instance = SuperLazyArrayLike(
+            self.filename,
+            self.address,
+            **kwargs,
+            )
+        return new_instance
 
     def _post_process_data(self, data):
         """

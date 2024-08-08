@@ -134,7 +134,7 @@ class FragmentArrayWrapper(ArrayLike):
 
             fragments[pos] = fragment
         
-        if not self.active_chunks:
+        if not self._active_chunks:
             dsk = self._chunk_by_fragment(fragments)
 
             global_extent = {k: fragment_info[k]["global_extent"] for k in fragment_info.keys()}

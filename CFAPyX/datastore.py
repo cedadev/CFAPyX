@@ -120,9 +120,13 @@ class CFADataStore(NetCDF4DataStore):
         return {k: v for k, v in zip(parts[0::2], parts[1::2])}
 
     def _check_applied_conventions(self, agg_data):
-        if 'CFA-0.6.2' in self.conventions:
-            required = ('shape', 'location', 'address')
-        else:
+        """
+        Check that the aggregated data complies with the conventions specified in the
+        CFA-netCDF file
+        """
+
+        required = ('shape', 'location', 'address')
+        if 'CFA-0.6.2' in self.conventions.split(' '):
             required = ('location', 'file', 'format')
 
         for feature in required:
@@ -284,7 +288,9 @@ class CFADataStore(NetCDF4DataStore):
             )
 
         # Determine CFA-aggregated variables
-        all_vars, real_vars, fragment_array_vars = {}, {}, {}
+        all_vars, real_vars = {}, {}
+
+        fragment_array_vars = []
 
         ## Ignore variables in the set of standardised terms.
         for avar in self.ds.variables.keys():
@@ -296,7 +302,7 @@ class CFADataStore(NetCDF4DataStore):
                 agg_data = self.ds.variables[avar].aggregated_data.split(' ')
 
                 for vname in agg_data:
-                    fragment_array_vars[vname.split(':')[1]] = 0
+                    fragment_array_vars += re.split(': | ',vname)
                 
             all_vars[avar] = (self.ds.variables[avar], cfa)
 
@@ -384,8 +390,7 @@ class CFADataStore(NetCDF4DataStore):
                 dtype=var.dtype,
                 cfa_options=self.cfa_options,
                 active_options=self.active_options,
-                dask_chunks=self._active_chunks,
-                dims=dimensions,
+                named_dims=dimensions,
             ))
             
         encoding = {}
@@ -425,3 +430,4 @@ class CFADataStore(NetCDF4DataStore):
 
         v = Variable(dimensions, data, attributes, encoding)
         return v
+    

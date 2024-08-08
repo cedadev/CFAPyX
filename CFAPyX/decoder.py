@@ -150,12 +150,12 @@ def get_dask_chunks(
                 fsizes.append(fragment_size)
 
             fsizes_per_dim.append(tuple(fsizes))
+            fragmented_dim_indices.append(dim)
         else:
             # This aggregated dimension is spanned by exactly one
             # fragment. Store None, for now, in the expectation
             # that it will get overwritten.
             fsizes_per_dim.append(None)
-            fragmented_dim_indices.append(dim)
 
     ## Handle explicit shapes for the fragments.
 

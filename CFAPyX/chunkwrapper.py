@@ -268,7 +268,7 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
  
         filenames = self.filename
 
-        if type(filenames) == 'str':
+        if type(filenames) == str:
             filenames = [filenames]
 
         # Tidy code - never going to be many filenames

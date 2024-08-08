@@ -10,7 +10,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
 
-project = 'CFAPyX'
+project = 'CFAPyX Package'
 copyright = ('2022-2024, Centre of Environmental Data Analysis Developers,'
              'Scientific and Technical Facilities Council (STFC),'
              'UK Research and Innovation (UKRI). '
@@ -37,7 +37,7 @@ exclude_patterns = []
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
-html_logo = '_images/CFAPyX_nobg.png'
+html_logo = '_images/CFAPyX_long.png'
 html_favicon = '_images/CFAPyX.ico'
 html_a1 = '_images/ceda.png'
 html_a2 = '_images/ncas.png'

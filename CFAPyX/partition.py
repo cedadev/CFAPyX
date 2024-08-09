@@ -97,7 +97,7 @@ class SuperLazyArrayLike(ArrayLike):
     def __getitem__(self, selection):
         """
         SuperLazy behaviour supported by saving index information to be applied when fetching the array.
-        This is considered ``SuperLazy`` because Dask already loads dask subarrays lazily, but a further lazy
+        This is considered ``SuperLazy`` because Dask already loads dask chunks lazily, but a further lazy
         approach is required when applying Active methods.
         """
         newextent = self._combine_slices(selection)
@@ -136,7 +136,8 @@ class SuperLazyArrayLike(ArrayLike):
     def shape(self, value):
         self._shape = value
 
-class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
+class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
+
     description = "Wrapper class for individual chunk retrievals. May incorporate Active Storage routines as applicable methods called via Dask."
 
     def __init__(self,
@@ -156,7 +157,9 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
 
         :param filename:    (str) The path to the data file from which this fragment or chunk is 
                             derived, if known. Not used in this class other than to support a ``.copy`` mechanism of
-                            higher-level classes like ``CFAChunk``.
+                            higher-level classes like ``CFAPartition``.
+
+
          
         :param address:     (str) The variable name/address within the underlying data file which this class represents.
 
@@ -164,7 +167,9 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
 
         :param units:       (obj) The units of the values represented in this Array-like class.
 
-        :param shape:       (tuple) The shape of the array or subarray represented by this class.
+        :param shape:       (tuple) The shape of the partition represented by this class.
+
+
 
         :param position:    (tuple) The position in ``index space`` into which this chunk belongs, this could be
                             ``fragment space`` or ``chunk space`` if using Active chunks.
@@ -172,11 +177,11 @@ class ChunkWrapper(ActiveChunk, SuperLazyArrayLike):
         :param extent:      (tuple) Initial set of slices to apply to this chunk. Further slices may be applied which
                             are concatenated to the original slice defined here, if present. For fragments this will be
                             the extent of the whole array, but when using Active chunks the fragment copies may only
-                            cover a subsection of the subarray.
+                            cover a partition of the fragment.
 
         :param format:      (str) The format type of the underlying data file from which this fragment or chunk is 
                             derived, if known. Not used in this class other than to support a ``.copy`` mechanism of
-                            higher-level classes like ``CFAChunk``.
+                            higher-level classes like ``CFAPartition``.
         """
         
         self.__array_function__ = self.__array__

@@ -3,7 +3,7 @@ __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 from CFAPyX.decoder import get_dask_chunks
-from CFAPyX.partition import ChunkWrapper, ArrayLike
+from CFAPyX.partition import ArrayPartition, ArrayLike
 
 import dask.array as da
 from dask.array.core import getter
@@ -19,9 +19,9 @@ class FragmentArrayWrapper(ArrayLike):
     """
     FragmentArrayWrapper behaves like an Array that can be indexed or references to 
     return a Dask-like array object. This class is essentially a constructor for the 
-    subarrays that feed into the returned Dask-like array into Xarray.
+    partitions that feed into the returned Dask-like array into Xarray.
     """
-
+    
     description = 'Wrapper-class for the array of fragment objects'
 
     def __init__(
@@ -125,10 +125,11 @@ class FragmentArrayWrapper(ArrayLike):
             else:
                 filename   = self.fragment_info[pos]['location']
                 address    = self.fragment_info[pos]['address']
+                
                 # Wrong extent type for both scenarios but keep as a different label for 
                 # dask chunking.
 
-            fragment = CFAChunk(
+            fragment = CFAPartition(
                 filename,
                 address,
                 dtype=dtype,
@@ -182,6 +183,7 @@ class FragmentArrayWrapper(ArrayLike):
         Relates private option variables to the ``active_options`` parameter of the 
         backend.
         """
+        
         return {
             'use_active': self._use_active,
             'active_chunks': self._active_chunks
@@ -200,6 +202,7 @@ class FragmentArrayWrapper(ArrayLike):
         Sets the private variables referred by the ``active_options`` parameter to the backend. 
         Ignores additional kwargs.
         """
+        
         self._use_active = use_active
         self._active_chunks = active_chunks
 
@@ -247,7 +250,7 @@ class FragmentArrayWrapper(ArrayLike):
         Assemble the base ``dsk`` task dependency graph which includes the fragment objects 
         plus the method to index each object (with locking).
 
-        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with 
+        :param fragments:   (dict) The set of Fragment objects (CFAPartition) with 
             their positions in ``fragment space``.
 
         :returns:       A task dependency graph with all the fragments included to use 
@@ -384,7 +387,6 @@ class FragmentArrayWrapper(ArrayLike):
 
             # Copy the fragment with the correct extent for each chunk covered.
             for c in chunk_list:
-
                 # For each fragment, the subdivisions caused by chunking create an irregular 
                 # array of sliced fragments which comprises the whole chunk. Each of these 
                 # sliced fragments needs a coordinate relative to the chunk it is being
@@ -410,9 +412,10 @@ class FragmentArrayWrapper(ArrayLike):
 
         for chunk in mfwrapper.keys():
             fragments = mfwrapper[chunk]
-            mfwrap = MultiFragmentWrapper(fragments)
+            
+            mfwrap = CFAChunkWrapper(fragments)
 
-            # f_indices is the initial_extent for the ChunkWrapper
+            # f_indices is the initial_extent for the ArrayPartition
 
             mf_identifier = f"{mfwrap.__class__.__name__}-{tokenize(mfwrap)}"
             dsk[mf_identifier] = mfwrap
@@ -425,13 +428,14 @@ class FragmentArrayWrapper(ArrayLike):
             )
         return dsk
 
-class CFAChunk(ChunkWrapper):
+class CFAPartition(ArrayPartition):
     """
-    Wrapper object for a CFA Fragment, extends the basic ChunkWrapper with CFA-specific 
+    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
     methods.
     """
+  
+    description = 'Wrapper object for a CFA Partition (Fragment or Chunk)'
 
-    description = 'Wrapper object for a CFA Fragment'
 
     def __init__(self,
                  filename,
@@ -464,11 +468,12 @@ class CFAChunk(ChunkWrapper):
         Create a new instance of this class from its own methods and attributes, and 
         apply a new extent to the copy if required.
         """
+        
         kwargs = self.get_kwargs()
         if extent:
             kwargs['extent'] = self._combine_slices(extent)
 
-        new = CFAChunk(
+        new = CFAPartition(
             self.filename,
             self.address,
             aggregated_units=self.aggregated_units,
@@ -481,7 +486,8 @@ class CFAChunk(ChunkWrapper):
         """Correct units/data conversions - if necessary at this stage"""
         return data
 
-class MultiFragmentWrapper:
+
+class CFAChunkWrapper(ArrayLike):
     description = 'Brand new array class for handling any-size dask chunks.'
 
     """
@@ -489,9 +495,9 @@ class MultiFragmentWrapper:
      - Fragments are initialised with a position in index space. (Fragment Space)
      - Chunk position array initialised with a different index space. (Compute Space)
      - For each fragment, identify which chunk positions it falls into and add that 
-       `CFAChunk` to a dict.
+       `CFAPartition` to a dict.
      - The dict contains Chunk coordinates (compute space) as keys, with the values being 
-       a list of pairs of CFAChunk objects that are already sliced and the array shapes 
+       a list of pairs of CFAPartition objects that are already sliced and the array shapes 
        those sliced segments fit into.
     """
 
@@ -506,8 +512,7 @@ class MultiFragmentWrapper:
         dsk = {}
         for fragment_position in self.fragments.keys():
             fragment = self.fragments[fragment_position]
-
-            # f_indices is the initial_extent for the ChunkWrapper
+            # f_indices is the initial_extent for the ArrayPartition
 
             f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[f_identifier] = fragment

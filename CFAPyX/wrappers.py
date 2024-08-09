@@ -3,7 +3,7 @@ __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 from CFAPyX.decoder import get_dask_chunks
-from CFAPyX.chunkwrapper import ChunkWrapper, ArrayLike
+from CFAPyX.partition import ChunkWrapper, ArrayLike
 
 import dask.array as da
 from dask.array.core import getter
@@ -17,11 +17,12 @@ import numpy as np
 
 class FragmentArrayWrapper(ArrayLike):
     """
-    FragmentArrayWrapper behaves like an Array that can be indexed or references to return a Dask-like array object. This class
-    is essentially a constructor for the subarrays that feed into the returned Dask-like array into Xarray.
+    FragmentArrayWrapper behaves like an Array that can be indexed or references to 
+    return a Dask-like array object. This class is essentially a constructor for the 
+    subarrays that feed into the returned Dask-like array into Xarray.
     """
 
-    description = 'Wrapper class for the Array-like behaviour required by Xarray for the array of fragments.'
+    description = 'Wrapper-class for the array of fragment objects'
 
     def __init__(
             self, 
@@ -35,18 +36,22 @@ class FragmentArrayWrapper(ArrayLike):
             named_dims=None
         ):
         """
-        :param fragment_info:       (dict) The information relating to each fragment with the fragment coordinates
-                                    in ``fragment space`` as the key. Each fragment is described by the following:
-                                     - ``shape`` - The shape of the fragment in ``array space``.
-                                     - ``location`` - The file from which this fragment originates.
-                                     - ``address`` - The variable and group name relating to this variable.
-                                     - ``extent`` - The slice object to apply to the fragment on retrieval (usually get
-                                       the whole array)
-                                     - ``global_extent`` - The slice object that equates to a particular fragment out
-                                       of the whole array (in ``array space``).
+        Initialisation method for the FragmentArrayWrapper class
 
-        :param fragment_space:      (tuple) The coordinate system that refers to individual fragments. Each coordinate 
-                                    eg. i, j, k refers to the number of fragments in each of the associated dimensions.
+        :param fragment_info:   (dict) The information relating to each fragment with the 
+            fragment coordinates in ``fragment space`` as the key. Each 
+            fragment is described by the following:
+            - ``shape`` - The shape of the fragment in ``array space``.
+            - ``location`` - The file from which this fragment originates.
+            - ``address`` - The variable and group name relating to this variable.
+            - ``extent`` - The slice object to apply to the fragment on retrieval (usually get
+            the whole array)
+            - ``global_extent`` - The slice object that equates to a particular fragment out
+            of the whole array (in ``array space``).
+                        
+        :param fragment_space:      (tuple) The coordinate system that refers to individual 
+                                    fragments. Each coordinate eg. i, j, k refers to the 
+                                    number of fragments in each of the associated dimensions.
 
         :param shape:               (tuple) The total shape of the array in ``array space``
 
@@ -59,6 +64,8 @@ class FragmentArrayWrapper(ArrayLike):
         :param active_options:  (dict) The set of options defining Active behaviour.
 
         :param named_dims:  (list) The set of dimension names that apply to this Array object.
+
+        :returns: None
         """
 
         self.fragment_info    = fragment_info
@@ -82,9 +89,9 @@ class FragmentArrayWrapper(ArrayLike):
     
     def __array__(self):
         """
-        Non-lazy array construction, this will occur as soon as the instance is ``indexed`` or any other ``array`` 
-        behaviour is attempted. Construction of a Dask-like array occurs here based on the decoded fragment info
-        and any other specified settings.
+        Non-lazy array construction, this will occur as soon as the instance is ``indexed`` 
+        or any other ``array`` behaviour is attempted. Construction of a Dask-like array 
+        occurs here based on the decoded fragment info and any other specified settings.
         """
 
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
@@ -118,7 +125,8 @@ class FragmentArrayWrapper(ArrayLike):
             else:
                 filename   = self.fragment_info[pos]['location']
                 address    = self.fragment_info[pos]['address']
-                # Wrong extent type for both scenarios but keep as a different label for dask chunking.
+                # Wrong extent type for both scenarios but keep as a different label for 
+                # dask chunking.
 
             fragment = CFAChunk(
                 filename,
@@ -137,7 +145,10 @@ class FragmentArrayWrapper(ArrayLike):
         if not self._active_chunks:
             dsk = self._chunk_by_fragment(fragments)
 
-            global_extent = {k: fragment_info[k]["global_extent"] for k in fragment_info.keys()}
+            global_extent = {
+                k: fragment_info[k]["global_extent"] for k in fragment_info.keys()
+            }
+
             dask_chunks = get_dask_chunks(
                 self.shape,
                 self.fragment_space,
@@ -158,7 +169,8 @@ class FragmentArrayWrapper(ArrayLike):
                 darr = DaskActiveArray(dsk, array_name[0], chunks=dask_chunks, dtype=dtype)
             except ImportError:
                 raise ImportError(
-                    '"DaskActiveArray" from XarrayActive failed to import - please ensure you have the XarrayActive package installed.'
+                    '"DaskActiveArray" from XarrayActive failed to import - please ensure '
+                    'you have the XarrayActive package installed.'
                 )
         else:
             darr = da.Array(dsk, array_name[0], chunks=dask_chunks, dtype=dtype)
@@ -166,7 +178,10 @@ class FragmentArrayWrapper(ArrayLike):
     
     @property
     def active_options(self):
-        """Relates private option variables to the ``active_options`` parameter of the backend."""
+        """
+        Relates private option variables to the ``active_options`` parameter of the 
+        backend.
+        """
         return {
             'use_active': self._use_active,
             'active_chunks': self._active_chunks
@@ -182,15 +197,18 @@ class FragmentArrayWrapper(ArrayLike):
             active_chunks=None, 
             **kwargs):
         """
-        Sets the private variables referred by the ``active_options`` parameter to the backend. Ignores
-        additional kwargs.
+        Sets the private variables referred by the ``active_options`` parameter to the backend. 
+        Ignores additional kwargs.
         """
         self._use_active = use_active
         self._active_chunks = active_chunks
 
     @property
     def cfa_options(self):
-        """Relates private option variables to the ``cfa_options`` parameter of the backend."""
+        """
+        Relates private option variables to the ``cfa_options`` parameter of the backend.
+        """
+
         return {
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa
@@ -206,8 +224,8 @@ class FragmentArrayWrapper(ArrayLike):
             decode_cfa=None,
             **kwargs):
         """
-        Sets the private variables referred by the ``cfa_options`` parameter to the backend. Ignores
-        additional kwargs.
+        Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
+        Ignores additional kwargs.
         """
         
         # Don't need this here
@@ -226,13 +244,14 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _chunk_by_fragment(self, fragments):
         """
-        Assemble the base ``dsk`` task dependency graph which includes the fragment objects plus the
-        method to index each object (with locking).
+        Assemble the base ``dsk`` task dependency graph which includes the fragment objects 
+        plus the method to index each object (with locking).
 
-        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with their positions
-                            in ``fragment space``.
+        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with 
+            their positions in ``fragment space``.
 
-        :returns:       A task dependency graph with all the fragments included to use when constructing the dask array.
+        :returns:       A task dependency graph with all the fragments included to use 
+            when constructing the dask array.
         """
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
 
@@ -243,7 +262,8 @@ class FragmentArrayWrapper(ArrayLike):
             f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[f_identifier] = fragment
             dsk[array_name + fragment_position] = (
-                getter, # Method of retrieving the 'data' from each fragment - but each fragment is Array-like.
+                getter, 
+                # Method of retrieving the 'data' from each fragment - but each fragment is Array-like.
                 f_identifier,
                 fragment.get_extent(),
                 False,
@@ -253,16 +273,19 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _derive_chunk_space(self):
         """
-        Derive the chunk space and shape given the user-provided ``active_chunks`` option. Chunk space is the
-        number of chunks in each dimension which presents like an array shape, but is referred to as a ``space``
-        because it has a novel coordinate system. Chunk shape is the shape of each chunk in ``array space``, which must be regular
+        Derive the chunk space and shape given the user-provided ``active_chunks`` option. 
+        Chunk space is the number of chunks in each dimension which presents like an array 
+        shape, but is referred to as a ``space`` because it has a novel coordinate system. 
+        Chunk shape is the shape of each chunk in ``array space``, which must be regular
         even if lower-level objects used to define the chunk are not.
 
         Example: 
-            50 chunks across the time dimension of 1000 values which is represented by 8 fragments. Chunk space representation is
-            (50,) and the chunk shape is (20,). Each chunk is served by at most 2 fragments, where each chunk is described using a 
-            MultiFragmentWrapper object which appropriately sets the extents of each Fragment object. The Fragments cover 125 values
-            each:
+            50 chunks across the time dimension of 1000 values which is represented by 8 
+            fragments. Chunk space representation is (50,) and the chunk shape is (20,). 
+            
+            Each chunk is served by at most 2 fragments, where each chunk is described using a 
+            MultiFragmentWrapper object which appropriately sets the extents of each Fragment 
+            object. The Fragments cover 125 values each:
         
             Chunk 0 served by Fragment 0 slice(0,20) 
             Chunk 1 served by Fragment 0 slice(20,40)
@@ -297,19 +320,23 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _chunk_oversample(self, fragments):
         """
-        Assemble the base ``dsk`` task dependency graph which includes the chunk objects plus the
-        method to index each chunk object (with locking). In this case, each chunk object is a MultiFragmentWrapper
-        which serves another dask array used to combine the individual fragment arrays contributing to each chunk.
+        Assemble the base ``dsk`` task dependency graph which includes the chunk 
+        objects plus the method to index each chunk object (with locking). In this 
+        case, each chunk object is a MultiFragmentWrapper which serves another dask array 
+        used to combine the individual fragment arrays contributing to each chunk.
 
-        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with their positions
-                            in ``fragment space``. These are copied into MultiFragmentWrappers with the correctly applied
-                            extents such that all the chunks define the scope of the total array.
+        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with 
+            their positions in ``fragment space``. These are copied into MultiFragmentWrappers 
+            with the correctly applied extents such that all the chunks define the scope of the 
+            total array.
 
         Terminology Notes:
 
-            ``cs`` and ``fs`` represent the chunk_shape and fragment_shape respectively, with short names to make the code simpler to read.
+            ``cs`` and ``fs`` represent the chunk_shape and fragment_shape respectively, 
+            with short names to make the code simpler to read.
 
-        :returns:       A task dependency graph with all the chunks included to use when constructing the dask array.
+        :returns:       A task dependency graph with all the chunks included to use when 
+            constructing the dask array.
         """
 
         chunk_space, cs = self._derive_chunk_space()
@@ -337,7 +364,8 @@ class FragmentArrayWrapper(ArrayLike):
                 )
 
             # Chunk coverage extent 
-            # - Two chunk-space coordinates defining the chunks that are covered by this fragment.
+            # - Two chunk-space coordinates defining the chunks that are covered by this 
+            #   fragment.
             cce = [tuple(initial), tuple(final)]
 
             # Generate the list of chunks covered by this fragment.
@@ -357,9 +385,10 @@ class FragmentArrayWrapper(ArrayLike):
             # Copy the fragment with the correct extent for each chunk covered.
             for c in chunk_list:
 
-                # For each fragment, the subdivisions caused by chunking create an irregular array 
-                # of sliced fragments which comprises the whole chunk. Each of these sliced fragment 
-                # needs a coordinate relative to ...
+                # For each fragment, the subdivisions caused by chunking create an irregular 
+                # array of sliced fragments which comprises the whole chunk. Each of these 
+                # sliced fragments needs a coordinate relative to the chunk it is being
+                # assigned to.
                 relative_fragment = tuple([c[i] - chunk_list[0][i] for i in range(len(c))])
 
                 chunk = [
@@ -397,8 +426,12 @@ class FragmentArrayWrapper(ArrayLike):
         return dsk
 
 class CFAChunk(ChunkWrapper):
+    """
+    Wrapper object for a CFA Fragment, extends the basic ChunkWrapper with CFA-specific 
+    methods.
+    """
 
-    description = 'Wrapper object for a CFA Fragment, extends the basic ChunkWrapper with CFA-specific methods.'
+    description = 'Wrapper object for a CFA Fragment'
 
     def __init__(self,
                  filename,
@@ -409,11 +442,17 @@ class CFAChunk(ChunkWrapper):
             ):
         
         """
-        Wrapper object for the 'array' section of a fragment. Contains some metadata to ensure the
-        correct fragment is selected, but generally just serves the fragment array to dask when required.
+        Wrapper object for the 'array' section of a fragment. Contains some metadata 
+        to ensure the correct fragment is selected, but generally just serves the 
+        fragment array to dask when required.
 
-        Parameters: extent - in the form of a list/tuple of slices for this fragment. Different from the 
-                             'location' parameter which states where the fragment fits into the total array.
+        :param filename:
+
+        :param address:
+
+        :param aggregated_units:        None
+
+        :param aggregated_calendar:     None
         """
 
         super().__init__(filename, address, **kwargs)
@@ -422,8 +461,8 @@ class CFAChunk(ChunkWrapper):
 
     def copy(self, extent=None):
         """
-        Create a new instance of this class from its own methods and attributes, and apply
-        a new extent to the copy if required.
+        Create a new instance of this class from its own methods and attributes, and 
+        apply a new extent to the copy if required.
         """
         kwargs = self.get_kwargs()
         if extent:
@@ -449,9 +488,11 @@ class MultiFragmentWrapper:
     Requirements:
      - Fragments are initialised with a position in index space. (Fragment Space)
      - Chunk position array initialised with a different index space. (Compute Space)
-     - For each fragment, identify which chunk positions it falls into and add that `CFAChunk` to a dict.
-     - The dict contains Chunk coordinates (compute space) as keys, with the values being a list of pairs of 
-       CFAChunk objects that are already sliced and the array shapes those sliced segments fit into.
+     - For each fragment, identify which chunk positions it falls into and add that 
+       `CFAChunk` to a dict.
+     - The dict contains Chunk coordinates (compute space) as keys, with the values being 
+       a list of pairs of CFAChunk objects that are already sliced and the array shapes 
+       those sliced segments fit into.
     """
 
     def __init__(self, fragments):
@@ -493,8 +534,8 @@ def _overlap(chunk, chunk_size, fragment, fragment_size):
     
     :param fragment_size:   None
 
-    Chunk and Fragment need to have structure (2,N) where 2 signifies the start and end of each dimension
-    and N is the number of dimensions.
+    Chunk and Fragment need to have structure (2,N) where 2 signifies the start and end 
+    of each dimension and N is the number of dimensions.
     """
 
     extent = []

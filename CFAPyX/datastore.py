@@ -20,7 +20,7 @@ import numpy as np
 import os
 import re
 
-from CFAPyX.fragmentarray import FragmentArrayWrapper
+from CFAPyX.wrappers import FragmentArrayWrapper
 from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
 
 from CFAPyX.group import CFAGroupWrapper

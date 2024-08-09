@@ -22,11 +22,12 @@ Current support is limited to local netCDF4 formatted files, but future addition
 
    Inspiration for CFA <inspiration>
    Xarray Engine Overview <overview>
+   Fragments in CFA <fragments>
    CFA Backend Entrypoint <backendentrypoint>
    CFA DataStore <datastore>
    CFA Fragment Array <fragmentarray>
+   Fragment/Chunk Objects <chunkwrapper>
    NetCDF group handling <groups>
-   Utilities <utils>
    
 Indices and Tables
 ==================

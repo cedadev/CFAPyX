@@ -137,6 +137,7 @@ class SuperLazyArrayLike(ArrayLike):
         self._shape = value
 
 class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
+
     description = "Wrapper class for individual chunk retrievals. May incorporate Active Storage routines as applicable methods called via Dask."
 
     def __init__(self,
@@ -157,6 +158,8 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         :param filename:    (str) The path to the data file from which this fragment or chunk is 
                             derived, if known. Not used in this class other than to support a ``.copy`` mechanism of
                             higher-level classes like ``CFAPartition``.
+
+
          
         :param address:     (str) The variable name/address within the underlying data file which this class represents.
 
@@ -165,6 +168,8 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         :param units:       (obj) The units of the values represented in this Array-like class.
 
         :param shape:       (tuple) The shape of the partition represented by this class.
+
+
 
         :param position:    (tuple) The position in ``index space`` into which this chunk belongs, this could be
                             ``fragment space`` or ``chunk space`` if using Active chunks.

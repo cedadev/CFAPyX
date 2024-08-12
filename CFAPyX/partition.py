@@ -18,6 +18,9 @@ except:
         pass
 
 class ArrayLike:
+    """
+    Container class for Array-like behaviour
+    """
     description = 'Container class for Array-Like behaviour'
 
     def __init__(self, shape, units=None, dtype=None):
@@ -30,34 +33,104 @@ class ArrayLike:
     # Shape-based properties (Lazy loading means this may change in some cases)
     @property
     def size(self):
+        """
+        Size property is derived from the current shape. In an ``ArrayLike`` 
+        instance the shape is fixed, but other classes may alter the shape
+        at runtime.
+        """
         return product(self.shape)
     
     @property
     def ndim(self):
+        """
+        ndim property is derived from the current shape. In an ``ArrayLike`` 
+        instance the shape is fixed, but other classes may alter the shape
+        at runtime.
+        """
         return len(self.shape)
     
     def copy(self, **kwargs):
-        raise NotImplementedError
+        """
+        Return a new basic ArrayLike instance. Ignores provided kwargs
+        this class does not require, but other inheritors may."""
+        return ArrayLike(
+            self.shape,
+            **self.get_kwargs()
+        )
     
     def get_kwargs(self):
+        """
+        Get the kwargs provided to this class initially - for creating a copy."""
         return {
             'units':self.units,
             'dtype':self.dtype
         }
 
 class SuperLazyArrayLike(ArrayLike):
+    """
+    Container class for SuperLazy Array-Like behaviour. ``SuperLazy`` behaviour is
+    defined as Lazy-Slicing behaviour for objects that are below the 'Dask Surface',
+    i.e for object that serve as Dask Chunks."""
 
     description = "Container class for SuperLazy Array-Like behaviour"
 
-    def __init__(self, shape, **kwargs):
+    def __init__(self, shape, named_dims=None, **kwargs):
+        """
+        Adds an ``extent`` variable derived from the initial shape,
+        this can be altered by performing slices, which are not applied 
+        'Super-Lazily' to the data.
+        """
 
         self._extent = [
             slice(0, i) for i in shape
         ]
 
+        self.named_dims = named_dims
+
         super().__init__(shape, **kwargs)
+ 
+    def __getitem__(self, selection):
+        """
+        SuperLazy behaviour supported by saving index information to be applied when fetching the array.
+        This is considered ``SuperLazy`` because Dask already loads dask chunks lazily, but a further lazy
+        approach is required when applying Active methods.
+        """
+        newextent = self._combine_slices(selection)
+        return self.copy(newextent)
+    
+    @property
+    def shape(self):
+        """
+        Apply the current ``extent`` slices to determine the current array shape,
+        given all current slicing operations. This replaces shape as a simple
+        attribute in ``ArrayLike``, on instantiation the ``_shape`` private attribute
+        is defined, and subsequent attempts to retrieve the ``shape`` will depend on
+        the current ``extent``.
+        """
+        current_shape = []
+        if not self._extent:
+            return self._shape
+        for d, e in enumerate(self._extent):
+            start = e.start or 0
+            stop  = e.stop or self.shape[d]
+            step  = e.step or 1
+            current_shape.append(int((stop - start)/step))
+        return tuple(current_shape)
+
+    @shape.setter
+    def shape(self, value):
+        self._shape = value
 
     def _combine_slices(self, newslice):
+        """
+        Combine existing ``extent`` attribute with a new set of slices.
+
+        :param newslice:        (tuple) A set of slices to apply to the data 
+            'Super-Lazily', i.e the slices will be combined with existing information
+            and applied later in the process.
+
+        :returns:   The combined set of slices.
+        """
 
         if len(newslice) != len(self.shape):
             if hasattr(self, 'active'):
@@ -66,6 +139,8 @@ class SuperLazyArrayLike(ArrayLike):
                 raise ValueError(
                     "Active chain broken - mean has already been accomplished."
                 )
+            
+            
             else:
                 self._array = np.array(self)[newslice]
                 return None
@@ -93,22 +168,16 @@ class SuperLazyArrayLike(ArrayLike):
             for dim in range(len(newslice)):
                 extent[dim] = combine_sliced_dim(extent[dim], newslice[dim], dim)
             return extent
-    
-    def __getitem__(self, selection):
-        """
-        SuperLazy behaviour supported by saving index information to be applied when fetching the array.
-        This is considered ``SuperLazy`` because Dask already loads dask chunks lazily, but a further lazy
-        approach is required when applying Active methods.
-        """
-        newextent = self._combine_slices(selection)
-        return self.copy(newextent)
-    
+   
     def get_extent(self):
         return self._extent
 
     def copy(self, newextent=None):
         """
-        Each chunk class must overwrite this class to get the best performance with multiple slicing operations.
+        Create a new instance of this class with all attributes of the current instance, but
+        with a new initial extent made by combining the current instance extent with the ``newextent``.
+        Each ArrayLike class must overwrite this class to get the best performance with multiple 
+        slicing operations.
         """
         kwargs = self.get_kwargs()
         if newextent:
@@ -119,36 +188,21 @@ class SuperLazyArrayLike(ArrayLike):
             )
         return new_instance
 
-    @property
-    def shape(self):
-        # Apply extent to shape.
-        current_shape = []
-        if not self._extent:
-            return self._shape
-        for d, e in enumerate(self._extent):
-            start = e.start or 0
-            stop  = e.stop or self.shape[d]
-            step  = e.step or 1
-            current_shape.append(int((stop - start)/step))
-        return tuple(current_shape)
-
-    @shape.setter
-    def shape(self, value):
-        self._shape = value
-
 class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
+    """
+    Complete Array-like object with all proper methods for data retrieval.
+    May include methods from ``XarrayActive.ActiveChunk`` if installed."""
 
-    description = "Wrapper class for individual chunk retrievals. May incorporate Active Storage routines as applicable methods called via Dask."
+    description = "Complete Array-like object with all proper methods for data retrieval."
 
     def __init__(self,
                  filename,
                  address,
-                 dtype=None,
-                 units=None,
                  shape=None,
                  position=None,
                  extent=None,
                  format=None,
+                 **kwargs
             ):
         
         """
@@ -195,43 +249,7 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         self._extent  = extent
         self._lock    = SerializableLock()
 
-        super().__init__(shape, dtype=dtype, units=units)
-
-    def get_kwargs(self):
-        """
-        Return all the initial kwargs from instantiation, to support ``.copy()`` mechanisms by higher classes.
-        """
-        return {
-            'dtype': self.dtype,
-            'units': self.units,
-            'shape': self.shape,
-            'position': self.position,
-            'extent': self._extent,
-            'format': self.format
-        }
-    
-    def copy(self, newextent=None):
-        """
-        Each chunk class must overwrite this class to get the best performance with multiple slicing operations.
-        """
-        kwargs = self.get_kwargs()
-        if newextent:
-            kwargs['extent'] = self._combine_slices(newextent)
-
-        new_instance = SuperLazyArrayLike(
-            self.filename,
-            self.address,
-            **kwargs,
-            )
-        return new_instance
-
-    def _post_process_data(self, data):
-        """
-        Perform any post-processing steps on the data here.
-        - unit correction
-        - calendar correction
-        """
-        return data
+        super().__init__(shape, **kwargs)
     
     def __array__(self, *args, **kwargs):
         """
@@ -276,6 +294,9 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
                 f"the variable '{varname}'."
             )
         
+        if hasattr(array, 'units'):
+            self.units = array.units
+        
         try:
             var = np.array(array[tuple(self._extent)])
         except IndexError:
@@ -286,6 +307,14 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
 
         return self._post_process_data(var)
     
+    def _post_process_data(self, data):
+        """
+        Perform any post-processing steps on the data here.
+        - unit correction
+        - calendar correction
+        """
+        return data
+
     def _try_openers(self, filename):
         """
         Attempt to open the dataset using all possible methods. Currently only NetCDF is supported.
@@ -312,7 +341,40 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         raise NotImplementedError
 
     def _open_netcdf(self, filename):
+        """
+        Open a NetCDF file using the netCDF4 python package."""
         return netCDF4.Dataset(filename, mode='r')
+
+    def get_kwargs(self):
+        """
+        Return all the initial kwargs from instantiation, to support ``.copy()`` mechanisms by higher classes.
+        """
+        return {
+            'dtype': self.dtype,
+            'units': self.units,
+            'shape': self.shape,
+            'position': self.position,
+            'extent': self._extent,
+            'format': self.format
+        }
+    
+    def copy(self, newextent=None):
+        """
+        Create a new instance of this class with all attributes of the current instance, but
+        with a new initial extent made by combining the current instance extent with the ``newextent``.
+        Each ArrayLike class must overwrite this class to get the best performance with multiple 
+        slicing operations.
+        """
+        kwargs = self.get_kwargs()
+        if newextent:
+            kwargs['extent'] = self._combine_slices(newextent)
+
+        new_instance = SuperLazyArrayLike(
+            self.filename,
+            self.address,
+            **kwargs,
+            )
+        return new_instance
 
     def open(self):
         """

@@ -139,7 +139,7 @@ def get_dask_chunks(
     fsizes_per_dim, fragmented_dim_indices = [],[]
 
     for dim, n_fragments in enumerate(fragment_space):
-        if fragment_space[dim] != 1:
+        if n_fragments != 1:
 
             fsizes = []
             index = [0] * ndim

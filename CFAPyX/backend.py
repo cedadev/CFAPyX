@@ -109,7 +109,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             active_options=active_options,
             group=group)
 
-
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     description = "Open CFA-based Abstract Data Store"
     url = "https://cedadev.github.io/CFAPyX/"

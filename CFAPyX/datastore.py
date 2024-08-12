@@ -34,7 +34,8 @@ class CFADataStore(NetCDF4DataStore):
 
     """
     DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines 
-    directly related to the specific variables and attributes. The class __init__ method 
+    directly related to the specific variables and attributes. The ``NetCDF4Datastore``
+    Xarray class from which this class inherits, has an ``__init__`` method which 
     cannot easily be overriden, so properties are used instead for specific variables 
     that may be un-set at time of use.
     """

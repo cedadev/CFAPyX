@@ -17,7 +17,7 @@ import numpy as np
 
 class FragmentArrayWrapper(ArrayLike):
     """
-    FragmentArrayWrapper behaves like an Array that can be indexed or references to 
+    FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
     return a Dask-like array object. This class is essentially a constructor for the 
     partitions that feed into the returned Dask-like array into Xarray.
     """
@@ -139,6 +139,7 @@ class FragmentArrayWrapper(ArrayLike):
                 aggregated_units=units,
                 aggregated_calendar=calendar,
                 format=fragment_format,
+                named_dims=self.named_dims
             )
 
             fragments[pos] = fragment
@@ -428,65 +429,6 @@ class FragmentArrayWrapper(ArrayLike):
             )
         return dsk
 
-class CFAPartition(ArrayPartition):
-    """
-    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
-    methods.
-    """
-  
-    description = 'Wrapper object for a CFA Partition (Fragment or Chunk)'
-
-
-    def __init__(self,
-                 filename,
-                 address,
-                 aggregated_units=None,
-                 aggregated_calendar=None,
-                 **kwargs
-            ):
-        
-        """
-        Wrapper object for the 'array' section of a fragment. Contains some metadata 
-        to ensure the correct fragment is selected, but generally just serves the 
-        fragment array to dask when required.
-
-        :param filename:
-
-        :param address:
-
-        :param aggregated_units:        None
-
-        :param aggregated_calendar:     None
-        """
-
-        super().__init__(filename, address, **kwargs)
-        self.aggregated_units    = aggregated_units # cfunits conform method.
-        self.aggregated_calendar = aggregated_calendar
-
-    def copy(self, extent=None):
-        """
-        Create a new instance of this class from its own methods and attributes, and 
-        apply a new extent to the copy if required.
-        """
-        
-        kwargs = self.get_kwargs()
-        if extent:
-            kwargs['extent'] = self._combine_slices(extent)
-
-        new = CFAPartition(
-            self.filename,
-            self.address,
-            aggregated_units=self.aggregated_units,
-            aggregated_calendar=self.aggregated_calendar,
-            **kwargs
-        )
-        return new
-
-    def _post_process_data(self, data):
-        """Correct units/data conversions - if necessary at this stage"""
-        return data
-
-
 class CFAChunkWrapper(ArrayLike):
     description = 'Brand new array class for handling any-size dask chunks.'
 
@@ -526,6 +468,69 @@ class CFAChunkWrapper(ArrayLike):
 
         # Should return a dask array.
         return dsk
+
+class CFAPartition(ArrayPartition):
+    """
+    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
+    methods.
+    """
+  
+    description = 'Wrapper object for a CFA Partition (Fragment or Chunk)'
+
+
+    def __init__(self,
+                 filename,
+                 address,
+                 aggregated_units=None,
+                 aggregated_calendar=None,
+                 **kwargs
+            ):
+        
+        """
+        Wrapper object for the 'array' section of a fragment. Contains some metadata 
+        to ensure the correct fragment is selected, but generally just serves the 
+        fragment array to dask when required.
+
+        :param filename:
+
+        :param address:
+
+        :param aggregated_units:        None
+
+        :param aggregated_calendar:     None
+        """
+
+        super().__init__(filename, address, units=aggregated_units, **kwargs)
+        self.aggregated_units    = aggregated_units
+        self.aggregated_calendar = aggregated_calendar
+
+    def copy(self, extent=None):
+        """
+        Create a new instance of this class from its own methods and attributes, and 
+        apply a new extent to the copy if required.
+        """
+        
+        kwargs = self.get_kwargs()
+        if extent:
+            kwargs['extent'] = self._combine_slices(extent)
+
+        new = CFAPartition(
+            self.filename,
+            self.address,
+            aggregated_units=self.aggregated_units,
+            aggregated_calendar=self.aggregated_calendar,
+            **kwargs
+        )
+        return new
+
+    def _post_process_data(self, data):
+        """Correct units/data conversions - if necessary at this stage"""
+        from cfunits import Units
+
+        if self.units != self.aggregated_units:
+            data = Units.conform(data, self.units, self.aggregated_units)
+        return data
+
 
 def _overlap(chunk, chunk_size, fragment, fragment_size):
     """

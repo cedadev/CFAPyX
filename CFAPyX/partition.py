@@ -187,6 +187,11 @@ class SuperLazyArrayLike(ArrayLike):
             **kwargs
             )
         return new_instance
+    
+    def get_kwargs(self):
+        return {
+            'named_dims': self.named_dims
+        } | super().get_kwargs()
 
 class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
     """
@@ -350,13 +355,11 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         Return all the initial kwargs from instantiation, to support ``.copy()`` mechanisms by higher classes.
         """
         return {
-            'dtype': self.dtype,
-            'units': self.units,
             'shape': self.shape,
             'position': self.position,
             'extent': self._extent,
             'format': self.format
-        }
+        } | super().get_kwargs()
     
     def copy(self, newextent=None):
         """
@@ -369,7 +372,7 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         if newextent:
             kwargs['extent'] = self._combine_slices(newextent)
 
-        new_instance = SuperLazyArrayLike(
+        new_instance = ArrayPartition(
             self.filename,
             self.address,
             **kwargs,

@@ -504,6 +504,10 @@ class CFAPartition(ArrayPartition):
 
         :param aggregated_calendar:     None
         """
+        if 'units' in kwargs:
+            if not aggregated_units:
+                aggregated_units = kwargs['units']
+            kwargs.pop('units')
 
         super().__init__(filename, address, units=aggregated_units, **kwargs)
         self.aggregated_units    = aggregated_units
@@ -522,8 +526,6 @@ class CFAPartition(ArrayPartition):
         new = CFAPartition(
             self.filename,
             self.address,
-            aggregated_units=self.aggregated_units,
-            aggregated_calendar=self.aggregated_calendar,
             **kwargs
         )
         return new
@@ -536,6 +538,11 @@ class CFAPartition(ArrayPartition):
             data = Units.conform(data, self.units, self.aggregated_units)
         return data
 
+    def get_kwargs(self):
+        return {
+            'aggregated_units': self.aggregated_units,
+            'aggregated_calendar': self.aggregated_calendar
+        } | super().get_kwargs()
 
 def _overlap(chunk, chunk_size, fragment, fragment_size):
     """

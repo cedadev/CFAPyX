@@ -491,11 +491,16 @@ class CFAPartition(ArrayPartition):
         to ensure the correct fragment is selected, but generally just serves the 
         fragment array to dask when required.
 
-        :param filename:
+        :param filename:        (str) The path to a Fragment file from which this 
+            partition object will access data from. The partition may represent 
+            all or a subset of the data from the Fragment file.
 
-        :param address:
+        :param address:         (str) The address of the data variable within the 
+            Fragment file, may include a group hierarchy structure.
 
-        :param aggregated_units:        None
+        :param aggregated_units:    (obj) The expected units for the received data.
+            If the units of the received data are not equal to the ``aggregated_units``
+            then the data is 'post-processed' using the cfunits ``conform`` function.
 
         :param aggregated_calendar:     None
         """

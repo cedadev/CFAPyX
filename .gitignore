@@ -8,3 +8,8 @@ CFAPyX/__pycache__/*.pyc
 CFAPyX.egg-info/
 .vscode/
 testing/
+build/
+.DS_Store/
+docs/.DS_Store/
+docs/source/.DS_Store
+docs/source/_images/.DS_Store

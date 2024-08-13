@@ -3,7 +3,7 @@ __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 # Chunk wrapper is common to both CFAPyX and XarrayActive
-VERSION = 1.0
+VERSION = 1.1
 
 import numpy as np
 import netCDF4
@@ -140,10 +140,10 @@ class SuperLazyArrayLike(ArrayLike):
                     "Active chain broken - mean has already been accomplished."
                 )
             
-            
             else:
-                self._array = np.array(self)[newslice]
-                return None
+                raise ValueError(
+                    "Compute chain broken - dimensions have been reduced already."
+                )
         
         def combine_sliced_dim(old, new, dim):
 
@@ -303,6 +303,9 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         if hasattr(array, 'units'):
             self.units = array.units
         
+        if len(array.shape) != len(self._extent):
+            self._correct_slice(array.dimensions)
+
         try:
             var = np.array(array[tuple(self._extent)])
         except IndexError:
@@ -313,6 +316,35 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
 
         return self._post_process_data(var)
     
+    def _correct_slice(self, array_dims):
+        """
+        Drop size-1 dimensions from the set of slices if there is an issue.
+
+        :param array_dims:      (tuple) The set of named dimensions present in
+            the source file. If there are fewer array_dims than the expected
+            set in ``named_dims`` then this function is used to remove extra
+            dimensions from the ``extent`` if possible.
+        """
+        extent = []
+        for dim in range(len(self.named_dims)):
+            named_dim = self.named_dims[dim]
+            if named_dim in array_dims:
+                extent.append(self._extent[dim])
+
+            # named dim not present
+            ext = self._extent[dim]
+            
+            start = ext.start or 0 
+            stop  = ext.stop or self.shape[dim]
+            step  = ext.step or 1
+
+            if int(stop - start)/step > 1:
+                raise ValueError(
+                    f'Attempted to slice dimension "{named_dim}" using slice "{ext}" '
+                    'but the requested dimension is not present'
+                )
+        self._extent = extent
+            
     def _post_process_data(self, data):
         """
         Perform any post-processing steps on the data here.

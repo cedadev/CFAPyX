@@ -504,10 +504,6 @@ class CFAPartition(ArrayPartition):
 
         :param aggregated_calendar:     None
         """
-        if 'units' in kwargs:
-            if not aggregated_units:
-                aggregated_units = kwargs['units']
-            kwargs.pop('units')
 
         super().__init__(filename, address, units=aggregated_units, **kwargs)
         self.aggregated_units    = aggregated_units
@@ -520,6 +516,12 @@ class CFAPartition(ArrayPartition):
         """
         
         kwargs = self.get_kwargs()
+
+        if 'units' in kwargs:
+            if not kwargs['aggregated_units']:
+                kwargs['aggregated_units'] = kwargs['units']
+            kwargs.pop('units')
+
         if extent:
             kwargs['extent'] = self._combine_slices(extent)
 

@@ -184,6 +184,7 @@ class SuperLazyArrayLike(ArrayLike):
             kwargs['extent'] = self._combine_slices(newextent)
 
         new_instance = SuperLazyArrayLike(
+            self.shape,
             **kwargs
             )
         return new_instance

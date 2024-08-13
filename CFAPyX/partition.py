@@ -450,7 +450,7 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
                 pass
 
         raise FileNotFoundError(
-            f'None of the location options for chunk "{self.position}" could be accessed.'
+            f'None of the location options for chunk "{self.position}" could be accessed. '
             f'Locations tried: {filenames}.'
         )
     

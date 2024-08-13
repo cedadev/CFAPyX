@@ -241,6 +241,17 @@ class FragmentArrayWrapper(ArrayLike):
         Ignores additional kwargs.
         """
 
+        # Perform substitutions for this fragment array
+        if substitutions:
+
+            if type(substitutions) != list:
+                substitutions = [substitutions]
+
+            for s in substitutions:
+                base, substitution = s.split(':')
+                for f in self.fragment_info.keys():
+                    self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
+
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self.chunks = chunks

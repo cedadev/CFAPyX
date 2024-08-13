@@ -1,1 +1,1 @@
-from .backendentrypoint import CFANetCDFBackendEntrypoint
+from .backend import CFANetCDFBackendEntrypoint

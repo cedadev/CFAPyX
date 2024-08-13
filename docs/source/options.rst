@@ -1,5 +1,5 @@
 ========================
-CFA and Distributed Data
+CFAPyX Usage and Options
 ========================
 
 Coming Soon!

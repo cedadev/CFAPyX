@@ -1,198 +1,183 @@
+__author__    = "Daniel Westwood"
+__contact__   = "daniel.westwood@stfc.ac.uk"
+__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+
 from itertools import accumulate, product
 
 from dask.array.core import normalize_chunks
 
-def chunk_positions(chunks):
+def get_fragment_positions(fragment_size_per_dim):
     """
-    Determine the position of each chunk. Copied directly from cf-python, version 3.14.0 onwards.
+    Get the positions in index space for each fragment.
+
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length 
+                                        equal to the number of array dimensions, second dimension is a list of the
+                                        fragment sizes for the corresponding array dimension.
+
+    :returns:       A list of tuples representing the positions of all the fragments in index space given by the
+                    fragment_size_per_dim.
 
     """
-    return product(*(range(len(bds)) for bds in chunks))
+    return product(*(range(len(sizes)) for sizes in fragment_size_per_dim))
 
-def chunk_locations(chunks):
-    """Determine the shape of each chunk. Copied directly from cf-python, version 3.15.0 onwards.
-
-    :param chunks:          (tuple) The chunk sizes along each dimension, as output by
-                            `dask.array.Array.chunks`.
-
-    :returns:       The location/shape of each array chunk within the corresponding fragment file.
-    """
-    from dask.utils import cached_cumsum
-
-    cumdims = [cached_cumsum(bds, initial_zero=True) for bds in chunks]
-    locations = [
-        [(s, s + dim) for s, dim in zip(starts, shapes)]
-        for starts, shapes in zip(cumdims, chunks)
-    ]
-    return product(*locations)
-
-def fragment_descriptors(fsizes_per_dim, fragment_dims, array_shape):
+def get_fragment_extents(fragment_size_per_dim, array_shape):
     """
     Return descriptors for every fragment. Copied from cf-python version 3.14.0 onwards.
 
-    :param fsizes_per_dim:          (tuple) Size of the fragment array in each dimension.
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length 
+                                        equal to the number of array dimensions, second dimension is a list of the
+                                        fragment sizes for the corresponding array dimension.
 
-    :param fragment_dims:           (tuple) The indexes of dimensions which are fragmented.
-
-    :param array_shape:             (tuple) The shape of the total array.
+    :param array_shape:             (tuple) The shape of the total array in ``array space``.
 
     :returns:
 
-        6-`tuple` of iterators
-            Each iterator iterates over a particular descriptor
-            from each subarray.
+            global_extents - The array of slice objects for each fragment which define where the fragment
+                             slots into the total array.
 
-            1. The indices of the aggregated array that correspond
-                to each subarray.
+            extents - The extents to be applied to each fragment, usually just the whole fragment array.
 
-            2. The shape of each subarray.
-
-            3. The indices of the fragment that corresponds to each
-                subarray (some subarrays may be represented by a
-                part of a fragment).
-
-            4. The location of each subarray.
-
-            5. The location on the fragment dimensions of the
-                fragment that corresponds to each subarray.
-
-            6. The shape of each fragment that overlaps each chunk.
+            shapes - The shape of each fragment in ``array space``.
 
     """
 
-    # The indices of the uncompressed array that correspond to
-    # each subarray, the shape of each uncompressed subarray, and
-    # the location of each subarray
-    s_locations = []
-    u_shapes = []
-    u_indices = []
-    f_locations = []
-    for dim, fs in enumerate(fsizes_per_dim):
-        num_fs = len(fs)
-        # (0, 1, 2, 3 ... num_fragments) in each dimension
-        s_locations.append(tuple(range(num_fs)))
-        # (num_fragments) for each dimension
-        u_shapes.append(fs)
+    ndim = len(fragment_size_per_dim)
 
-        if dim in fragment_dims:
+    initial = [0 for i in range(ndim)]
+    final   = [len(i) for i in fragment_size_per_dim]
+
+    fragmented_dims = [i for i in range(len(fragment_size_per_dim)) if len(fragment_size_per_dim[i]) != 1]
+
+    dim_shapes  = []
+    dim_indices = []
+    f_locations = []
+    for dim, fs in enumerate(fragment_size_per_dim):
+
+        # (num_fragments) for each dimension
+        dim_shapes.append(fs)
+
+        fsa = tuple(accumulate((0,) + tuple(fs)))
+
+        if dim in fragmented_dims:
             # Same as s_locations
-            f_locations.append(tuple(range(num_fs)))
+            f_locations.append(tuple(range(len(fs))))
         else:
             # No fragmentation along this dimension
             # (0, 0, 0, 0 ...) in each non-fragmented dimension.
-            f_locations.append((0,) * num_fs)
+            f_locations.append((0,) * len(fs))
 
-        fs = tuple(accumulate((0,) + fs))
-        u_indices.append([slice(i, j) for i, j in zip(fs[:-1], fs[1:])])
+        # List of slices a to a+1 for every item in the new fs.
+        dim_indices.append([slice(i, j) for i, j in zip(fsa[:-1], fsa[1:])])
 
-    # For each fragment, we define a slice that corresponds
-    # to the data we want to collect from it.
-    f_indices = [
-        (slice(None),) * len(u) if dim in fragment_dims else u
-        for dim, u in enumerate(u_indices)
+    # Transform f_locations to get a dict of positions with a slice and shape for each.
+    positions = [
+        coord for coord in product(
+            *[range(r[0], r[1]) for r in zip(initial, final)]
+        )
     ]
 
-    # For each fragment, we define a shape that corresponds to 
-    # the sliced data.
+    f_indices = []
+    for dim, u in enumerate(dim_indices):
+        if dim in fragmented_dims:
+            f_indices.append( (slice(None),) * len(u))
+        else:
+            f_indices.append( u )
+
     f_shapes = [
-        u_shape if dim in fragment_dims else (size,) * len(u_shape)
-        for dim, (u_shape, size) in enumerate(zip(u_shapes, array_shape))
+        dim_shape if dim in fragmented_dims else (size,) * len(dim_shape)
+        for dim, (dim_shape, size) in enumerate(zip(dim_shapes, array_shape))
     ]
 
-    return (
-        product(*u_indices),
-        product(*u_shapes),
-        product(*f_indices),
-        product(*s_locations),
-        product(*f_locations),
-        product(*f_shapes),
-    )
+    global_extents = {}
+    extents = {}
+    shapes = {}
 
-def fragment_shapes(shapes, array_shape, fragment_dims, fragment_shape, aggregated_data, ndim, dtype):
+    for frag_pos in positions:
+        extents[frag_pos] = []
+        global_extents[frag_pos] = []
+        shapes[frag_pos] = []
+        for a, i in enumerate(frag_pos):
+            extents[frag_pos].append(
+                f_indices[a][i]
+            )
+            global_extents[frag_pos].append(
+                dim_indices[a][i]
+            )
+            shapes[frag_pos].append(
+                f_shapes[a][i]
+            )
+            
+    return global_extents, extents, shapes
+
+def get_dask_chunks(
+        array_space,
+        fragment_space,
+        extent,
+        dtype, 
+        explicit_shapes=None):
     """
-    Create what is later referred to as 'chunks'. Copied from cf-python version 3.14.0 onwards.
+    Define the `chunks` array passed to Dask when creating a Dask Array. This is an array of fragment sizes 
+    per dimension for each of the relevant dimensions. Copied from cf-python version 3.14.0 onwards.
 
-    **Requires updating**.
+    :param array_space:     (tuple) The shape of the array in ``array space``.
 
-    :Parameters:
+    :param fragment_space:  (tuple) The shape of the array in ``fragment space``.
 
-        shapes: `int`, sequence, `dict` or `str`, optional
-            Define the chunk shapes.
+    :param extent:      (dict) The global extent of each fragment - where it fits into the total array for this variable (in array space).
 
-            Any value accepted by the *chunks* parameter of the
-            `dask.array.from_array` function is allowed.
+    :param dtype:       (obj) The datatype for this variable.
 
-            The chunk sizes implied by *chunks* for a dimension
-            that has been fragmented are ignored, so their
-            specification is arbitrary.
+    :param explicit_shapes:     (tuple) Set of shapes to apply to the fragments - currently not implemented outside this function.
 
-        array_shape: 
-
-        fragment_dims:
-
-        fragment_shape:
-
-        aggregated_data:
-
-        ndim:
-
-        dtype:
-
-    :Returns:
-
-        `tuple`
-            The chunk sizes along each dimension.
+    :returns:       A tuple of the chunk sizes along each dimension.
     """
             
     from numbers import Number
-
     from dask.array.core import normalize_chunks
 
-    # Create the base chunks.
-    fsizes_per_dim = []
+    ndim = len(array_space)
+    fsizes_per_dim, fragmented_dim_indices = [],[]
 
-    for dim, (n_fragments, size) in enumerate(
-        zip(fragment_shape, array_shape)
-    ):
-        if dim in fragment_dims:
-            # This aggregated dimension is spanned by more than
-            # one fragment.
-            fs = []
+    for dim, n_fragments in enumerate(fragment_space):
+        if n_fragments != 1:
+
+            fsizes = []
             index = [0] * ndim
             for n in range(n_fragments):
                 index[dim] = n
-                loc = aggregated_data[tuple(index)]["location"][dim] # Update for CF-1.12
-                fragment_size = loc[1] - loc[0]
-                fs.append(fragment_size)
+                ext = extent[tuple(index)][dim]
+                fragment_size = ext.stop - ext.start
+                fsizes.append(fragment_size)
 
-            fsizes_per_dim.append(tuple(fs))
+            fsizes_per_dim.append(tuple(fsizes))
+            fragmented_dim_indices.append(dim)
         else:
             # This aggregated dimension is spanned by exactly one
             # fragment. Store None, for now, in the expectation
-            # that it will get overwrittten.
+            # that it will get overwritten.
             fsizes_per_dim.append(None)
 
-    ## Handle custom shapes for the fragments.
+    ## Handle explicit shapes for the fragments.
 
-    if isinstance(shapes, (str, Number)) or shapes is None:
-        fsizes_per_dim = [ # For each dimension, use fs or shapes if the dimension is fragmented or not respectively.
-            fs if i in fragment_dims else shapes for i, fs in enumerate(fsizes_per_dim)
+    if isinstance(explicit_shapes, (str, Number)) or explicit_shapes is None:
+        fsizes_per_dim = [ # For each dimension, use fs or explicit_shapes if the dimension is fragmented or not respectively.
+            fs if i in fragmented_dim_indices else explicit_shapes for i, fs in enumerate(fsizes_per_dim)
         ]
-    elif isinstance(shapes, dict):
+    elif isinstance(explicit_shapes, dict):
         fsizes_per_dim = [
-            fsizes_per_dim[i] if i in fragment_dims else shapes.get(i, "auto")
+            fsizes_per_dim[i] if i in fragmented_dim_indices else explicit_shapes.get(i, "auto")
             for i, fs in enumerate(fsizes_per_dim)
         ]
     else:
-        # Shapes is a sequence
-        if len(shapes) != ndim:
+        # explicit_shapes is a sequence
+        if len(explicit_shapes) != ndim:
             raise ValueError(
-                f"Wrong number of 'shapes' elements in {shapes}: "
-                f"Got {len(shapes)}, expected {ndim}"
+                f"Wrong number of 'explicit_shapes' elements in {explicit_shapes}: "
+                f"Got {len(explicit_shapes)}, expected {ndim}"
             )
 
         fsizes_per_dim = [
-            fs if i in fragment_dims else shapes[i] for i, fs in enumerate(fsizes_per_dim)
+            fs if i in fragmented_dim_indices else explicit_shapes[i] for i, fs in enumerate(fsizes_per_dim)
         ]
 
-    return normalize_chunks(fsizes_per_dim, shape=array_shape, dtype=dtype)
+    return normalize_chunks(fsizes_per_dim, shape=array_space, dtype=dtype)

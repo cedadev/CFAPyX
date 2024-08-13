@@ -7,3 +7,4 @@ h5py==3.11.0
 dask==2024.7.0
 cftime==1.6.4
 cfunits==3.3.7
+pytest==7.2.0

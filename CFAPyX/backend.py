@@ -10,7 +10,6 @@ from xarray import conventions
 from CFAPyX.datastore import CFADataStore
 
 from importlib.metadata import entry_points
-#engine = entry_points(group='xarray.backends')
 
 def open_cfa_dataset(
         filename_or_obj,

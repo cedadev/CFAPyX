@@ -1,4 +1,4 @@
-name: CI
+name: Automatic Test
 # Specify which GitHub events will trigger a CI build
 
 on: push

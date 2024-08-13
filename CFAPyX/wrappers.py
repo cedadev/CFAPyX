@@ -534,9 +534,18 @@ class CFAPartition(ArrayPartition):
 
     def _post_process_data(self, data):
         """Correct units/data conversions - if necessary at this stage"""
-        from cfunits import Units
 
         if self.units != self.aggregated_units:
+            try:
+                from cfunits import Units
+            except FileNotFoundError:
+                raise ValueError(
+                    'Encountered issue when trying to import the "cfunits" library:'
+                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' library."
+                    ' - Consider setting up a conda environment, and installing '
+                    '`conda install -c conda-forge udunits2`'
+                )
+
             data = Units.conform(data, self.units, self.aggregated_units)
         return data
 

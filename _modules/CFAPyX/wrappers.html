@@ -1,0 +1,731 @@
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFAPyX.wrappers &mdash; CFAPyX Package 2024.8.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/CFAPyX.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4fca6d66"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CFAPyX Package
+              <img src="../../_static/CFAPyX_long.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Details:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../inspiration.html">Inspiration for CFA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Xarray Engine Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fragments.html">Fragments, Partitions and Chunks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../options.html">CFAPyX Usage and Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../datastore.html">CFA DataStore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wrapper.html">CFA Wrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../partition.html">Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../groups.html">CFA Groups</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CFAPyX Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">CFAPyX.wrappers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for CFAPyX.wrappers</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span>    <span class="o">=</span> <span class="s2">&quot;Daniel Westwood&quot;</span>
+<span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2023 United Kingdom Research and Innovation&quot;</span>
+
+<span class="kn">from</span> <span class="nn">CFAPyX.decoder</span> <span class="kn">import</span> <span class="n">get_dask_chunks</span>
+<span class="kn">from</span> <span class="nn">CFAPyX.partition</span> <span class="kn">import</span> <span class="n">ArrayPartition</span><span class="p">,</span> <span class="n">ArrayLike</span>
+
+<span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
+<span class="kn">from</span> <span class="nn">dask.array.core</span> <span class="kn">import</span> <span class="n">getter</span>
+<span class="kn">from</span> <span class="nn">dask.base</span> <span class="kn">import</span> <span class="n">tokenize</span>
+<span class="kn">from</span> <span class="nn">dask.utils</span> <span class="kn">import</span> <span class="n">SerializableLock</span><span class="p">,</span> <span class="n">is_arraylike</span>
+<span class="kn">from</span> <span class="nn">dask.array.reductions</span> <span class="kn">import</span> <span class="n">numel</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span> <span class="nn">netCDF4</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="FragmentArrayWrapper"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper">[docs]</a><span class="k">class</span> <span class="nc">FragmentArrayWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FragmentArrayWrapper behaves like an Array that can be indexed or referenced to </span>
+<span class="sd">    return a Dask-like array object. This class is essentially a constructor for the </span>
+<span class="sd">    partitions that feed into the returned Dask-like array into Xarray.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper-class for the array of fragment objects&#39;</span>
+
+<div class="viewcode-block" id="FragmentArrayWrapper.__init__"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> 
+            <span class="n">fragment_info</span><span class="p">,</span> 
+            <span class="n">fragment_space</span><span class="p">,</span> 
+            <span class="n">shape</span><span class="p">,</span> 
+            <span class="n">units</span><span class="p">,</span> 
+            <span class="n">dtype</span><span class="p">,</span> 
+            <span class="n">cfa_options</span><span class="o">=</span><span class="p">{},</span> 
+            <span class="n">active_options</span><span class="o">=</span><span class="p">{},</span> 
+            <span class="n">named_dims</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation method for the FragmentArrayWrapper class</span>
+
+<span class="sd">        :param fragment_info:   (dict) The information relating to each fragment with the </span>
+<span class="sd">            fragment coordinates in ``fragment space`` as the key. Each </span>
+<span class="sd">            fragment is described by the following:</span>
+<span class="sd">            - ``shape`` - The shape of the fragment in ``array space``.</span>
+<span class="sd">            - ``location`` - The file from which this fragment originates.</span>
+<span class="sd">            - ``address`` - The variable and group name relating to this variable.</span>
+<span class="sd">            - ``extent`` - The slice object to apply to the fragment on retrieval (usually get</span>
+<span class="sd">            the whole array)</span>
+<span class="sd">            - ``global_extent`` - The slice object that equates to a particular fragment out</span>
+<span class="sd">            of the whole array (in ``array space``).</span>
+<span class="sd">                        </span>
+<span class="sd">        :param fragment_space:      (tuple) The coordinate system that refers to individual </span>
+<span class="sd">                                    fragments. Each coordinate eg. i, j, k refers to the </span>
+<span class="sd">                                    number of fragments in each of the associated dimensions.</span>
+
+<span class="sd">        :param shape:               (tuple) The total shape of the array in ``array space``</span>
+
+<span class="sd">        :param units:       (obj) The units of the values represented in this Array-like class.</span>
+
+<span class="sd">        :param dtype:       (obj) The datatype of the values represented in this Array-like class.</span>
+
+<span class="sd">        :param cfa_options:     (dict) The set of options defining some specific decoding behaviour.</span>
+
+<span class="sd">        :param active_options:  (dict) The set of options defining Active behaviour.</span>
+
+<span class="sd">        :param named_dims:  (list) The set of dimension names that apply to this Array object.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span>    <span class="o">=</span> <span class="n">fragment_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragment_space</span>   <span class="o">=</span> <span class="n">fragment_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span>       <span class="o">=</span> <span class="n">named_dims</span>
+
+        <span class="c1"># Set internal private variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfa_options</span>    <span class="o">=</span> <span class="n">cfa_options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active_options</span> <span class="o">=</span> <span class="n">active_options</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__array_function__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FragmentArrayWrapper.__getitem__"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-lazy retrieval of the dask array when this object is indexed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="n">selection</span><span class="p">]</span></div>
+    
+<div class="viewcode-block" id="FragmentArrayWrapper.__array__"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__array__">[docs]</a>    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-lazy array construction, this will occur as soon as the instance is ``indexed`` </span>
+<span class="sd">        or any other ``array`` behaviour is attempted. Construction of a Dask-like array </span>
+<span class="sd">        occurs here based on the decoded fragment info and any other specified settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">array_name</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+
+        <span class="n">calendar</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Fix later</span>
+
+        <span class="c1"># Fragment info dict at this point</span>
+        <span class="n">fragment_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span>
+
+        <span class="c1"># For now expect to deal only with NetCDF Files</span>
+
+        <span class="c1"># dict of array-like objects to pass to the dask Array constructor.</span>
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="n">fragment_shape</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span>
+            <span class="n">fragment_position</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="n">global_extent</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;global_extent&#39;</span><span class="p">]</span>
+            <span class="n">extent</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span>
+
+            <span class="n">fragment_format</span>   <span class="o">=</span> <span class="s1">&#39;nc&#39;</span>
+
+            <span class="k">if</span> <span class="s1">&#39;fill_value&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">]:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="c1"># Extra handling required for this condition.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+                <span class="n">address</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;address&#39;</span><span class="p">]</span>
+                
+                <span class="c1"># Wrong extent type for both scenarios but keep as a different label for </span>
+                <span class="c1"># dask chunking.</span>
+
+            <span class="n">fragment</span> <span class="o">=</span> <span class="n">CFAPartition</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">address</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">fragment_shape</span><span class="p">,</span>
+                <span class="n">position</span><span class="o">=</span><span class="n">fragment_position</span><span class="p">,</span>
+                <span class="n">aggregated_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                <span class="n">aggregated_calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="n">fragment_format</span><span class="p">,</span>
+                <span class="n">named_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span>
+            <span class="p">)</span>
+
+            <span class="n">fragments</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span><span class="p">:</span>
+            <span class="n">dsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_by_fragment</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+
+            <span class="n">global_extent</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">fragment_info</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;global_extent&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fragment_info</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="p">}</span>
+
+            <span class="n">dask_chunks</span> <span class="o">=</span> <span class="n">get_dask_chunks</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fragment_space</span><span class="p">,</span>
+                <span class="n">extent</span><span class="o">=</span><span class="n">global_extent</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">explicit_shapes</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_oversample</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+            <span class="n">dask_chunks</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Assemble in the same format as the CFA ones.</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_active</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">XarrayActive</span> <span class="kn">import</span> <span class="n">DaskActiveArray</span>
+
+                <span class="n">darr</span> <span class="o">=</span> <span class="n">DaskActiveArray</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                    <span class="s1">&#39;&quot;DaskActiveArray&quot; from XarrayActive failed to import - please ensure &#39;</span>
+                    <span class="s1">&#39;you have the XarrayActive package installed.&#39;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">darr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">darr</span></div>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Relates private option variables to the ``active_options`` parameter of the </span>
+<span class="sd">        backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;use_active&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_active</span><span class="p">,</span>
+            <span class="s1">&#39;active_chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span>
+        <span class="p">}</span>
+    
+    <span class="nd">@active_options</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">active_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_active_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_active_options</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> 
+            <span class="n">use_active</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+            <span class="n">active_chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the private variables referred by the ``active_options`` parameter to the backend. </span>
+<span class="sd">        Ignores additional kwargs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_active</span> <span class="o">=</span> <span class="n">use_active</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span> <span class="o">=</span> <span class="n">active_chunks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Relates private option variables to the ``cfa_options`` parameter of the backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
+            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>
+        <span class="p">}</span>
+
+    <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_cfa_options</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the private variables referred by the ``cfa_options`` parameter to the backend. </span>
+<span class="sd">        Ignores additional kwargs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Don&#39;t need this here</span>
+        <span class="k">if</span> <span class="n">substitutions</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">substitutions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">substitutions</span> <span class="o">=</span> <span class="p">[</span><span class="n">substitutions</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="p">:</span>
+                <span class="n">base</span><span class="p">,</span> <span class="n">substitution</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">substitution</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span> <span class="o">=</span> <span class="n">decode_cfa</span>
+
+    <span class="k">def</span> <span class="nf">_chunk_by_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assemble the base ``dsk`` task dependency graph which includes the fragment objects </span>
+<span class="sd">        plus the method to index each object (with locking).</span>
+
+<span class="sd">        :param fragments:   (dict) The set of Fragment objects (CFAPartition) with </span>
+<span class="sd">            their positions in ``fragment space``.</span>
+
+<span class="sd">        :returns:       A task dependency graph with all the fragments included to use </span>
+<span class="sd">            when constructing the dask array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">array_name</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+
+        <span class="n">dsk</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">fragment_position</span> <span class="ow">in</span> <span class="n">fragments</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">fragment</span> <span class="o">=</span> <span class="n">fragments</span><span class="p">[</span><span class="n">fragment_position</span><span class="p">]</span>
+
+            <span class="n">f_identifier</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">f_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">array_name</span> <span class="o">+</span> <span class="n">fragment_position</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">getter</span><span class="p">,</span> 
+                <span class="c1"># Method of retrieving the &#39;data&#39; from each fragment - but each fragment is Array-like.</span>
+                <span class="n">f_identifier</span><span class="p">,</span>
+                <span class="n">fragment</span><span class="o">.</span><span class="n">get_extent</span><span class="p">(),</span>
+                <span class="kc">False</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s2">&quot;_lock&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1"># Check version cf-python</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dsk</span>
+
+    <span class="k">def</span> <span class="nf">_derive_chunk_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Derive the chunk space and shape given the user-provided ``active_chunks`` option. </span>
+<span class="sd">        Chunk space is the number of chunks in each dimension which presents like an array </span>
+<span class="sd">        shape, but is referred to as a ``space`` because it has a novel coordinate system. </span>
+<span class="sd">        Chunk shape is the shape of each chunk in ``array space``, which must be regular</span>
+<span class="sd">        even if lower-level objects used to define the chunk are not.</span>
+
+<span class="sd">        Example: </span>
+<span class="sd">            50 chunks across the time dimension of 1000 values which is represented by 8 </span>
+<span class="sd">            fragments. Chunk space representation is (50,) and the chunk shape is (20,). </span>
+<span class="sd">            </span>
+<span class="sd">            Each chunk is served by at most 2 fragments, where each chunk is described using a </span>
+<span class="sd">            MultiFragmentWrapper object which appropriately sets the extents of each Fragment </span>
+<span class="sd">            object. The Fragments cover 125 values each:</span>
+<span class="sd">        </span>
+<span class="sd">            Chunk 0 served by Fragment 0 slice(0,20) </span>
+<span class="sd">            Chunk 1 served by Fragment 0 slice(20,40)</span>
+<span class="sd">            ...</span>
+<span class="sd">            Chunk 6 served by Fragment 0 slice(120,None) and Fragment 1 slice(0,15)</span>
+<span class="sd">            ...</span>
+<span class="sd">            and so on.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chunk_space</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+        <span class="n">chunk_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_chunks</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_chunks</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+
+            <span class="n">idim</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="n">dim</span><span class="p">:</span>
+                    <span class="n">idim</span> <span class="o">=</span> <span class="n">x</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">idim</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Requested chunking across dimension &#39;</span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;but only &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span><span class="si">}</span><span class="s2">&#39; present in the dataset&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span>
+            <span class="n">chunk_space</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="o">=</span> <span class="n">chunks</span>
+            <span class="n">chunk_shape</span><span class="p">[</span><span class="n">idim</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="o">/</span><span class="n">chunks</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chunk_space</span><span class="p">,</span> <span class="n">chunk_shape</span>
+
+    <span class="k">def</span> <span class="nf">_chunk_oversample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assemble the base ``dsk`` task dependency graph which includes the chunk </span>
+<span class="sd">        objects plus the method to index each chunk object (with locking). In this </span>
+<span class="sd">        case, each chunk object is a MultiFragmentWrapper which serves another dask array </span>
+<span class="sd">        used to combine the individual fragment arrays contributing to each chunk.</span>
+
+<span class="sd">        :param fragments:   (dict) The set of Fragment objects (ChunkWrapper/CFAChunk) with </span>
+<span class="sd">            their positions in ``fragment space``. These are copied into MultiFragmentWrappers </span>
+<span class="sd">            with the correctly applied extents such that all the chunks define the scope of the </span>
+<span class="sd">            total array.</span>
+
+<span class="sd">        Terminology Notes:</span>
+
+<span class="sd">            ``cs`` and ``fs`` represent the chunk_shape and fragment_shape respectively, </span>
+<span class="sd">            with short names to make the code simpler to read.</span>
+
+<span class="sd">        :returns:       A task dependency graph with all the chunks included to use when </span>
+<span class="sd">            constructing the dask array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">chunk_space</span><span class="p">,</span> <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_derive_chunk_space</span><span class="p">()</span>
+
+        <span class="n">mfwrapper</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">fragment_coord</span> <span class="ow">in</span> <span class="n">fragments</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="n">fragment</span> <span class="o">=</span> <span class="n">fragments</span><span class="p">[</span><span class="n">fragment_coord</span><span class="p">]</span>
+
+            <span class="c1"># Shape of each fragment may vary</span>
+            <span class="n">fs</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="c1"># Calculate chunk coverage for this fragment</span>
+            <span class="n">initial</span><span class="p">,</span> <span class="n">final</span> <span class="o">=</span> <span class="p">[],[]</span>
+            <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fragment_coord</span><span class="p">)):</span>
+
+                <span class="n">initial</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">fragment_coord</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">*</span> <span class="n">fs</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">/</span><span class="n">cs</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+                <span class="p">)</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">fragment_coord</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">fs</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">/</span><span class="n">cs</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+                
+                <span class="n">final</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">chunk_space</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Chunk coverage extent </span>
+            <span class="c1"># - Two chunk-space coordinates defining the chunks that are covered by this </span>
+            <span class="c1">#   fragment.</span>
+            <span class="n">cce</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">initial</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">final</span><span class="p">)]</span>
+
+            <span class="c1"># Generate the list of chunks covered by this fragment.</span>
+            <span class="n">chunk_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">coord</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span>
+                    <span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cce</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cce</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Generate the &#39;extent of this fragment&#39; in ``fragment_space``</span>
+            <span class="c1"># i.e Fragment (0,0) has extent (0,0) to (1,1)</span>
+            <span class="n">fragment_extent</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">fragment_coord</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">i</span> <span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fragment_coord</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Copy the fragment with the correct extent for each chunk covered.</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunk_list</span><span class="p">:</span>
+                <span class="c1"># For each fragment, the subdivisions caused by chunking create an irregular </span>
+                <span class="c1"># array of sliced fragments which comprises the whole chunk. Each of these </span>
+                <span class="c1"># sliced fragments needs a coordinate relative to the chunk it is being</span>
+                <span class="c1"># assigned to.</span>
+                <span class="n">relative_fragment</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">chunk_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">))])</span>
+
+                <span class="n">chunk</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="nb">tuple</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">c</span><span class="p">)</span>
+                <span class="p">]</span>
+
+                <span class="n">hyperslab</span> <span class="o">=</span> <span class="n">_overlap</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">cs</span><span class="p">,</span> <span class="n">fragment_extent</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span>
+
+                <span class="n">newfragment</span> <span class="o">=</span> <span class="n">fragment</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">hyperslab</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">mfwrapper</span><span class="p">:</span>
+                    <span class="n">mfwrapper</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">relative_fragment</span><span class="p">]</span> <span class="o">=</span> <span class="n">newfragment</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mfwrapper</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">relative_fragment</span><span class="p">:</span> <span class="n">newfragment</span><span class="p">}</span>
+
+        <span class="n">array_name</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+        <span class="n">dsk</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">mfwrapper</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">fragments</span> <span class="o">=</span> <span class="n">mfwrapper</span><span class="p">[</span><span class="n">chunk</span><span class="p">]</span>
+            
+            <span class="n">mfwrap</span> <span class="o">=</span> <span class="n">CFAChunkWrapper</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
+
+            <span class="c1"># f_indices is the initial_extent for the ArrayPartition</span>
+
+            <span class="n">mf_identifier</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mfwrap</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="n">mfwrap</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">mf_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">mfwrap</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">array_name</span> <span class="o">+</span> <span class="n">chunk</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">getter</span><span class="p">,</span> <span class="c1"># From dask docs - replaces fragment_getter</span>
+                <span class="n">mf_identifier</span><span class="p">,</span>
+                <span class="n">fragment</span><span class="o">.</span><span class="n">get_extent</span><span class="p">(),</span> <span class="c1"># Needs a think on how to get this out.</span>
+                <span class="kc">False</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s2">&quot;_lock&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1"># Check version cf-python</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dsk</span></div>
+
+<div class="viewcode-block" id="CFAChunkWrapper"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAChunkWrapper">[docs]</a><span class="k">class</span> <span class="nc">CFAChunkWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">):</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Brand new array class for handling any-size dask chunks.&#39;</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Requirements:</span>
+<span class="sd">     - Fragments are initialised with a position in index space. (Fragment Space)</span>
+<span class="sd">     - Chunk position array initialised with a different index space. (Compute Space)</span>
+<span class="sd">     - For each fragment, identify which chunk positions it falls into and add that </span>
+<span class="sd">       `CFAPartition` to a dict.</span>
+<span class="sd">     - The dict contains Chunk coordinates (compute space) as keys, with the values being </span>
+<span class="sd">       a list of pairs of CFAPartition objects that are already sliced and the array shapes </span>
+<span class="sd">       those sliced segments fit into.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CFAChunkWrapper.__init__"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAChunkWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span> <span class="o">=</span> <span class="n">fragments</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">array_name</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+
+        <span class="n">dsk</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">fragment_position</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">fragment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragments</span><span class="p">[</span><span class="n">fragment_position</span><span class="p">]</span>
+            <span class="c1"># f_indices is the initial_extent for the ArrayPartition</span>
+
+            <span class="n">f_identifier</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fragment</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="n">fragment</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">f_identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
+            <span class="n">dsk</span><span class="p">[</span><span class="n">array_name</span> <span class="o">+</span> <span class="n">fragment_position</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">getter</span><span class="p">,</span> <span class="c1"># From dask docs - replaces fragment_getter</span>
+                <span class="n">f_identifier</span><span class="p">,</span>
+                <span class="n">fragment</span><span class="o">.</span><span class="n">get_extent</span><span class="p">(),</span>
+                <span class="kc">False</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">fragment</span><span class="p">,</span> <span class="s2">&quot;_lock&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1"># Check version cf-python</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Should return a dask array.</span>
+        <span class="k">return</span> <span class="n">dsk</span></div>
+
+<div class="viewcode-block" id="CFAPartition"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAPartition">[docs]</a><span class="k">class</span> <span class="nc">CFAPartition</span><span class="p">(</span><span class="n">ArrayPartition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific </span>
+<span class="sd">    methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+  
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper object for a CFA Partition (Fragment or Chunk)&#39;</span>
+
+
+<div class="viewcode-block" id="CFAPartition.__init__"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAPartition.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">filename</span><span class="p">,</span>
+                 <span class="n">address</span><span class="p">,</span>
+                 <span class="n">aggregated_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">aggregated_calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wrapper object for the &#39;array&#39; section of a fragment. Contains some metadata </span>
+<span class="sd">        to ensure the correct fragment is selected, but generally just serves the </span>
+<span class="sd">        fragment array to dask when required.</span>
+
+<span class="sd">        :param filename:        (str) The path to a Fragment file from which this </span>
+<span class="sd">            partition object will access data from. The partition may represent </span>
+<span class="sd">            all or a subset of the data from the Fragment file.</span>
+
+<span class="sd">        :param address:         (str) The address of the data variable within the </span>
+<span class="sd">            Fragment file, may include a group hierarchy structure.</span>
+
+<span class="sd">        :param aggregated_units:    (obj) The expected units for the received data.</span>
+<span class="sd">            If the units of the received data are not equal to the ``aggregated_units``</span>
+<span class="sd">            then the data is &#39;post-processed&#39; using the cfunits ``conform`` function.</span>
+
+<span class="sd">        :param aggregated_calendar:     None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">aggregated_units</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span>    <span class="o">=</span> <span class="n">aggregated_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span> <span class="o">=</span> <span class="n">aggregated_calendar</span></div>
+
+<div class="viewcode-block" id="CFAPartition.copy"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAPartition.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new instance of this class from its own methods and attributes, and </span>
+<span class="sd">        apply a new extent to the copy if required.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;units&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">extent</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_slices</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+
+        <span class="n">new</span> <span class="o">=</span> <span class="n">CFAPartition</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new</span></div>
+
+    <span class="k">def</span> <span class="nf">_post_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Correct units/data conversions - if necessary at this stage&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">cfunits</span> <span class="kn">import</span> <span class="n">Units</span>
+            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Encountered issue when trying to import the &quot;cfunits&quot; library:&#39;</span>
+                    <span class="s2">&quot;cfunits requires UNIDATA UDUNITS-2. Can&#39;t find the &#39;udunits2&#39; library.&quot;</span>
+                    <span class="s1">&#39; - Consider setting up a conda environment, and installing &#39;</span>
+                    <span class="s1">&#39;`conda install -c conda-forge udunits2`&#39;</span>
+                <span class="p">)</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="n">Units</span><span class="o">.</span><span class="n">conform</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="CFAPartition.get_kwargs"><a class="viewcode-back" href="../../wrapper.html#CFAPyX.wrappers.CFAPartition.get_kwargs">[docs]</a>    <span class="k">def</span> <span class="nf">get_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;aggregated_units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">,</span>
+            <span class="s1">&#39;aggregated_calendar&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span>
+        <span class="p">}</span> <span class="o">|</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span></div></div>
+
+<span class="k">def</span> <span class="nf">_overlap</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">fragment_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine the overlap between a chunk and fragment. Not yet properly implemented.</span>
+
+<span class="sd">    :param chunk:           None    </span>
+
+<span class="sd">    :param chunk_size:      None</span>
+
+<span class="sd">    :param fragment:        None</span>
+<span class="sd">    </span>
+<span class="sd">    :param fragment_size:   None</span>
+
+<span class="sd">    Chunk and Fragment need to have structure (2,N) where 2 signifies the start and end </span>
+<span class="sd">    of each dimension and N is the number of dimensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">dimslice</span> <span class="o">=</span> <span class="n">_overlap_in_1d</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">dim</span><span class="p">],</span> <span class="n">chunk</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">dim</span><span class="p">]),</span>
+            <span class="n">chunk_size</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">fragment</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">dim</span><span class="p">],</span> <span class="n">fragment</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">dim</span><span class="p">]),</span>
+            <span class="n">fragment_size</span>
+        <span class="p">)</span>
+        <span class="n">extent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dimslice</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">extent</span> <span class="c1"># Total slice-based overlap of chunk and fragment</span>
+
+<span class="k">def</span> <span class="nf">_overlap_in_1d</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">fragment</span><span class="p">,</span> <span class="n">fragment_size</span><span class="p">):</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">fragment</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">fragment_size</span><span class="p">)</span>
+    <span class="n">end</span>   <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">fragment</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">chunk_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="c1"># And possibly more</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #0ecc5778;
+    }
+
+    .caption-text, .header h1 {
+        color: #45c347
+    }
+
+    .note {
+        background: #BEEF9E
+    }
+    .admonition-title {
+        background: #335145
+    }
+
+    .wy-nav-side {
+        background: #001711;
+    }
+
+  </style>
+
+
+</body>
+</html>

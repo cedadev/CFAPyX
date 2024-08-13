@@ -4,19 +4,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; CFAPyX v1.1 documentation</title>
+  <title>Index &mdash; CFAPyX Package 2024.8.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="shortcut icon" href="_static/CFAPyX.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=3dd8cc91"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
@@ -33,7 +33,8 @@
           
           
           <a href="index.html" class="icon icon-home">
-            CFAPyX
+            CFAPyX Package
+              <img src="_static/CFAPyX_long.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,15 +44,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Details:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
         </div>
@@ -60,7 +66,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">CFAPyX</a>
+          <a href="index.html">CFAPyX Package</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -81,7 +87,10 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#C"><strong>C</strong></a>
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#K"><strong>K</strong></a>
@@ -89,22 +98,72 @@
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  
 </div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__array__">__array__() (CFAPyX.wrappers.FragmentArrayWrapper method)</a>
+</li>
+      <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__getitem__">__getitem__() (CFAPyX.wrappers.FragmentArrayWrapper method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="wrapper.html#CFAPyX.wrappers.CFAChunkWrapper.__init__">__init__() (CFAPyX.wrappers.CFAChunkWrapper method)</a>
+
+      <ul>
+        <li><a href="wrapper.html#CFAPyX.wrappers.CFAPartition.__init__">(CFAPyX.wrappers.CFAPartition method)</a>
+</li>
+        <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.__init__">(CFAPyX.wrappers.FragmentArrayWrapper method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.active_options">active_options (CFAPyX.datastore.CFADataStore property)</a>
+
+      <ul>
+        <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.active_options">(CFAPyX.wrappers.FragmentArrayWrapper property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="partition.html#CFAPyX.partition.ArrayLike">ArrayLike (class in CFAPyX.partition)</a>
+</li>
+      <li><a href="partition.html#CFAPyX.partition.ArrayPartition">ArrayPartition (class in CFAPyX.partition)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.cfa_options">cfa_options (CFAPyX.datastore.CFADataStore property)</a>
+
+      <ul>
+        <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper.cfa_options">(CFAPyX.wrappers.FragmentArrayWrapper property)</a>
+</li>
+      </ul></li>
+      <li><a href="wrapper.html#CFAPyX.wrappers.CFAChunkWrapper">CFAChunkWrapper (class in CFAPyX.wrappers)</a>
 </li>
       <li><a href="datastore.html#CFAPyX.datastore.CFADataStore">CFADataStore (class in CFAPyX.datastore)</a>
 </li>
-      <li><a href="backendentrypoint.html#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint">CFANetCDFBackendEntrypoint (class in CFAPyX.backendentrypoint)</a>
+      <li><a href="groups.html#CFAPyX.group.CFAGroupWrapper">CFAGroupWrapper (class in CFAPyX.group)</a>
+</li>
+      <li><a href="backend.html#CFAPyX.backend.CFANetCDFBackendEntrypoint">CFANetCDFBackendEntrypoint (class in CFAPyX.backend)</a>
+</li>
+      <li><a href="wrapper.html#CFAPyX.wrappers.CFAPartition">CFAPartition (class in CFAPyX.wrappers)</a>
 </li>
       <li>
-    CFAPyX.backendentrypoint
+    CFAPyX.backend
 
       <ul>
-        <li><a href="backendentrypoint.html#module-CFAPyX.backendentrypoint">module</a>
+        <li><a href="backend.html#module-CFAPyX.backend">module</a>
 </li>
       </ul></li>
       <li>
@@ -117,13 +176,6 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
-    CFAPyX.fragmentarray
-
-      <ul>
-        <li><a href="fragmentarray.html#module-CFAPyX.fragmentarray">module</a>
-</li>
-      </ul></li>
-      <li>
     CFAPyX.group
 
       <ul>
@@ -131,13 +183,38 @@
 </li>
       </ul></li>
       <li>
-    CFAPyX.utils
+    CFAPyX.partition
 
       <ul>
-        <li><a href="utils.html#module-CFAPyX.utils">module</a>
+        <li><a href="partition.html#module-CFAPyX.partition">module</a>
 </li>
       </ul></li>
-      <li><a href="backendentrypoint.html#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint">CFAStoreBackendEntrypoint (class in CFAPyX.backendentrypoint)</a>
+      <li>
+    CFAPyX.wrappers
+
+      <ul>
+        <li><a href="wrapper.html#module-CFAPyX.wrappers">module</a>
+</li>
+      </ul></li>
+      <li><a href="backend.html#CFAPyX.backend.CFAStoreBackendEntrypoint">CFAStoreBackendEntrypoint (class in CFAPyX.backend)</a>
+</li>
+      <li><a href="partition.html#CFAPyX.partition.ArrayLike.copy">copy() (CFAPyX.partition.ArrayLike method)</a>
+
+      <ul>
+        <li><a href="partition.html#CFAPyX.partition.ArrayPartition.copy">(CFAPyX.partition.ArrayPartition method)</a>
+</li>
+        <li><a href="partition.html#CFAPyX.partition.SuperLazyArrayLike.copy">(CFAPyX.partition.SuperLazyArrayLike method)</a>
+</li>
+        <li><a href="wrapper.html#CFAPyX.wrappers.CFAPartition.copy">(CFAPyX.wrappers.CFAPartition method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="wrapper.html#CFAPyX.wrappers.CFAChunkWrapper.description">description (CFAPyX.wrappers.CFAChunkWrapper attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -145,7 +222,7 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="fragmentarray.html#CFAPyX.fragmentarray.FragmentWrapper">FragmentWrapper (class in CFAPyX.fragmentarray)</a>
+      <li><a href="wrapper.html#CFAPyX.wrappers.FragmentArrayWrapper">FragmentArrayWrapper (class in CFAPyX.wrappers)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -155,11 +232,19 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.get_attrs">get_attrs() (CFAPyX.datastore.CFADataStore method)</a>
 </li>
+      <li><a href="partition.html#CFAPyX.partition.ArrayLike.get_kwargs">get_kwargs() (CFAPyX.partition.ArrayLike method)</a>
+
+      <ul>
+        <li><a href="partition.html#CFAPyX.partition.ArrayPartition.get_kwargs">(CFAPyX.partition.ArrayPartition method)</a>
+</li>
+        <li><a href="partition.html#CFAPyX.partition.SuperLazyArrayLike.get_kwargs">(CFAPyX.partition.SuperLazyArrayLike method)</a>
+</li>
+        <li><a href="wrapper.html#CFAPyX.wrappers.CFAPartition.get_kwargs">(CFAPyX.wrappers.CFAPartition method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.get_variables">get_variables() (CFAPyX.datastore.CFADataStore method)</a>
-</li>
-      <li><a href="groups.html#CFAPyX.group.GroupedDatasetWrapper">GroupedDatasetWrapper (class in CFAPyX.group)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -167,7 +252,7 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="groups.html#CFAPyX.group.PropertyWrapper.keys">keys() (CFAPyX.group.PropertyWrapper method)</a>
+      <li><a href="groups.html#CFAPyX.group.VariableWrapper.keys">keys() (CFAPyX.group.VariableWrapper method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -179,15 +264,15 @@
     module
 
       <ul>
-        <li><a href="backendentrypoint.html#module-CFAPyX.backendentrypoint">CFAPyX.backendentrypoint</a>
+        <li><a href="backend.html#module-CFAPyX.backend">CFAPyX.backend</a>
 </li>
         <li><a href="datastore.html#module-CFAPyX.datastore">CFAPyX.datastore</a>
 </li>
-        <li><a href="fragmentarray.html#module-CFAPyX.fragmentarray">CFAPyX.fragmentarray</a>
-</li>
         <li><a href="groups.html#module-CFAPyX.group">CFAPyX.group</a>
 </li>
-        <li><a href="utils.html#module-CFAPyX.utils">CFAPyX.utils</a>
+        <li><a href="partition.html#module-CFAPyX.partition">CFAPyX.partition</a>
+</li>
+        <li><a href="wrapper.html#module-CFAPyX.wrappers">CFAPyX.wrappers</a>
 </li>
       </ul></li>
   </ul></td>
@@ -196,7 +281,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="fragmentarray.html#CFAPyX.fragmentarray.NetCDFFragmentWrapper">NetCDFFragmentWrapper (class in CFAPyX.fragmentarray)</a>
+      <li><a href="partition.html#CFAPyX.partition.ArrayLike.ndim">ndim (CFAPyX.partition.ArrayLike property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -204,24 +289,18 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="utils.html#CFAPyX.utils.OneOrMoreList">OneOrMoreList (class in CFAPyX.utils)</a>
+      <li><a href="partition.html#CFAPyX.partition.ArrayPartition.open">open() (CFAPyX.partition.ArrayPartition method)</a>
 </li>
-      <li><a href="fragmentarray.html#CFAPyX.fragmentarray.FragmentWrapper.open">open() (CFAPyX.fragmentarray.FragmentWrapper method)</a>
-
-      <ul>
-        <li><a href="fragmentarray.html#CFAPyX.fragmentarray.NetCDFFragmentWrapper.open">(CFAPyX.fragmentarray.NetCDFFragmentWrapper method)</a>
+      <li><a href="backend.html#CFAPyX.backend.open_cfa_dataset">open_cfa_dataset() (in module CFAPyX.backend)</a>
 </li>
-      </ul></li>
-      <li><a href="backendentrypoint.html#CFAPyX.backendentrypoint.open_cfa_dataset">open_cfa_dataset() (in module CFAPyX.backendentrypoint)</a>
+      <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.open_cfa_variable">open_cfa_variable() (CFAPyX.datastore.CFADataStore method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.open_cfa_variable">open_cfa_variable() (CFAPyX.datastore.CFADataStore method)</a>
-</li>
-      <li><a href="backendentrypoint.html#CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint.open_dataset">open_dataset() (CFAPyX.backendentrypoint.CFANetCDFBackendEntrypoint method)</a>
+      <li><a href="backend.html#CFAPyX.backend.CFANetCDFBackendEntrypoint.open_dataset">open_dataset() (CFAPyX.backend.CFANetCDFBackendEntrypoint method)</a>
 
       <ul>
-        <li><a href="backendentrypoint.html#CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint.open_dataset">(CFAPyX.backendentrypoint.CFAStoreBackendEntrypoint method)</a>
+        <li><a href="backend.html#CFAPyX.backend.CFAStoreBackendEntrypoint.open_dataset">(CFAPyX.backend.CFAStoreBackendEntrypoint method)</a>
 </li>
       </ul></li>
       <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.open_variable">open_variable() (CFAPyX.datastore.CFADataStore method)</a>
@@ -232,7 +311,29 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="groups.html#CFAPyX.group.PropertyWrapper">PropertyWrapper (class in CFAPyX.group)</a>
+      <li><a href="datastore.html#CFAPyX.datastore.CFADataStore.perform_decoding">perform_decoding() (CFAPyX.datastore.CFADataStore method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="partition.html#CFAPyX.partition.SuperLazyArrayLike.shape">shape (CFAPyX.partition.SuperLazyArrayLike property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="partition.html#CFAPyX.partition.ArrayLike.size">size (CFAPyX.partition.ArrayLike property)</a>
+</li>
+      <li><a href="partition.html#CFAPyX.partition.SuperLazyArrayLike">SuperLazyArrayLike (class in CFAPyX.partition)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="groups.html#CFAPyX.group.VariableWrapper">VariableWrapper (class in CFAPyX.group)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -246,7 +347,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved..</p>
+    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

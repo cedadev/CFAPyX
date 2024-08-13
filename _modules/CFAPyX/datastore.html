@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFAPyX.datastore &mdash; CFAPyX Package 2024.8.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/CFAPyX.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4fca6d66"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CFAPyX Package
+              <img src="../../_static/CFAPyX_long.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Details:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../inspiration.html">Inspiration for CFA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Xarray Engine Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../fragments.html">Fragments, Partitions and Chunks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../options.html">CFAPyX Usage and Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../backend.html">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../datastore.html">CFA DataStore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wrapper.html">CFA Wrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../partition.html">Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../groups.html">CFA Groups</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CFAPyX Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">CFAPyX.datastore</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for CFAPyX.datastore</h1><div class="highlight"><pre>
+<span></span><span class="n">__author__</span>    <span class="o">=</span> <span class="s2">&quot;Daniel Westwood&quot;</span>
+<span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2023 United Kingdom Research and Innovation&quot;</span>
+
+<span class="kn">from</span> <span class="nn">xarray.backends</span> <span class="kn">import</span> <span class="p">(</span> 
+    <span class="n">NetCDF4DataStore</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">xarray.core.utils</span> <span class="kn">import</span> <span class="n">FrozenDict</span>
+<span class="kn">from</span> <span class="nn">xarray.core</span> <span class="kn">import</span> <span class="n">indexing</span>
+<span class="kn">from</span> <span class="nn">xarray.coding.variables</span> <span class="kn">import</span> <span class="n">pop_to</span>
+
+<span class="kn">from</span> <span class="nn">xarray.core.variable</span> <span class="kn">import</span> <span class="n">Variable</span>
+
+<span class="kn">import</span> <span class="nn">xarray</span>
+
+
+<span class="kn">import</span> <span class="nn">netCDF4</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">CFAPyX.wrappers</span> <span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
+<span class="kn">from</span> <span class="nn">CFAPyX.decoder</span> <span class="kn">import</span> <span class="n">get_fragment_positions</span><span class="p">,</span> <span class="n">get_fragment_extents</span>
+
+<span class="kn">from</span> <span class="nn">CFAPyX.group</span> <span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
+
+
+<span class="n">xarray_subs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;file:///&#39;</span><span class="p">:</span><span class="s1">&#39;/&#39;</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="CFADataStore"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore">[docs]</a><span class="k">class</span> <span class="nc">CFADataStore</span><span class="p">(</span><span class="n">NetCDF4DataStore</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines </span>
+<span class="sd">    directly related to the specific variables and attributes. The ``NetCDF4Datastore``</span>
+<span class="sd">    Xarray class from which this class inherits, has an ``__init__`` method which </span>
+<span class="sd">    cannot easily be overriden, so properties are used instead for specific variables </span>
+<span class="sd">    that may be un-set at time of use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Property of the datastore that relates private option variables to the standard </span>
+<span class="sd">        ``active_options`` parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;use_active&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span><span class="p">,</span>
+            <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span><span class="p">,</span>
+        <span class="p">}</span>
+    
+    <span class="nd">@active_options</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">active_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_active_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_active_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_active</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span> <span class="o">=</span> <span class="n">use_active</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span> <span class="o">=</span> <span class="n">chunks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_active_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;__active_chunks&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__active_chunks</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="nd">@_active_chunks</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_active_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__active_chunks</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Property of the datastore that relates private option variables to the standard </span>
+<span class="sd">        ``cfa_options`` parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
+            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>
+        <span class="p">}</span>
+
+    <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_cfa_options</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> 
+            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to set cfa options.</span>
+
+<span class="sd">        :param substitutions:   (dict) Set of provided substitutions to Xarray, </span>
+<span class="sd">                                following the CFA conventions on substitutions.</span>
+
+<span class="sd">        :param decode_cfa:      (bool) Optional setting to disable CFA decoding </span>
+<span class="sd">                                in some cases, default is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>    <span class="o">=</span> <span class="n">decode_cfa</span>
+
+    <span class="k">def</span> <span class="nf">_acquire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">needs_lock</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_manager</span><span class="o">.</span><span class="n">acquire_context</span><span class="p">(</span><span class="n">needs_lock</span><span class="p">)</span> <span class="k">as</span> <span class="n">root</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">CFAGroupWrapper</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_group</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conventions</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">Conventions</span>
+
+        <span class="k">return</span> <span class="n">ds</span>
+
+    <span class="k">def</span> <span class="nf">_decode_feature_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_data</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decode the value of an object which is expected to be of the form of a </span>
+<span class="sd">        ``feature: variable`` blank-separated element list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: | &#39;</span><span class="p">,</span><span class="n">feature_data</span><span class="p">)</span>
+
+        <span class="c1"># Anything that uses a &#39;:&#39; needs to be readded after the previous step.</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">readd</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])}</span>
+
+    <span class="k">def</span> <span class="nf">_check_applied_conventions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that the aggregated data complies with the conventions specified in the</span>
+<span class="sd">        CFA-netCDF file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;address&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;CFA-0.6.2&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+            <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="s1">&#39;format&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">feature</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;CFA-netCDF file is not compliant with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="si">}</span><span class="s1"> &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;Required aggregated data features: &quot;</span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_perform_decoding</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> 
+            <span class="n">shape</span><span class="p">,</span> 
+            <span class="n">address</span><span class="p">,</span> 
+            <span class="n">location</span><span class="p">,</span> 
+            <span class="n">array_shape</span><span class="p">,</span> 
+            <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+            <span class="n">cformat</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> 
+            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method for performing the decoding of the standard ``fragment array </span>
+<span class="sd">        variables``. Any convention version-specific adjustments should be made prior </span>
+<span class="sd">        to decoding with this function, namely in the public method of the same name.</span>
+
+<span class="sd">        :param shape:       (obj) The integer-valued ``shape`` fragment array variable </span>
+<span class="sd">                            defines the shape of each fragment&#39;s data in its canonical </span>
+<span class="sd">                            form. CF-1.12 section 2.8.1</span>
+
+<span class="sd">        :param address:     (obj) The ``address`` fragment array variable, that may </span>
+<span class="sd">                            have any data type, defines how to find each fragment </span>
+<span class="sd">                            within its fragment dataset. CF-1.12 section 2.8.1</span>
+
+<span class="sd">        :param location:    (obj) The string-valued ``location`` fragment array </span>
+<span class="sd">                            variable defines the locations of fragment datasets using </span>
+<span class="sd">                            Uniform Resource Identifiers (URIs). CF-1.12 section 2.8.1</span>
+
+<span class="sd">        :param value:       (obj) *Optional* unique data value to fill a fragment array </span>
+<span class="sd">                            where the data values within the fragment are all the same.</span>
+
+<span class="sd">        :param cformat:     (str) *Optional* ``format`` argument if provided by the </span>
+<span class="sd">                            CFA-netCDF or cfa-options parameters. CFA-0.6.2</span>
+
+<span class="sd">        :param substitutions:</span>
+
+<span class="sd">        :returns:       (fragment_info) A dictionary of fragment metadata where each </span>
+<span class="sd">                        key is the coordinates of a fragment in index space and the </span>
+<span class="sd">                        value is a dictionary of the attributes specific to that </span>
+<span class="sd">                        fragment.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">fragment_info</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Extract non-padded fragment sizes per dimension.</span>
+        <span class="n">fragment_size_per_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">compressed</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
+
+        <span class="c1"># Derive the total shape of the fragment array in all fragmented dimensions.</span>
+        <span class="n">fragment_space</span>    <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">fsize</span><span class="p">)</span> <span class="k">for</span> <span class="n">fsize</span> <span class="ow">in</span> <span class="n">fragment_size_per_dim</span><span class="p">]</span>
+
+        <span class="c1"># Obtain the positions of each fragment in index space.</span>
+        <span class="n">fragment_positions</span> <span class="o">=</span> <span class="n">get_fragment_positions</span><span class="p">(</span><span class="n">fragment_size_per_dim</span><span class="p">)</span>
+
+        <span class="n">global_extent</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">get_fragment_extents</span><span class="p">(</span>
+            <span class="n">fragment_size_per_dim</span><span class="p">,</span> 
+            <span class="n">array_shape</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># --------------------------------------------------------</span>
+            <span class="c1"># This fragment contains a constant value, not file</span>
+            <span class="c1"># locations.</span>
+            <span class="c1"># --------------------------------------------------------</span>
+            <span class="n">fragment_space</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">fragment_info</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">frag_pos</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shapes</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                    <span class="s2">&quot;fill_value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+                    <span class="s2">&quot;global_extent&quot;</span><span class="p">:</span> <span class="n">global_extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                    <span class="s2">&quot;extent&quot;</span><span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;full&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">frag_pos</span> <span class="ow">in</span> <span class="n">fragment_positions</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
+
+        <span class="n">constructor_shape</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span> <span class="c1"># Scalar address</span>
+            <span class="n">addr</span>    <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">getValue</span><span class="p">()</span>
+            <span class="n">adtype</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="n">address</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">constructor_shape</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">adtype</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cformat</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cformat</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+                <span class="n">cft</span> <span class="o">=</span> <span class="n">cformat</span><span class="o">.</span><span class="n">getValue</span><span class="p">()</span>
+                <span class="n">npdtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cft</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="n">cformat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">constructor_shape</span><span class="p">,</span> <span class="n">cft</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">npdtype</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">frag_pos</span> <span class="ow">in</span> <span class="n">fragment_positions</span><span class="p">:</span>
+
+            <span class="n">fragment_info</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;shape&quot;</span>    <span class="p">:</span> <span class="n">shapes</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;location&quot;</span> <span class="p">:</span> <span class="n">location</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;address&quot;</span>  <span class="p">:</span> <span class="n">address</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;extent&quot;</span>   <span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;global_extent&quot;</span><span class="p">:</span> <span class="n">global_extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cformat</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">):</span>
+                <span class="n">fragment_info</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cformat</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span>
+
+        <span class="c1"># Apply string substitutions to the fragment filenames</span>
+        <span class="k">if</span> <span class="n">substitutions</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fragment_info</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
+
+    <span class="c1"># Public class methods</span>
+
+<div class="viewcode-block" id="CFADataStore.perform_decoding"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore.perform_decoding">[docs]</a>    <span class="k">def</span> <span class="nf">perform_decoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Public method ``perform_decoding`` involves extracting the aggregated </span>
+<span class="sd">        information parameters and assembling the required information for actual </span>
+<span class="sd">        decoding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If not raised an error in checking, we can continue.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_applied_conventions</span><span class="p">(</span><span class="n">agg_data</span><span class="p">)</span>
+
+        <span class="n">cformat</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">value</span>   <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;CFA-0.6.2&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="p">:</span>
+                <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
+                <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]]</span>
+                <span class="n">cformat</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># Default to CF-1.12</span>
+                <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">]]</span>
+                <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
+                    <span class="n">value</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]]</span>
+
+            <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">]]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;One or more aggregated data features specified could not be &#39;</span>
+                <span class="s1">&#39;found in the data: &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="p">)</span>
+        
+        <span class="n">subs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s1">&#39;substitutions&#39;</span><span class="p">):</span>
+            <span class="n">subs</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">substitutions</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;https://&#39;</span><span class="p">,</span> <span class="s1">&#39;https@//&#39;</span><span class="p">)</span>
+            <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">subs</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://&#39;</span><span class="p">:</span><span class="s1">&#39;https@//&#39;</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_decoding</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span> 
+                                      <span class="n">cformat</span><span class="o">=</span><span class="n">cformat</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> 
+                                      <span class="n">substitutions</span> <span class="o">=</span> <span class="n">xarray_subs</span> <span class="o">|</span> <span class="n">subs</span><span class="p">)</span> </div>
+        <span class="c1"># Combine substitutions with known defaults for using in xarray.</span>
+
+<div class="viewcode-block" id="CFADataStore.get_variables"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore.get_variables">[docs]</a>    <span class="k">def</span> <span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetch the netCDF4.Dataset variables and perform some CFA decoding if </span>
+<span class="sd">        necessary.</span>
+
+<span class="sd">        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which </span>
+<span class="sd">        has flattened the group structure and allows fetching of variables and </span>
+<span class="sd">        attributes from the whole group tree from which a specific group may inherit.</span>
+
+<span class="sd">        :returns:       A ``FrozenDict`` Xarray object of the names of all variables, </span>
+<span class="sd">                        and methods to fetch those variables, depending on if those </span>
+<span class="sd">                        variables are standard NetCDF4 or CFA Aggregated variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Determine CFA-aggregated variables</span>
+        <span class="n">all_vars</span><span class="p">,</span> <span class="n">real_vars</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+
+        <span class="n">fragment_array_vars</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1">## Ignore variables in the set of standardised terms.</span>
+        <span class="k">for</span> <span class="n">avar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">cfa</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1">## CF-Compliant method of identifying aggregated variables.</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">],</span> <span class="s1">&#39;aggregated_dimensions&#39;</span><span class="p">):</span>
+                <span class="n">cfa</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="n">agg_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">]</span><span class="o">.</span><span class="n">aggregated_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">vname</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
+                    <span class="n">fragment_array_vars</span> <span class="o">+=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: | &#39;</span><span class="p">,</span><span class="n">vname</span><span class="p">)</span>
+                
+            <span class="n">all_vars</span><span class="p">[</span><span class="n">avar</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">],</span> <span class="n">cfa</span><span class="p">)</span>
+
+        <span class="c1"># Ignore fragment array variables at this stage of decoding.</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">all_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fragment_array_vars</span><span class="p">:</span>
+                <span class="n">real_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+
+
+        <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">real_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="CFADataStore.get_attrs"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore.get_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or </span>
+<span class="sd">        ``CFAGroupWrapper`` in the case of using a group or nested group tree.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="CFADataStore.open_variable"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore.open_variable">[docs]</a>    <span class="k">def</span> <span class="nf">open_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable </span>
+<span class="sd">        or as a CFA aggregated variable which requires additional decoding.</span>
+
+<span class="sd">        :param name:    (str) A named NetCDF4 variable.</span>
+
+<span class="sd">        :param var:     (obj) The NetCDF4.Variable object or a tuple with the contents </span>
+<span class="sd">                        ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that </span>
+<span class="sd">                        determines if the variable is a CFA or standard variable.</span>
+
+<span class="sd">        :returns:       The variable object opened as either a standard store variable </span>
+<span class="sd">                        or CFA aggregated variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">:</span>
+                <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_cfa_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_store_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_store_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">variable</span></div>
+
+<div class="viewcode-block" id="CFADataStore.open_cfa_variable"><a class="viewcode-back" href="../../datastore.html#CFAPyX.datastore.CFADataStore.open_cfa_variable">[docs]</a>    <span class="k">def</span> <span class="nf">open_cfa_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open a CFA Aggregated variable with the correct parameters to create an </span>
+<span class="sd">        Xarray ``Variable`` instance.</span>
+
+<span class="sd">        :param name:        (str) A named NetCDF4 variable.</span>
+
+<span class="sd">        :param var:         (obj) The NetCDF4.Variable object or a tuple with the </span>
+<span class="sd">                            contents ``(NetCDF4.Variable, cfa)`` where ``cfa`` is </span>
+<span class="sd">                            a bool that determines if the variable is a CFA or </span>
+<span class="sd">                            standard variable.</span>
+
+<span class="sd">        :returns:           An xarray ``Variable`` instance constructed from the </span>
+<span class="sd">                            attributes provided here, and data provided by a </span>
+<span class="sd">                            ``FragmentArrayWrapper`` which is indexed by Xarray&#39;s </span>
+<span class="sd">                            ``LazilyIndexedArray`` class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">real_dims</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">d</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">aggregated_dimensions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">agg_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">aggregated_data</span><span class="p">)</span>
+
+        <span class="c1">## Array Metadata</span>
+        <span class="n">dimensions</span>  <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">real_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">array_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">real_dims</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_decoding</span><span class="p">(</span><span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">)</span>
+
+        <span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;aggregated_units&#39;</span><span class="p">):</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;aggregated_units&#39;</span><span class="p">)</span>
+
+        <span class="c1">## Get non-aggregated attributes.</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;aggregated&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">attributes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> 
+
+        <span class="c1">## Array-like object </span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">indexing</span><span class="o">.</span><span class="n">LazilyIndexedArray</span><span class="p">(</span>
+            <span class="n">FragmentArrayWrapper</span><span class="p">(</span>
+                <span class="n">fragment_info</span><span class="p">,</span>
+                <span class="n">fragment_space</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">array_shape</span><span class="p">,</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">cfa_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfa_options</span><span class="p">,</span>
+                <span class="n">active_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">active_options</span><span class="p">,</span>
+                <span class="n">named_dims</span><span class="o">=</span><span class="n">dimensions</span><span class="p">,</span>
+            <span class="p">))</span>
+            
+        <span class="n">encoding</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">datatype</span><span class="p">,</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">EnumType</span><span class="p">):</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">datatype</span><span class="o">.</span><span class="n">enum_dict</span><span class="p">,</span>
+                    <span class="s2">&quot;enum_name&quot;</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">datatype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;S&quot;</span> <span class="ow">and</span> <span class="s2">&quot;_FillValue&quot;</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">:</span>
+            <span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;_FillValue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">(</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;_FillValue&quot;</span><span class="p">])</span>
+
+        <span class="n">filters</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">filters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">encoding</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">chunking</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">chunking</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">chunking</span> <span class="o">==</span> <span class="s2">&quot;contiguous&quot;</span><span class="p">:</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;contiguous&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;chunksizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;contiguous&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;chunksizes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">chunking</span><span class="p">)</span>
+                <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;preferred_chunks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">chunking</span><span class="p">))</span>
+        <span class="c1"># TODO: figure out how to round-trip &quot;endian-ness&quot; without raising</span>
+        <span class="c1"># warnings from netCDF4</span>
+        <span class="c1"># encoding[&#39;endian&#39;] = var.endian()</span>
+        <span class="n">pop_to</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="s2">&quot;least_significant_digit&quot;</span><span class="p">)</span>
+        <span class="c1"># save source so __repr__ can detect if it&#39;s local or not</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;original_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">v</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">attributes</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div></div>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #0ecc5778;
+    }
+
+    .caption-text, .header h1 {
+        color: #45c347
+    }
+
+    .note {
+        background: #BEEF9E
+    }
+    .admonition-title {
+        background: #335145
+    }
+
+    .wy-nav-side {
+        background: #001711;
+    }
+
+  </style>
+
+
+</body>
+</html>

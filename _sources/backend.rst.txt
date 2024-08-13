@@ -2,5 +2,5 @@
 Xarray Backend Entrypoint for CFAPyX
 ====================================
 
-.. automodule:: CFAPyX.backendentrypoint
+.. automodule:: CFAPyX.backend
     :members:

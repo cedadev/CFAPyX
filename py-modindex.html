@@ -4,19 +4,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python Module Index &mdash; CFAPyX v1.1 documentation</title>
+  <title>Python Module Index &mdash; CFAPyX Package 2024.8.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
-    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="shortcut icon" href="_static/CFAPyX.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=3dd8cc91"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
@@ -36,7 +36,8 @@
           
           
           <a href="index.html" class="icon icon-home">
-            CFAPyX
+            CFAPyX Package
+              <img src="_static/CFAPyX_long.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,15 +47,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Details:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="backendentrypoint.html">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fragmentarray.html">CFA Fragment Array</a></li>
-<li class="toctree-l1"><a class="reference internal" href="groups.html">NetCDF group handling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
         </div>
@@ -63,7 +69,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">CFAPyX</a>
+          <a href="index.html">CFAPyX Package</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -100,7 +106,7 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="backendentrypoint.html#module-CFAPyX.backendentrypoint"><code class="xref">CFAPyX.backendentrypoint</code></a></td><td>
+       <a href="backend.html#module-CFAPyX.backend"><code class="xref">CFAPyX.backend</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -110,17 +116,17 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="fragmentarray.html#module-CFAPyX.fragmentarray"><code class="xref">CFAPyX.fragmentarray</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
        <a href="groups.html#module-CFAPyX.group"><code class="xref">CFAPyX.group</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="utils.html#module-CFAPyX.utils"><code class="xref">CFAPyX.utils</code></a></td><td>
+       <a href="partition.html#module-CFAPyX.partition"><code class="xref">CFAPyX.partition</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="wrapper.html#module-CFAPyX.wrappers"><code class="xref">CFAPyX.wrappers</code></a></td><td>
        <em></em></td></tr>
    </table>
 
@@ -132,7 +138,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved..</p>
+    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -18,15 +18,23 @@ Current support is limited to local netCDF4 formatted files, but future addition
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Details:
 
    Inspiration for CFA <inspiration>
    Xarray Engine Overview <overview>
-   CFA Backend Entrypoint <backendentrypoint>
+   Fragments, Partitions and Chunks <fragments>
+   CFAPyX Usage and Options <options>
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
+   CFA Backend Entrypoint <backend>
    CFA DataStore <datastore>
-   CFA Fragment Array <fragmentarray>
-   NetCDF group handling <groups>
-   Utilities <utils>
+   CFA Wrappers <wrapper>
+   Partitions <partition>
+   CFA Groups <groups>
    
 Indices and Tables
 ==================

@@ -144,7 +144,7 @@ class FragmentArrayWrapper(ArrayLike):
 
             fragments[pos] = fragment
         
-        if not self._active_chunks:
+        if not self._cfa_chunks:
             dsk = self._chunk_by_fragment(fragments)
 
             global_extent = {
@@ -187,7 +187,6 @@ class FragmentArrayWrapper(ArrayLike):
         
         return {
             'use_active': self._use_active,
-            'active_chunks': self._active_chunks
         }
     
     @active_options.setter
@@ -197,7 +196,6 @@ class FragmentArrayWrapper(ArrayLike):
     def _set_active_options(
             self, 
             use_active=False, 
-            active_chunks=None, 
             **kwargs):
         """
         Sets the private variables referred by the ``active_options`` parameter to the backend. 
@@ -205,7 +203,6 @@ class FragmentArrayWrapper(ArrayLike):
         """
         
         self._use_active = use_active
-        self._active_chunks = active_chunks
 
     @property
     def cfa_options(self):
@@ -215,24 +212,36 @@ class FragmentArrayWrapper(ArrayLike):
 
         return {
             'substitutions': self._substitutions,
-            'decode_cfa': self._decode_cfa
+            'decode_cfa': self._decode_cfa,
+            'chunks': self.chunks
         }
 
     @cfa_options.setter
     def cfa_options(self, value):
         self._set_cfa_options(**value)
 
+    @property
+    def chunks(self):
+        if hasattr(self,'_cfa_chunks'):
+            return self._cfa_chunks
+        return None
+    
+    @chunks.setter
+    def chunks(self, value):
+        self._cfa_chunks = value
+
     def _set_cfa_options(
             self,
             substitutions=None,
             decode_cfa=None,
+            chunks=None,
             **kwargs):
         """
         Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
         Ignores additional kwargs.
         """
-        
-        # Don't need this here
+
+        # Perform substitutions for this fragment array
         if substitutions:
 
             if type(substitutions) != list:
@@ -245,6 +254,7 @@ class FragmentArrayWrapper(ArrayLike):
 
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
+        self.chunks = chunks
 
     def _chunk_by_fragment(self, fragments):
         """

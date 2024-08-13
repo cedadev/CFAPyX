@@ -23,19 +23,23 @@ Opening a CFA dataset requires opening the CFA-netCDF file into a ``CFADataStore
 2. Datastore
 ------------
 
-The ``CFA Datastore`` handles all unpacking and decoding of CFA variables, as well as handling global and group variables where a group is present. The ``aggregated dimensions`` and ``attributes`` present in a 
-CFA-netCDF file are unpacked for each variable and returned from ``get_variables`` as an xarray ``FrozenDict`` object of xarray ``Variable`` objects. Each Variable is defined using the dimensions, attributes 
+The ``CFA Datastore`` handles global and group variables where a group is present, and determines which variables are ``aggregated variables``, which are decoded in ``open_cfa_variable``
+The set of variables are returned from ``get_variables`` as an xarray ``FrozenDict`` object of xarray ``Variable`` objects. Each Variable is defined using the dimensions, attributes 
 and encoding from the CFA file, but the data is more complicated.
 
 3. Data from Fragments
 ----------------------
 Xarray comes with an included ``LazilyIndexedArray`` wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn't loaded immediately upon creating the Xarray variable.
 CFAPyX provides an Array-like wrapper class called ``FragmentArrayWrapper`` for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
-set of distributed ``Fragments``. CFAPyX handles these fragments as individual ``FragmentWrapper`` objects, which are provided to the higher level Xarray wrapper by way of a Dask array, which is created with the Variable.
+set of distributed ``Fragments``. CFAPyX handles these fragments as individual ``CFAPartition`` objects when no chunks are present, and ``ChunkWrapper`` objects otherwise. 
+These are provided to the higher level Xarray wrapper by way of a Dask array, which is created as the ``data`` attribute of each variable.
 
-This means most of the complicated maths to relate an array segment to specific fragments is actually handled by Dask, the only thing the ``FragmentWrapper`` objects have to do is act like indexable Arrays that only load the data when they are indexed.
-This is done using the python ``netCDF4`` library to load the associated **fragment file** for this fragment, selecting the specific variable (from `cfa_address`) and loading a selection of the array as a numpy array. 
-Performing the slice operations on the netCDF4 dataset ensures the minimal amount of memory chunks are loaded from the file, since this is built into the netCDF4 library.
+This means most of the complicated maths to relate an array partition to specific fragments is actually handled by Dask, the only thing the ``CFAPartition`` objects have to do is act like indexable Arrays that only load the data when they are indexed.
+Since there are several Array-like objects in CFAPyX, these all inherit from classes in ``CFAPyX.partition``, in the order ``ArrayLike -> SuperLazyArrayLike -> ArrayPartition``. The ``CFAPartition`` class is an example of an ``ArrayPartition`` while the
+``FragmentArrayWrapper`` and ``ChunkWrapper`` classes are merely ``SuperLazyArrayLike`` children.
+
+Loading each array partition is done using the python ``netCDF4`` library to load the associated **fragment file** for this partition, selecting the specific variable (from ```location```) and loading a section of the array as a numpy array - depending on the 
+partition structure. Performing the slice operations on the netCDF4 dataset at the latest point ensures the minimal amount of memory chunks are loaded from the file, since any slicing operations are optimised by Dask before being applied to the source data.
 
 4. Result
 ---------
@@ -48,7 +52,7 @@ If you would like to read more about lazy loading in general, see this `SaturnCl
 or visit the `Dask Documentation <https://docs.dask.org/en/stable/>`_.
 
 For more detail specifically on CFA, see either the `CFA specifications <https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md>`_ 
-or our page on the Inspiration for CFA.
+or our page on the Inspiration for CFA. The CFA specifications version 0.6.2 will be added to CF-conventions 1.12 in November 2024 with some minor changes.
 
 Finally if you would like to find out about alternative ways of handling distributed data, specifically for cloud applications, see one of the following:
  - `padocc (CEDA) <https://cedadev.github.io/padocc/>`_: Pipeline to Aggregate Data for Optimal Cloud Capabilities

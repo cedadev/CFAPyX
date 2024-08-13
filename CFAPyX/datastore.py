@@ -48,7 +48,6 @@ class CFADataStore(NetCDF4DataStore):
         """
         return {
             'use_active': self.use_active,
-            'chunks': self._active_chunks,
         }
     
     @active_options.setter
@@ -57,17 +56,16 @@ class CFADataStore(NetCDF4DataStore):
 
     def _set_active_options(self, use_active=False, chunks=None):
         self.use_active = use_active
-        self._active_chunks = chunks
 
     @property
-    def _active_chunks(self):
-        if hasattr(self,'__active_chunks'):
-            return self.__active_chunks
+    def chunks(self):
+        if hasattr(self,'_cfa_chunks'):
+            return self._cfa_chunks
         return None
     
-    @_active_chunks.setter
-    def _active_chunks(self, value):
-        self.__active_chunks = value
+    @chunks.setter
+    def chunks(self, value):
+        self._cfa_chunks = value
 
     @property
     def cfa_options(self):
@@ -78,7 +76,8 @@ class CFADataStore(NetCDF4DataStore):
 
         return {
             'substitutions': self._substitutions,
-            'decode_cfa': self._decode_cfa
+            'decode_cfa': self._decode_cfa,
+            'chunks': self.chunks,
         }
 
     @cfa_options.setter

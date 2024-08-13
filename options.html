@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Xarray Backend Entrypoint for CFAPyX" href="backend.html" />
-    <link rel="prev" title="Fragments in CFA" href="fragments.html" /> 
+    <link rel="prev" title="CFAPyX Terminology" href="fragments.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -89,14 +89,38 @@
              
   <section id="cfapyx-usage-and-options">
 <h1>CFAPyX Usage and Options<a class="headerlink" href="#cfapyx-usage-and-options" title="Permalink to this heading"></a></h1>
-<p>Coming Soon!</p>
+<p>The CFAPyX engine ‘CFA’ is enabled using the <code class="docutils literal notranslate"><span class="pre">engine</span></code> keyword to Xarray as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cfa_file</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;CFA&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ds</span></code> object can then be used as normal in Xarray. Keyword arguments are provided to CFAPyX with the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cfa_file</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;CFA&#39;</span><span class="p">,</span>
+                    <span class="n">cfa_options</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="s1">&#39;substitutions&#39;</span> <span class="p">:</span> <span class="p">{</span><span class="s1">&#39;base&#39;</span><span class="p">:</span><span class="s1">&#39;sub&#39;</span><span class="p">},</span>
+                            <span class="s1">&#39;decode_cfa&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                            <span class="s1">&#39;chunks&#39;</span> <span class="p">:</span> <span class="p">{}</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Three keyword arguments are currently supported within <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code>:</dt><dd><ul class="simple">
+<li><p><strong>Substitutions</strong>: Additional substitutions provided to the CFA decoder for this file, following the CF 1.12 conventions
+for syntax with ‘base’ and ‘sub’.</p></li>
+<li><p><strong>Decode CFA</strong>: Optional parameter to disable decoding of aggregation variables if required. Default is True.</p></li>
+<li><p><strong>Chunks</strong>: Replaces the typical <code class="docutils literal notranslate"><span class="pre">chunks={}</span></code> normally provided to Xarray for Dask chunks. You may still use the normal
+dask chunks keyword but may get better performance using CFA chunks because this takes into account the underlying storage
+regime including Fragment extents. See the diagram in <a class="reference internal" href="fragments.html#fragments-chunks-and-partitions"><span class="std std-ref">Fragments, Chunks and Partitions</span></a> for more details.</p></li>
+</ul>
+</dd>
+</dl>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="fragments.html" class="btn btn-neutral float-left" title="Fragments in CFA" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fragments.html" class="btn btn-neutral float-left" title="CFAPyX Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="backend.html" class="btn btn-neutral float-right" title="Xarray Backend Entrypoint for CFAPyX" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

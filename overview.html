@@ -23,7 +23,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Fragments in CFA" href="fragments.html" />
+    <link rel="next" title="CFAPyX Terminology" href="fragments.html" />
     <link rel="prev" title="CFA and Distributed Data" href="inspiration.html" /> 
 </head>
 
@@ -111,18 +111,21 @@ methods are required. There is therefore a large number of methods with CFA clas
 </section>
 <section id="datastore">
 <h2>2. Datastore<a class="headerlink" href="#datastore" title="Permalink to this heading"></a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">CFA</span> <span class="pre">Datastore</span></code> handles all unpacking and decoding of CFA variables, as well as handling global and group variables where a group is present. The <code class="docutils literal notranslate"><span class="pre">aggregated</span> <span class="pre">dimensions</span></code> and <code class="docutils literal notranslate"><span class="pre">attributes</span></code> present in a
-CFA-netCDF file are unpacked for each variable and returned from <code class="docutils literal notranslate"><span class="pre">get_variables</span></code> as an xarray <code class="docutils literal notranslate"><span class="pre">FrozenDict</span></code> object of xarray <code class="docutils literal notranslate"><span class="pre">Variable</span></code> objects. Each Variable is defined using the dimensions, attributes
+<p>The <code class="docutils literal notranslate"><span class="pre">CFA</span> <span class="pre">Datastore</span></code> handles global and group variables where a group is present, and determines which variables are <code class="docutils literal notranslate"><span class="pre">aggregated</span> <span class="pre">variables</span></code>, which are decoded in <code class="docutils literal notranslate"><span class="pre">open_cfa_variable</span></code>
+The set of variables are returned from <code class="docutils literal notranslate"><span class="pre">get_variables</span></code> as an xarray <code class="docutils literal notranslate"><span class="pre">FrozenDict</span></code> object of xarray <code class="docutils literal notranslate"><span class="pre">Variable</span></code> objects. Each Variable is defined using the dimensions, attributes
 and encoding from the CFA file, but the data is more complicated.</p>
 </section>
 <section id="data-from-fragments">
 <h2>3. Data from Fragments<a class="headerlink" href="#data-from-fragments" title="Permalink to this heading"></a></h2>
 <p>Xarray comes with an included <code class="docutils literal notranslate"><span class="pre">LazilyIndexedArray</span></code> wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn’t loaded immediately upon creating the Xarray variable.
 CFAPyX provides an Array-like wrapper class called <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
-set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. CFAPyX handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">FragmentWrapper</span></code> objects, which are provided to the higher level Xarray wrapper by way of a Dask array, which is created with the Variable.</p>
-<p>This means most of the complicated maths to relate an array segment to specific fragments is actually handled by Dask, the only thing the <code class="docutils literal notranslate"><span class="pre">FragmentWrapper</span></code> objects have to do is act like indexable Arrays that only load the data when they are indexed.
-This is done using the python <code class="docutils literal notranslate"><span class="pre">netCDF4</span></code> library to load the associated <strong>fragment file</strong> for this fragment, selecting the specific variable (from <cite>cfa_address</cite>) and loading a selection of the array as a numpy array.
-Performing the slice operations on the netCDF4 dataset ensures the minimal amount of memory chunks are loaded from the file, since this is built into the netCDF4 library.</p>
+set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. CFAPyX handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects when no chunks are present, and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> objects otherwise.
+These are provided to the higher level Xarray wrapper by way of a Dask array, which is created as the <code class="docutils literal notranslate"><span class="pre">data</span></code> attribute of each variable.</p>
+<p>This means most of the complicated maths to relate an array partition to specific fragments is actually handled by Dask, the only thing the <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects have to do is act like indexable Arrays that only load the data when they are indexed.
+Since there are several Array-like objects in CFAPyX, these all inherit from classes in <code class="docutils literal notranslate"><span class="pre">CFAPyX.partition</span></code>, in the order <code class="docutils literal notranslate"><span class="pre">ArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">SuperLazyArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">ArrayPartition</span></code>. The <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> class is an example of an <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> while the
+<code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> classes are merely <code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike</span></code> children.</p>
+<p>Loading each array partition is done using the python <code class="docutils literal notranslate"><span class="pre">netCDF4</span></code> library to load the associated <strong>fragment file</strong> for this partition, selecting the specific variable (from <code class="docutils literal notranslate"><span class="pre">`location`</span></code>) and loading a section of the array as a numpy array - depending on the
+partition structure. Performing the slice operations on the netCDF4 dataset at the latest point ensures the minimal amount of memory chunks are loaded from the file, since any slicing operations are optimised by Dask before being applied to the source data.</p>
 </section>
 <section id="result">
 <h2>4. Result<a class="headerlink" href="#result" title="Permalink to this heading"></a></h2>
@@ -132,7 +135,7 @@ combined and applied at the latest stage for optimal performance.</p>
 <p>If you would like to read more about lazy loading in general, see this <a class="reference external" href="https://saturncloud.io/blog/a-data-scientist-s-guide-to-lazy-evaluation-with-dask/">SaturnCloud Blog</a>
 or visit the <a class="reference external" href="https://docs.dask.org/en/stable/">Dask Documentation</a>.</p>
 <p>For more detail specifically on CFA, see either the <a class="reference external" href="https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md">CFA specifications</a>
-or our page on the Inspiration for CFA.</p>
+or our page on the Inspiration for CFA. The CFA specifications version 0.6.2 will be added to CF-conventions 1.12 in November 2024 with some minor changes.</p>
 <dl class="simple">
 <dt>Finally if you would like to find out about alternative ways of handling distributed data, specifically for cloud applications, see one of the following:</dt><dd><ul class="simple">
 <li><p><a class="reference external" href="https://cedadev.github.io/padocc/">padocc (CEDA)</a>: Pipeline to Aggregate Data for Optimal Cloud Capabilities</p></li>
@@ -150,7 +153,7 @@ or our page on the Inspiration for CFA.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="inspiration.html" class="btn btn-neutral float-left" title="CFA and Distributed Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="fragments.html" class="btn btn-neutral float-right" title="Fragments in CFA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fragments.html" class="btn btn-neutral float-right" title="CFAPyX Terminology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -231,7 +231,7 @@
 
             <span class="n">fragments</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
         
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span><span class="p">:</span>
             <span class="n">dsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_by_fragment</span><span class="p">(</span><span class="n">fragments</span><span class="p">)</span>
 
             <span class="n">global_extent</span> <span class="o">=</span> <span class="p">{</span>
@@ -274,7 +274,6 @@
         
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;use_active&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_active</span><span class="p">,</span>
-            <span class="s1">&#39;active_chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span>
         <span class="p">}</span>
     
     <span class="nd">@active_options</span><span class="o">.</span><span class="n">setter</span>
@@ -284,7 +283,6 @@
     <span class="k">def</span> <span class="nf">_set_active_options</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">use_active</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-            <span class="n">active_chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets the private variables referred by the ``active_options`` parameter to the backend. </span>
@@ -292,7 +290,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_active</span> <span class="o">=</span> <span class="n">use_active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_active_chunks</span> <span class="o">=</span> <span class="n">active_chunks</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -302,24 +299,36 @@
 
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
-            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>
+            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">,</span>
+            <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>
         <span class="p">}</span>
 
     <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;_cfa_chunks&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="nd">@chunks</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span> <span class="o">=</span> <span class="n">value</span>
+
     <span class="k">def</span> <span class="nf">_set_cfa_options</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">chunks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets the private variables referred by the ``cfa_options`` parameter to the backend. </span>
 <span class="sd">        Ignores additional kwargs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># Don&#39;t need this here</span>
+
+        <span class="c1"># Perform substitutions for this fragment array</span>
         <span class="k">if</span> <span class="n">substitutions</span><span class="p">:</span>
 
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">substitutions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">:</span>
@@ -332,6 +341,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span> <span class="o">=</span> <span class="n">decode_cfa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span>
 
     <span class="k">def</span> <span class="nf">_chunk_by_fragment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

@@ -3,12 +3,13 @@ __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 # Chunk wrapper is common to both CFAPyX and XarrayActive
-VERSION = 1.1
+VERSION = 1.2
 
 import numpy as np
 import netCDF4
 
 from itertools import product
+from copy import deepcopy
 from dask.utils import SerializableLock
 
 try:
@@ -23,12 +24,16 @@ class ArrayLike:
     """
     description = 'Container class for Array-Like behaviour'
 
-    def __init__(self, shape, units=None, dtype=None):
+    def __init__(self, shape, units=None, dtype=None, source_shape=None):
 
         # Standard parameters to store for array-like behaviour
         self.shape = shape
         self.units = units
         self.dtype = dtype
+
+        if not source_shape: # First time instantiation - all other copies will not use this.
+            source_shape = shape
+        self._source_shape = source_shape
 
     # Shape-based properties (Lazy loading means this may change in some cases)
     @property
@@ -63,7 +68,8 @@ class ArrayLike:
         Get the kwargs provided to this class initially - for creating a copy."""
         return {
             'units':self.units,
-            'dtype':self.dtype
+            'dtype':self.dtype,
+            'source_shape': self._source_shape
         }
 
 class SuperLazyArrayLike(ArrayLike):
@@ -95,8 +101,7 @@ class SuperLazyArrayLike(ArrayLike):
         This is considered ``SuperLazy`` because Dask already loads dask chunks lazily, but a further lazy
         approach is required when applying Active methods.
         """
-        newextent = self._combine_slices(selection)
-        return self.copy(newextent)
+        return self.copy(selection)
     
     @property
     def shape(self):
@@ -151,13 +156,24 @@ class SuperLazyArrayLike(ArrayLike):
             ostop  = old.stop or self._shape[dim]
             ostep  = old.step or 1
 
+            osize = (ostop - ostart)/ostep
+
             nstart = new.start or 0
             nstop  = new.stop or self._shape[dim]
             nstep  = new.step or 1
 
+            nsize = (nstop - nstart)/nstep
+
+            if nsize > osize:
+                raise IndexError(
+                    f'Attempted to slice dimension "{dim}" with new slice "({nstart},{nstop},{nstep})'
+                    f'but the dimension size is limited to {osize}.'
+                )
+
             start = ostart + ostep*nstart
             step  = ostep * nstep
             stop  = start + step * (nstop - nstart)
+            
             return slice(start, stop, step)
 
 
@@ -252,10 +268,13 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         self.format   = format
         self.position = position
 
-        self._extent  = extent
         self._lock    = SerializableLock()
 
         super().__init__(shape, **kwargs)
+
+        if extent:
+            # Apply a specific extent if given by the initiator
+            self._extent  = extent
     
     def __array__(self, *args, **kwargs):
         """

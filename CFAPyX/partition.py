@@ -117,7 +117,7 @@ class SuperLazyArrayLike(ArrayLike):
             return self._shape
         for d, e in enumerate(self._extent):
             start = e.start or 0
-            stop  = e.stop or self.shape[d]
+            stop  = e.stop or self._shape[d]
             step  = e.step or 1
             current_shape.append(int((stop - start)/step))
         return tuple(current_shape)

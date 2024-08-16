@@ -3,7 +3,7 @@ __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
 # Chunk wrapper is common to both CFAPyX and XarrayActive
-VERSION = 1.2
+VERSION = '1.2.1'
 
 import numpy as np
 import netCDF4
@@ -101,7 +101,7 @@ class SuperLazyArrayLike(ArrayLike):
         This is considered ``SuperLazy`` because Dask already loads dask chunks lazily, but a further lazy
         approach is required when applying Active methods.
         """
-        return self.copy(selection)
+        return self.copy(extent=selection)
     
     @property
     def shape(self):
@@ -153,13 +153,13 @@ class SuperLazyArrayLike(ArrayLike):
         def combine_sliced_dim(old, new, dim):
 
             ostart = old.start or 0
-            ostop  = old.stop or self._shape[dim]
+            ostop  = old.stop or self.shape[dim]
             ostep  = old.step or 1
 
             osize = (ostop - ostart)/ostep
 
             nstart = new.start or 0
-            nstop  = new.stop or self._shape[dim]
+            nstop  = new.stop or self.shape[dim]
             nstep  = new.step or 1
 
             nsize = (nstop - nstart)/nstep
@@ -182,13 +182,14 @@ class SuperLazyArrayLike(ArrayLike):
         else:
             extent = self._extent
             for dim in range(len(newslice)):
-                extent[dim] = combine_sliced_dim(extent[dim], newslice[dim], dim)
+                if not _identical_extents(extent[dim], newslice[dim], self.shape[dim]):
+                    extent[dim] = combine_sliced_dim(extent[dim], newslice[dim], dim)
             return extent
    
     def get_extent(self):
         return self._extent
 
-    def copy(self, newextent=None):
+    def copy(self, extent=None):
         """
         Create a new instance of this class with all attributes of the current instance, but
         with a new initial extent made by combining the current instance extent with the ``newextent``.
@@ -196,8 +197,8 @@ class SuperLazyArrayLike(ArrayLike):
         slicing operations.
         """
         kwargs = self.get_kwargs()
-        if newextent:
-            kwargs['extent'] = self._combine_slices(newextent)
+        if extent:
+            kwargs['extent'] = self._combine_slices(extent)
 
         new_instance = SuperLazyArrayLike(
             self.shape,
@@ -413,7 +414,7 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
             'format': self.format
         } | super().get_kwargs()
     
-    def copy(self, newextent=None):
+    def copy(self, extent=None):
         """
         Create a new instance of this class with all attributes of the current instance, but
         with a new initial extent made by combining the current instance extent with the ``newextent``.
@@ -421,8 +422,8 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
         slicing operations.
         """
         kwargs = self.get_kwargs()
-        if newextent:
-            kwargs['extent'] = self._combine_slices(newextent)
+        if extent:
+            kwargs['extent'] = self._combine_slices(extent)
 
         new_instance = ArrayPartition(
             self.filename,
@@ -473,3 +474,15 @@ class ArrayPartition(ActiveChunk, SuperLazyArrayLike):
             f'Locations tried: {filenames}.'
         )
     
+def _identical_extents(old, new, dshape):
+    ostart = old.start or 0
+    ostop  = old.stop or dshape
+    ostep  = old.step or 1
+
+    nstart = new.start or 0
+    nstop  = new.stop or dshape
+    nstep  = new.step or 1
+
+    return (ostart == nstart) and \
+           (ostop == nstop) and \
+           (ostep == nstep)

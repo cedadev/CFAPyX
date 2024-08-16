@@ -14,7 +14,8 @@ def test_cfa_pure():
     assert 'p' in ds
     assert ds['p'].shape == (20, 180, 360)
 
-    p_sel = ds['p'].sel(time=slice(1,3),latitude=slice(50,54), longitude=slice(0,9))
+    # Using selection with lat/lon values NOT index values
+    p_sel = ds['p'].isel(time=slice(0,3),latitude=slice(140,145), longitude=slice(90,100))
 
     assert p_sel.shape == (3, 5, 10)
     assert not hasattr(p_sel, 'aggregated_data')
@@ -29,3 +30,6 @@ def test_cfa_pure():
 
     assert p_value.shape == ()
     assert (p_value.to_numpy() - 0.53279) < 0.01
+
+if __name__ == '__main__':
+    test_cfa_pure()

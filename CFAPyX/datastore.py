@@ -30,7 +30,13 @@ xarray_subs = {
     'file:///':'/'
 }
 
-class CFADataStore(NetCDF4DataStore):
+try:
+    from XarrayActive import ActiveOptionsContainer
+except:
+    class ActiveOptionsContainer:
+        pass
+
+class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
 
     """
     DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines 
@@ -39,23 +45,6 @@ class CFADataStore(NetCDF4DataStore):
     cannot easily be overriden, so properties are used instead for specific variables 
     that may be un-set at time of use.
     """
-
-    @property
-    def active_options(self):
-        """
-        Property of the datastore that relates private option variables to the standard 
-        ``active_options`` parameter.
-        """
-        return {
-            'use_active': self.use_active,
-        }
-    
-    @active_options.setter
-    def active_options(self, value):
-        self._set_active_options(**value)
-
-    def _set_active_options(self, use_active=False, chunks=None):
-        self.use_active = use_active
 
     @property
     def chunks(self):
@@ -78,6 +67,7 @@ class CFADataStore(NetCDF4DataStore):
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa,
             'chunks': self.chunks,
+            'chunk_limits': self._chunk_limits
         }
 
     @cfa_options.setter
@@ -87,7 +77,9 @@ class CFADataStore(NetCDF4DataStore):
     def _set_cfa_options(
             self, 
             substitutions=None, 
-            decode_cfa=True
+            decode_cfa=True,
+            chunks={},
+            chunk_limits=True,
         ):
         """
         Method to set cfa options.
@@ -99,8 +91,10 @@ class CFADataStore(NetCDF4DataStore):
                                 in some cases, default is True.
         """
 
+        self.chunks = chunks
         self._substitutions = substitutions
         self._decode_cfa    = decode_cfa
+        self._chunk_limits  = chunk_limits
 
     def _acquire(self, needs_lock=True):
         """

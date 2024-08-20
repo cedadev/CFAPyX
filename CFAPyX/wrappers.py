@@ -2,8 +2,16 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
 
-from CFAPyX.decoder import get_dask_chunks
-from CFAPyX.partition import ArrayPartition, ArrayLike
+from arraypartition import (
+    ArrayPartition, 
+    ArrayLike,
+    get_chunk_shape,
+    get_chunk_space,
+    get_chunk_positions,
+    get_chunk_extent,
+    get_dask_chunks,
+    combine_slices
+)
 
 import dask.array as da
 from dask.array.core import getter
@@ -15,7 +23,78 @@ from itertools import product
 import netCDF4
 import numpy as np
 
-class FragmentArrayWrapper(ArrayLike):
+try:
+    from XarrayActive import ActiveOptionsContainer
+except:
+    class ActiveOptionsContainer:
+        pass
+
+class CFAArrayWrapper:
+    """
+    Simple container for CFA options properties, shared by ``FragmentArrayWrapper`` and
+    ``CFAChunkWrapper``"""
+
+    __slots__ = (
+        'chunks',
+        '_chunk_limits',
+        '_substitutions',
+        '_decode_cfa'
+    )
+
+    @property
+    def cfa_options(self):
+        """
+        Relates private option variables to the ``cfa_options`` parameter of the backend.
+        """
+
+        return {
+            'substitutions': self._substitutions,
+            'decode_cfa': self._decode_cfa,
+            'chunks': self.chunks,
+            'chunk_limits':self._chunk_limits
+        }
+
+    @cfa_options.setter
+    def cfa_options(self, value):
+        self._set_cfa_options(**value)
+
+    def _set_cfa_options(
+            self,
+            substitutions=None,
+            decode_cfa=None,
+            chunks={},
+            chunk_limits=None,
+            **kwargs):
+        """
+        Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
+        Ignores additional kwargs.
+        """
+
+        self._substitutions = substitutions
+        self._decode_cfa    = decode_cfa
+        self._chunk_limits  = chunk_limits
+        self.chunks         = chunks
+
+    def _assemble_array(self, dsk, array_name, dask_chunks):
+        if not hasattr(self, '_use_active'):
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+            return darr
+
+        if not self._use_active:
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+            return darr
+        try:
+            from XarrayActive import DaskActiveArray
+
+            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+        except ImportError:
+            raise ImportError(
+                '"DaskActiveArray" from XarrayActive failed to import - please ensure '
+                'you have the XarrayActive package installed.'
+            )
+        return darr
+
+class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
     """
     FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
     return a Dask-like array object. This class is essentially a constructor for the 
@@ -75,6 +154,8 @@ class FragmentArrayWrapper(ArrayLike):
         # Set internal private variables
         self.cfa_options    = cfa_options
         self.active_options = active_options
+
+        self._apply_substitutions()
 
         self.__array_function__ = self.__array__
 
@@ -139,13 +220,14 @@ class FragmentArrayWrapper(ArrayLike):
                 aggregated_units=units,
                 aggregated_calendar=calendar,
                 format=fragment_format,
-                named_dims=self.named_dims
+                named_dims=self.named_dims,
+                global_extent=global_extent
             )
 
             fragments[pos] = fragment
         
-        if not self._cfa_chunks:
-            dsk = self._chunk_by_fragment(fragments)
+        if not self.chunks:
+            dsk = self._chunk_by_fragment(fragments, array_name)
 
             global_extent = {
                 k: fragment_info[k]["global_extent"] for k in fragment_info.keys()
@@ -160,103 +242,39 @@ class FragmentArrayWrapper(ArrayLike):
             )
 
         else:
-            dsk = self._chunk_oversample(fragments)
-            dask_chunks = None # Assemble in the same format as the CFA ones.
-            raise NotImplementedError
+            chunk_shape = get_chunk_shape(
+                self.chunks,
+                self.shape,
+                self.named_dims,
+                chunk_limits=self._chunk_limits
+            )
 
-        if self._use_active:
-            try:
-                from XarrayActive import DaskActiveArray
+            chunk_space = get_chunk_space(
+                chunk_shape,
+                self.shape
+            )
 
-                darr = DaskActiveArray(dsk, array_name[0], chunks=dask_chunks, dtype=dtype)
-            except ImportError:
-                raise ImportError(
-                    '"DaskActiveArray" from XarrayActive failed to import - please ensure '
-                    'you have the XarrayActive package installed.'
-                )
-        else:
-            darr = da.Array(dsk, array_name[0], chunks=dask_chunks, dtype=dtype)
-        return darr
+            positions = get_chunk_positions(chunk_space)
+            extents = {}
+            for p in positions:
+                # Each chunk fits into the whole fragment array
+                extents[p] = get_chunk_extent(p, self.shape, chunk_space)
+
+            dsk = self._chunk_oversample(fragments, extents, array_name)
+
+            dask_chunks = get_dask_chunks(
+                self.shape, 
+                chunk_space,
+                extent=extents, # List of extents
+                dtype=self.dtype
+            )
+
+        # The dask_chunks should reflect the proper chunk structure to cover
+        # the whole array here.
+        darr = self._assemble_array(dsk, array_name[0], dask_chunks)
+        return darr.compute()
     
-    @property
-    def active_options(self):
-        """
-        Relates private option variables to the ``active_options`` parameter of the 
-        backend.
-        """
-        
-        return {
-            'use_active': self._use_active,
-        }
-    
-    @active_options.setter
-    def active_options(self, value):
-        self._set_active_options(**value)
-
-    def _set_active_options(
-            self, 
-            use_active=False, 
-            **kwargs):
-        """
-        Sets the private variables referred by the ``active_options`` parameter to the backend. 
-        Ignores additional kwargs.
-        """
-        
-        self._use_active = use_active
-
-    @property
-    def cfa_options(self):
-        """
-        Relates private option variables to the ``cfa_options`` parameter of the backend.
-        """
-
-        return {
-            'substitutions': self._substitutions,
-            'decode_cfa': self._decode_cfa,
-            'chunks': self.chunks
-        }
-
-    @cfa_options.setter
-    def cfa_options(self, value):
-        self._set_cfa_options(**value)
-
-    @property
-    def chunks(self):
-        if hasattr(self,'_cfa_chunks'):
-            return self._cfa_chunks
-        return None
-    
-    @chunks.setter
-    def chunks(self, value):
-        self._cfa_chunks = value
-
-    def _set_cfa_options(
-            self,
-            substitutions=None,
-            decode_cfa=None,
-            chunks=None,
-            **kwargs):
-        """
-        Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
-        Ignores additional kwargs.
-        """
-
-        # Perform substitutions for this fragment array
-        if substitutions:
-
-            if type(substitutions) != list:
-                substitutions = [substitutions]
-
-            for s in substitutions:
-                base, substitution = s.split(':')
-                for f in self.fragment_info.keys():
-                    self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
-
-        self._substitutions = substitutions
-        self._decode_cfa = decode_cfa
-        self.chunks = chunks
-
-    def _chunk_by_fragment(self, fragments):
+    def _chunk_by_fragment(self, fragments, array_name):
         """
         Assemble the base ``dsk`` task dependency graph which includes the fragment objects 
         plus the method to index each object (with locking).
@@ -267,7 +285,6 @@ class FragmentArrayWrapper(ArrayLike):
         :returns:       A task dependency graph with all the fragments included to use 
             when constructing the dask array.
         """
-        array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
 
         dsk = {}
         for fragment_position in fragments.keys():
@@ -285,54 +302,7 @@ class FragmentArrayWrapper(ArrayLike):
             )
         return dsk
 
-    def _derive_chunk_space(self):
-        """
-        Derive the chunk space and shape given the user-provided ``active_chunks`` option. 
-        Chunk space is the number of chunks in each dimension which presents like an array 
-        shape, but is referred to as a ``space`` because it has a novel coordinate system. 
-        Chunk shape is the shape of each chunk in ``array space``, which must be regular
-        even if lower-level objects used to define the chunk are not.
-
-        Example: 
-            50 chunks across the time dimension of 1000 values which is represented by 8 
-            fragments. Chunk space representation is (50,) and the chunk shape is (20,). 
-            
-            Each chunk is served by at most 2 fragments, where each chunk is described using a 
-            MultiFragmentWrapper object which appropriately sets the extents of each Fragment 
-            object. The Fragments cover 125 values each:
-        
-            Chunk 0 served by Fragment 0 slice(0,20) 
-            Chunk 1 served by Fragment 0 slice(20,40)
-            ...
-            Chunk 6 served by Fragment 0 slice(120,None) and Fragment 1 slice(0,15)
-            ...
-            and so on.
-
-        """
-        chunk_space = [1 for i in self.shape]
-        chunk_shape = [i for i in self.shape]
-
-        for dim in self.active_chunks.keys():
-            chunks = self.active_chunks[dim]
-
-            idim = None
-            for x, d in enumerate(self.named_dims):
-                if d == dim:
-                    idim = x
-
-            if not idim:
-                raise ValueError(
-                    f"Requested chunking across dimension '{dim}'"
-                    f"but only '{self.named_dims}' present in the dataset"
-                )
-
-            length = self.shape[idim]
-            chunk_space[idim] = chunks
-            chunk_shape[idim] = int(length/chunks)
-
-        return chunk_space, chunk_shape
-
-    def _chunk_oversample(self, fragments):
+    def _chunk_oversample(self, fragments, extents, array_name):
         """
         Assemble the base ``dsk`` task dependency graph which includes the chunk 
         objects plus the method to index each chunk object (with locking). In this 
@@ -353,78 +323,73 @@ class FragmentArrayWrapper(ArrayLike):
             constructing the dask array.
         """
 
-        chunk_space, cs = self._derive_chunk_space()
-
+        cs = get_chunk_shape(
+            self.chunks,
+            self.shape,
+            self.named_dims,
+            chunk_limits=self._chunk_limits
+        )
+        chunk_space = get_chunk_space(
+            cs,
+            self.shape
+        )
         mfwrapper = {}
 
         for fragment_coord in fragments.keys():
-
             fragment = fragments[fragment_coord]
+            fs       = fragment.shape
 
-            # Shape of each fragment may vary
-            fs = fragment.shape
-
-            # Calculate chunk coverage for this fragment
             initial, final = [],[]
             for dim in range(len(fragment_coord)):
 
+                conversion = chunk_space[dim]/self.fragment_space[dim]
+
                 initial.append(
-                    int(fragment_coord[dim] * fs[dim]/cs[dim])
+                    int(fragment_coord[dim] * conversion)
                 )
-                fn = int((fragment_coord[dim]+1) * fs[dim]/cs[dim])
-                
+                fn = int((fragment_coord[dim]+1) * conversion)
                 final.append(
-                    min(fn, chunk_space[dim])
+                    min(fn, chunk_space[dim]-1) +1
                 )
 
-            # Chunk coverage extent 
-            # - Two chunk-space coordinates defining the chunks that are covered by this 
-            #   fragment.
-            cce = [tuple(initial), tuple(final)]
-
-            # Generate the list of chunks covered by this fragment.
             chunk_list = [
                 coord for coord in product(
-                    *[range(r[0], r[1]) for r in zip(cce[0], cce[1])]
+                    *[range(r[0], r[1]) for r in zip(tuple(initial), tuple(final))]
                 )
             ]
 
-            # Generate the 'extent of this fragment' in ``fragment_space``
-            # i.e Fragment (0,0) has extent (0,0) to (1,1)
             fragment_extent = [
                 tuple(fragment_coord),
-                (i +1 for i in fragment_coord)
+                tuple(i +1 for i in fragment_coord)
             ]
 
-            # Copy the fragment with the correct extent for each chunk covered.
             for c in chunk_list:
-                # For each fragment, the subdivisions caused by chunking create an irregular 
-                # array of sliced fragments which comprises the whole chunk. Each of these 
-                # sliced fragments needs a coordinate relative to the chunk it is being
-                # assigned to.
-                relative_fragment = tuple([c[i] - chunk_list[0][i] for i in range(len(c))])
-
                 chunk = [
                     tuple(c),
-                    (i+1 for i in c)
+                    tuple(i+1 for i in c)
                 ]
-
-                hyperslab = _overlap(chunk, cs, fragment_extent, fs)
-
+                hyperslab   = _overlap(chunk, cs, fragment_extent, fs)
                 newfragment = fragment.copy(extent=hyperslab)
 
                 if c in mfwrapper:
-                    mfwrapper[c][relative_fragment] = newfragment
+                    mfwrapper[c].append(newfragment)
                 else:
-                    mfwrapper[c] = {relative_fragment: newfragment}
+                    mfwrapper[c] = [newfragment]
 
-        array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
         dsk = {}
 
         for chunk in mfwrapper.keys():
             fragments = mfwrapper[chunk]
             
-            mfwrap = CFAChunkWrapper(fragments)
+            mfwrap = CFAChunkWrapper(
+                fragments,
+                cs,
+                chunk_space,
+                extents[chunk],
+                dtype=self.dtype,
+                units=self.units,
+                cfa_options=self.cfa_options,
+                named_dims=self.named_dims)
 
             # f_indices is the initial_extent for the ArrayPartition
 
@@ -439,7 +404,19 @@ class FragmentArrayWrapper(ArrayLike):
             )
         return dsk
 
-class CFAChunkWrapper(ArrayLike):
+    def _apply_substitutions(self):
+        # Perform substitutions for this fragment array
+        if self._substitutions:
+
+            if type(self._substitutions) != list:
+                self._substitutions = [self._substitutions]
+
+            for s in self._substitutions:
+                base, substitution = s.split(':')
+                for f in self.fragment_info.keys():
+                    self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
+
+class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
     description = 'Brand new array class for handling any-size dask chunks.'
 
     """
@@ -453,18 +430,47 @@ class CFAChunkWrapper(ArrayLike):
        those sliced segments fit into.
     """
 
-    def __init__(self, fragments):
-        self.fragments = fragments
+    def __init__(
+            self, 
+            fragments,
+            shape,
+            chunk_space,
+            extent,
+            dtype=None, 
+            units=None,
+            cfa_options={},
+            named_dims=None):
+        
+        self.cfa_options = cfa_options
+        self.named_dims  = named_dims
 
-        raise NotImplementedError
+        self.chunk_shape = shape
+        self.chunk_space = chunk_space
+
+        self.extent = extent
+
+        self.__array_function__ = self.__array__
+
+        super().__init__(shape, dtype=dtype, units=units)
+        self._organise_fragments(fragments)
+
+    def __getitem__(self, selection):
+        """
+        Non-lazy retrieval of the dask array when this object is indexed.
+        """
+        arr = self.__array__()
+        return arr[selection]
 
     def __array__(self):
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
+
+        extents = {}
 
         dsk = {}
         for fragment_position in self.fragments.keys():
             fragment = self.fragments[fragment_position]
             # f_indices is the initial_extent for the ArrayPartition
+            extents[fragment_position] = fragment.get_extent()
 
             f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[f_identifier] = fragment
@@ -476,8 +482,37 @@ class CFAChunkWrapper(ArrayLike):
                 getattr(fragment, "_lock", False) # Check version cf-python
             )
 
-        # Should return a dask array.
-        return dsk
+        dask_chunks = get_dask_chunks(
+            self.shape,
+            self.chunk_space,
+            extents,
+            self.dtype
+        )
+
+        return self._assemble_array(dsk, array_name[0], dask_chunks)
+
+    def _organise_fragments(self, fragments):
+
+        fdict = {}
+        starts = []
+        for d in range(self.ndim):
+            s = []
+            for f in fragments:
+                ext = f.global_extent
+                s.append(ext[d].start)
+            starts.append(set(s))
+
+        starts = [list(s) for s in starts]
+        for f in fragments:
+            fp = []
+            for d in range(self.ndim):
+                for x, s in enumerate(starts[d]):
+                    if f.global_extent[d].start == s:
+                        fp.append(x)
+            fdict[tuple(fp)] = f
+
+        self.fragments = fdict
+                
 
 class CFAPartition(ArrayPartition):
     """
@@ -493,6 +528,7 @@ class CFAPartition(ArrayPartition):
                  address,
                  aggregated_units=None,
                  aggregated_calendar=None,
+                 global_extent=None,
                  **kwargs
             ):
         
@@ -518,6 +554,7 @@ class CFAPartition(ArrayPartition):
         super().__init__(filename, address, units=aggregated_units, **kwargs)
         self.aggregated_units    = aggregated_units
         self.aggregated_calendar = aggregated_calendar
+        self.global_extent = global_extent
 
     def copy(self, extent=None):
         """
@@ -533,7 +570,8 @@ class CFAPartition(ArrayPartition):
             kwargs.pop('units')
 
         if extent:
-            kwargs['extent'] = self._combine_slices(extent)
+            kwargs['extent'] = combine_slices(self.shape, self._extent, extent)
+            kwargs['global_extent'] = self.global_extent #combine_slices(self.shape, self.global_extent, extent)
 
         new = CFAPartition(
             self.filename,
@@ -585,9 +623,9 @@ def _overlap(chunk, chunk_size, fragment, fragment_size):
     for dim in range(len(chunk[0])):
         dimslice = _overlap_in_1d(
             (chunk[0][dim], chunk[1][dim]),
-            chunk_size,
+            chunk_size[dim],
             (fragment[0][dim], fragment[1][dim]),
-            fragment_size
+            fragment_size[dim]
         )
         extent.append(dimslice)
     return extent # Total slice-based overlap of chunk and fragment

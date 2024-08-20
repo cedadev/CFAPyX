@@ -52,6 +52,10 @@ def open_cfa_dataset(
     store.cfa_options    = cfa_options
     store.active_options = active_options
 
+    use_active = False
+    if hasattr(store, 'use_active'):
+        use_active = store.use_active
+
     # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
     ds = store_entrypoint.open_dataset(
@@ -63,7 +67,7 @@ def open_cfa_dataset(
         drop_variables=drop_variables,
         use_cftime=use_cftime,
         decode_timedelta=decode_timedelta,
-        use_active=store.use_active
+        use_active=use_active
     )
 
     return ds

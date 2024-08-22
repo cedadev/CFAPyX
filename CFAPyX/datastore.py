@@ -67,7 +67,8 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa,
             'chunks': self.chunks,
-            'chunk_limits': self._chunk_limits
+            'chunk_limits': self._chunk_limits,
+            'use_active': self.use_active
         }
 
     @cfa_options.setter
@@ -80,6 +81,7 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
             decode_cfa=True,
             chunks={},
             chunk_limits=True,
+            use_active=False,
         ):
         """
         Method to set cfa options.
@@ -95,6 +97,7 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
         self._substitutions = substitutions
         self._decode_cfa    = decode_cfa
         self._chunk_limits  = chunk_limits
+        self.use_active     = use_active
 
     def _acquire(self, needs_lock=True):
         """

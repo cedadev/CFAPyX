@@ -50,7 +50,6 @@ def open_cfa_dataset(
 
     # Expands cfa_options into individual kwargs for the store.
     store.cfa_options    = cfa_options
-    store.active_options = active_options
 
     use_active = False
     if hasattr(store, 'use_active'):

@@ -151,6 +151,8 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         self.fragment_space   = fragment_space
         self.named_dims       = named_dims
 
+        super().__init__(shape, dtype=dtype, units=units)
+
         # Set internal private variables
         self.cfa_options    = cfa_options
         self.active_options = active_options
@@ -158,8 +160,6 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         self._apply_substitutions()
 
         self.__array_function__ = self.__array__
-
-        super().__init__(shape, dtype=dtype, units=units)
 
     def __getitem__(self, selection):
         """
@@ -442,6 +442,8 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             cfa_options={},
             named_dims=None):
         
+        super().__init__(shape, dtype=dtype, units=units)
+        
         self.cfa_options = cfa_options
         self.named_dims  = named_dims
 
@@ -452,7 +454,6 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         self.__array_function__ = self.__array__
 
-        super().__init__(shape, dtype=dtype, units=units)
         self._organise_fragments(fragments)
 
     def __getitem__(self, selection):

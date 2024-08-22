@@ -30,6 +30,7 @@ def test_cfa_pure():
 
     assert p_value.shape == ()
     assert (p_value.to_numpy() - 0.53279) < 0.01
+    print('All tests passed!')
 
 def test_cfa_chunks():
     ds = xr.open_dataset('tests/rain/rainmaker.nca', engine='CFA',
@@ -65,4 +66,4 @@ def test_cfa_chunks():
 
 if __name__ == '__main__':
     test_cfa_pure()
-    #test_cfa_chunks()
+    test_cfa_chunks()

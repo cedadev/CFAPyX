@@ -16,4 +16,4 @@ authors = [{name = "Daniel Westwood", email = "daniel.westwood@stfc.ac.uk"}]
 packages = ["CFAPyX"]
 
 [project.entry-points."xarray.backends"]
-CFA = "CFAPyX:CFANetCDFBackendEntrypoint"
+CFA = "CFAPyX.backend:CFANetCDFBackendEntrypoint"

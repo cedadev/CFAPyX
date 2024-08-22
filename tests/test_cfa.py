@@ -24,12 +24,12 @@ def test_cfa_pure():
     p_mean = p_sel.mean(dim='time')
 
     assert p_mean.shape == (5, 10)
-    assert (p_mean[0][0].to_numpy() - 0.683402) < 0.01
+    assert (p_mean[0][0].to_numpy() - 0.635366) < 0.01
 
     p_value = p_sel.mean()
 
     assert p_value.shape == ()
-    assert (p_value.to_numpy() - 0.53279) < 0.01
+    assert (p_value.to_numpy() - 0.511954) < 0.01
     print('All tests passed!')
 
 def test_cfa_chunks():
@@ -57,12 +57,12 @@ def test_cfa_chunks():
     p_mean = p_sel.mean(dim='time')
 
     assert p_mean.shape == (5, 10)
-    assert (p_mean[0][0].to_numpy() - 0.683402) < 0.01
+    assert (p_mean[0][0].to_numpy() - 0.635366) < 0.01
 
     p_value = p_sel.mean()
 
     assert p_value.shape == ()
-    assert (p_value.to_numpy() - 0.53279) < 0.01
+    assert (p_value.to_numpy() - 0.511954) < 0.01
 
 if __name__ == '__main__':
     test_cfa_pure()

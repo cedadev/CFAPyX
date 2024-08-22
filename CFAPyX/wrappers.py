@@ -255,6 +255,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             )
 
             positions = get_chunk_positions(chunk_space)
+
             extents = {}
             for p in positions:
                 # Each chunk fits into the whole fragment array
@@ -484,7 +485,7 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         dask_chunks = get_dask_chunks(
             self.shape,
-            self.chunk_space,
+            self.partition_space,
             extents,
             self.dtype
         )
@@ -502,6 +503,8 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 s.append(ext[d].start)
             starts.append(set(s))
 
+        partition_space = [0 for i in self.shape]
+
         starts = [list(s) for s in starts]
         for f in fragments:
             fp = []
@@ -509,7 +512,11 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 for x, s in enumerate(starts[d]):
                     if f.global_extent[d].start == s:
                         fp.append(x)
+                        if x > partition_space[d]:
+                            partition_space[d] = x
             fdict[tuple(fp)] = f
+
+        self.partition_space = [i+1 for i in partition_space]
 
         self.fragments = fdict
                 
@@ -570,8 +577,8 @@ class CFAPartition(ArrayPartition):
             kwargs.pop('units')
 
         if extent:
-            kwargs['extent'] = combine_slices(self.shape, self._extent, extent)
-            kwargs['global_extent'] = self.global_extent #combine_slices(self.shape, self.global_extent, extent)
+            kwargs['extent'] = combine_slices(self.shape, list(self.get_extent()), extent)
+            kwargs['global_extent'] = combine_slices(self.shape, list(self.global_extent), extent)
 
         new = CFAPartition(
             self.filename,
@@ -633,6 +640,6 @@ def _overlap(chunk, chunk_size, fragment, fragment_size):
 def _overlap_in_1d(chunk, chunk_size, fragment, fragment_size):
 
     start = max(chunk[0]*chunk_size, fragment[0]*fragment_size)
-    end   = min(chunk[1]*chunk_size, fragment[1]*chunk_size)
+    end   = min(chunk[1]*chunk_size, fragment[1]*fragment_size)
 
     return slice(start, end) # And possibly more

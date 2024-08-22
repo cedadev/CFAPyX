@@ -272,8 +272,8 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         # The dask_chunks should reflect the proper chunk structure to cover
         # the whole array here.
         darr = self._assemble_array(dsk, array_name[0], dask_chunks)
-        return darr.compute()
-    
+        return darr
+
     def _chunk_by_fragment(self, fragments, array_name):
         """
         Assemble the base ``dsk`` task dependency graph which includes the fragment objects 

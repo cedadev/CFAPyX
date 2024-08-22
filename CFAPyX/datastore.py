@@ -422,7 +422,6 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
                 units=units,
                 dtype=var.dtype,
                 cfa_options=self.cfa_options,
-                active_options=self.active_options,
                 named_dims=dimensions,
             ))
             

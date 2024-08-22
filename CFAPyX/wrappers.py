@@ -20,7 +20,7 @@ from dask.utils import SerializableLock, is_arraylike
 from dask.array.reductions import numel
 
 from itertools import product
-import netCDF4
+import math
 import numpy as np
 
 try:
@@ -64,6 +64,7 @@ class CFAArrayWrapper:
             decode_cfa=None,
             chunks={},
             chunk_limits=None,
+            use_active=False,
             **kwargs):
         """
         Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
@@ -74,19 +75,22 @@ class CFAArrayWrapper:
         self._decode_cfa    = decode_cfa
         self._chunk_limits  = chunk_limits
         self.chunks         = chunks
+        self.use_active     = use_active
 
     def _assemble_array(self, dsk, array_name, dask_chunks):
-        if not hasattr(self, '_use_active'):
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+
+        meta = np.empty(self.shape, dtype=self.dtype)
+        if not hasattr(self, 'use_active'):
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
             return darr
 
-        if not self._use_active:
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+        if not self.use_active:
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
             return darr
         try:
             from XarrayActive import DaskActiveArray
 
-            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype)
+            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
         except ImportError:
             raise ImportError(
                 '"DaskActiveArray" from XarrayActive failed to import - please ensure '
@@ -111,7 +115,6 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             units, 
             dtype, 
             cfa_options={}, 
-            active_options={}, 
             named_dims=None
         ):
         """
@@ -140,8 +143,6 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         :param cfa_options:     (dict) The set of options defining some specific decoding behaviour.
 
-        :param active_options:  (dict) The set of options defining Active behaviour.
-
         :param named_dims:  (list) The set of dimension names that apply to this Array object.
 
         :returns: None
@@ -155,7 +156,6 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         # Set internal private variables
         self.cfa_options    = cfa_options
-        self.active_options = active_options
 
         self._apply_substitutions()
 
@@ -166,7 +166,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         Non-lazy retrieval of the dask array when this object is indexed.
         """
         arr = self.__array__()
-        return arr[selection]
+        return arr[tuple(selection)]
     
     def __array__(self):
         """
@@ -334,6 +334,12 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             cs,
             self.shape
         )
+
+        origin = get_chunk_extent(
+            tuple([0 for i in range(self.ndim)]),
+            self.shape,
+            chunk_space
+        )
         mfwrapper = {}
 
         for fragment_coord in fragments.keys():
@@ -348,9 +354,9 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 initial.append(
                     int(fragment_coord[dim] * conversion)
                 )
-                fn = int((fragment_coord[dim]+1) * conversion)
+                fn = math.ceil((fragment_coord[dim]+1) * conversion)
                 final.append(
-                    min(fn, chunk_space[dim]-1) +1
+                    min(fn, chunk_space[dim])
                 )
 
             chunk_list = [
@@ -369,6 +375,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                     tuple(c),
                     tuple(i+1 for i in c)
                 ]
+                # Overlap in relation to the fragment.
                 hyperslab   = _overlap(chunk, cs, fragment_extent, fs)
                 newfragment = fragment.copy(extent=hyperslab)
 
@@ -381,12 +388,12 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         for chunk in mfwrapper.keys():
             fragments = mfwrapper[chunk]
-            
             mfwrap = CFAChunkWrapper(
                 fragments,
                 cs,
                 chunk_space,
                 extents[chunk],
+                position=chunk,
                 dtype=self.dtype,
                 units=self.units,
                 cfa_options=self.cfa_options,
@@ -399,9 +406,9 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             dsk[array_name + chunk] = (
                 getter, # From dask docs - replaces fragment_getter
                 mf_identifier,
-                fragment.get_extent(), # Needs a think on how to get this out.
+                origin, # Needs a think on how to get this out.
                 False,
-                getattr(fragment, "_lock", False) # Check version cf-python
+                False
             )
         return dsk
 
@@ -437,6 +444,7 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             shape,
             chunk_space,
             extent,
+            position=None,
             dtype=None, 
             units=None,
             cfa_options={},
@@ -450,6 +458,8 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         self.chunk_shape = shape
         self.chunk_space = chunk_space
 
+        self.position = position
+
         self.extent = extent
 
         self.__array_function__ = self.__array__
@@ -461,7 +471,9 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         Non-lazy retrieval of the dask array when this object is indexed.
         """
         arr = self.__array__()
-        return arr[selection]
+
+        # Need to adjust selection 
+        return arr[tuple(selection)]
 
     def __array__(self):
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
@@ -474,12 +486,14 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             # f_indices is the initial_extent for the ArrayPartition
             extents[fragment_position] = fragment.get_extent()
 
+            origin = tuple([slice(0,i) for i in self.shape])
+
             f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[f_identifier] = fragment
             dsk[array_name + fragment_position] = (
                 getter, # From dask docs - replaces fragment_getter
                 f_identifier,
-                fragment.get_extent(),
+                origin,
                 False,
                 getattr(fragment, "_lock", False) # Check version cf-python
             )
@@ -521,7 +535,6 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
         self.fragments = fdict
                 
-
 class CFAPartition(ArrayPartition):
     """
     Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
@@ -640,7 +653,9 @@ def _overlap(chunk, chunk_size, fragment, fragment_size):
 
 def _overlap_in_1d(chunk, chunk_size, fragment, fragment_size):
 
-    start = max(chunk[0]*chunk_size, fragment[0]*fragment_size)
-    end   = min(chunk[1]*chunk_size, fragment[1]*fragment_size)
+    # From start and end subtract
+    translation = fragment[0]*fragment_size
+    start = max(chunk[0]*chunk_size, fragment[0]*fragment_size) - translation
+    end   = min(chunk[1]*chunk_size, fragment[1]*fragment_size) - translation
 
     return slice(start, end) # And possibly more

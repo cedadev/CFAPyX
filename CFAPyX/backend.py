@@ -21,7 +21,6 @@ def open_cfa_dataset(
         use_cftime=None,
         decode_timedelta=None,
         cfa_options={},
-        active_options={},
         group=None,
         ):
     """
@@ -88,7 +87,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=None,
             decode_timedelta=None,
             cfa_options={},
-            active_options={},
             group=None,
             # backend specific keyword arguments
             # do not use 'chunks' or 'cache' here
@@ -108,7 +106,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=use_cftime,
             decode_timedelta=decode_timedelta,
             cfa_options=cfa_options,
-            active_options=active_options,
             group=group)
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):

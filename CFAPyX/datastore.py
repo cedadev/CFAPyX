@@ -1,6 +1,6 @@
 __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
-__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+__copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 from xarray.backends import ( 
     NetCDF4DataStore
@@ -9,20 +9,14 @@ from xarray.backends import (
 from xarray.core.utils import FrozenDict
 from xarray.core import indexing
 from xarray.coding.variables import pop_to
-
 from xarray.core.variable import Variable
-
-import xarray
-
 
 import netCDF4
 import numpy as np
-import os
 import re
 
 from CFAPyX.wrappers import FragmentArrayWrapper
 from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
-
 from CFAPyX.group import CFAGroupWrapper
 
 
@@ -30,13 +24,7 @@ xarray_subs = {
     'file:///':'/'
 }
 
-try:
-    from XarrayActive import ActiveOptionsContainer
-except:
-    class ActiveOptionsContainer:
-        pass
-
-class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
+class CFADataStore(NetCDF4DataStore):
 
     """
     DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines 
@@ -91,6 +79,12 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
 
         :param decode_cfa:      (bool) Optional setting to disable CFA decoding 
                                 in some cases, default is True.
+
+        :param use_active:      (bool) Enable for use with XarrayActive.
+
+        :param chunks:          (dict) Not implemented in 2024.9.0
+
+        :param chunk_limits:    (dict) Not implemented in 2024.9.0
         """
 
         self.chunks = chunks
@@ -174,7 +168,7 @@ class CFADataStore(NetCDF4DataStore, ActiveOptionsContainer):
         :param cformat:     (str) *Optional* ``format`` argument if provided by the 
                             CFA-netCDF or cfa-options parameters. CFA-0.6.2
 
-        :param substitutions:
+        :param substitutions:   (dict) Set of substitutions to apply in the form 'base':'sub'
 
         :returns:       (fragment_info) A dictionary of fragment metadata where each 
                         key is the coordinates of a fragment in index space and the 

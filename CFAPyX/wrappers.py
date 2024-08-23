@@ -79,7 +79,7 @@ class CFAArrayWrapper:
 
     def _assemble_array(self, dsk, array_name, dask_chunks):
 
-        meta = np.empty(self.shape, dtype=self.dtype)
+        meta = da.empty(self.shape, dtype=self.dtype)
         if not hasattr(self, 'use_active'):
             darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
             return darr

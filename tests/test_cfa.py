@@ -1,10 +1,14 @@
 # All routines for testing CFA general methods.
 import xarray as xr
 
-def test_cfa_pure():
+def test_cfa_pure(active=False):
 
+    # Local testing: Add CFAPyX before tests
     ds = xr.open_dataset('tests/rain/rainmaker.nca', engine='CFA',
-                         cfa_options={'substitutions':"/home/users/dwest77/Documents/cfa_python_dw/testfiles/:tests/"})
+                         cfa_options={
+                             'substitutions':"/home/users/dwest77/Documents/cfa_python_dw/testfiles/:tests/",
+                             'use_active':active
+                             })
     
     ## Test global dataset
     assert not hasattr(ds,'address')
@@ -65,5 +69,7 @@ def test_cfa_chunks():
     assert (p_value.to_numpy() - 0.511954) < 0.01
 
 if __name__ == '__main__':
-    test_cfa_pure()
-    test_cfa_chunks()
+    test_cfa_pure(active=False)
+    test_cfa_pure(active=True)
+    # Chunks not implemented for release
+    #test_cfa_chunks()

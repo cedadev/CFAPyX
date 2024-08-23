@@ -1,6 +1,6 @@
 __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
-__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+__copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 from xarray.backends import StoreBackendEntrypoint, BackendEntrypoint
 from xarray.backends.common import AbstractDataStore
@@ -8,8 +8,6 @@ from xarray.core.dataset import Dataset
 from xarray import conventions
 
 from CFAPyX.datastore import CFADataStore
-
-from importlib.metadata import entry_points
 
 def open_cfa_dataset(
         filename_or_obj,
@@ -21,7 +19,6 @@ def open_cfa_dataset(
         use_cftime=None,
         decode_timedelta=None,
         cfa_options={},
-        active_options={},
         group=None,
         ):
     """
@@ -50,7 +47,10 @@ def open_cfa_dataset(
 
     # Expands cfa_options into individual kwargs for the store.
     store.cfa_options    = cfa_options
-    store.active_options = active_options
+
+    use_active = False
+    if hasattr(store, 'use_active'):
+        use_active = store.use_active
 
     # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
@@ -63,7 +63,7 @@ def open_cfa_dataset(
         drop_variables=drop_variables,
         use_cftime=use_cftime,
         decode_timedelta=decode_timedelta,
-        use_active=store.use_active
+        use_active=use_active
     )
 
     return ds
@@ -85,7 +85,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=None,
             decode_timedelta=None,
             cfa_options={},
-            active_options={},
             group=None,
             # backend specific keyword arguments
             # do not use 'chunks' or 'cache' here
@@ -105,7 +104,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             use_cftime=use_cftime,
             decode_timedelta=decode_timedelta,
             cfa_options=cfa_options,
-            active_options=active_options,
             group=group)
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
@@ -164,7 +162,8 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
                 ds = ActiveDataset(vars, attrs=attrs)
             except ImportError:
                 raise ImportError(
-                    '"ActiveDataset" from XarrayActive failed to import - please ensure you have the XarrayActive package installed.'
+                    '"ActiveDataset" from XarrayActive failed to import - please '
+                    'ensure you have the XarrayActive package installed.'
                 )
         else:
             ds = Dataset(vars, attrs=attrs)

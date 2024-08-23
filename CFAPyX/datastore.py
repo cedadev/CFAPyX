@@ -1,6 +1,6 @@
 __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
-__copyright__ = "Copyright 2023 United Kingdom Research and Innovation"
+__copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 from xarray.backends import ( 
     NetCDF4DataStore
@@ -9,20 +9,14 @@ from xarray.backends import (
 from xarray.core.utils import FrozenDict
 from xarray.core import indexing
 from xarray.coding.variables import pop_to
-
 from xarray.core.variable import Variable
-
-import xarray
-
 
 import netCDF4
 import numpy as np
-import os
 import re
 
 from CFAPyX.wrappers import FragmentArrayWrapper
 from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
-
 from CFAPyX.group import CFAGroupWrapper
 
 
@@ -39,23 +33,6 @@ class CFADataStore(NetCDF4DataStore):
     cannot easily be overriden, so properties are used instead for specific variables 
     that may be un-set at time of use.
     """
-
-    @property
-    def active_options(self):
-        """
-        Property of the datastore that relates private option variables to the standard 
-        ``active_options`` parameter.
-        """
-        return {
-            'use_active': self.use_active,
-        }
-    
-    @active_options.setter
-    def active_options(self, value):
-        self._set_active_options(**value)
-
-    def _set_active_options(self, use_active=False, chunks=None):
-        self.use_active = use_active
 
     @property
     def chunks(self):
@@ -78,6 +55,8 @@ class CFADataStore(NetCDF4DataStore):
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa,
             'chunks': self.chunks,
+            'chunk_limits': self._chunk_limits,
+            'use_active': self.use_active
         }
 
     @cfa_options.setter
@@ -87,7 +66,10 @@ class CFADataStore(NetCDF4DataStore):
     def _set_cfa_options(
             self, 
             substitutions=None, 
-            decode_cfa=True
+            decode_cfa=True,
+            chunks={},
+            chunk_limits=True,
+            use_active=False,
         ):
         """
         Method to set cfa options.
@@ -97,10 +79,19 @@ class CFADataStore(NetCDF4DataStore):
 
         :param decode_cfa:      (bool) Optional setting to disable CFA decoding 
                                 in some cases, default is True.
+
+        :param use_active:      (bool) Enable for use with XarrayActive.
+
+        :param chunks:          (dict) Not implemented in 2024.9.0
+
+        :param chunk_limits:    (dict) Not implemented in 2024.9.0
         """
 
+        self.chunks = chunks
         self._substitutions = substitutions
         self._decode_cfa    = decode_cfa
+        self._chunk_limits  = chunk_limits
+        self.use_active     = use_active
 
     def _acquire(self, needs_lock=True):
         """
@@ -177,7 +168,7 @@ class CFADataStore(NetCDF4DataStore):
         :param cformat:     (str) *Optional* ``format`` argument if provided by the 
                             CFA-netCDF or cfa-options parameters. CFA-0.6.2
 
-        :param substitutions:
+        :param substitutions:   (dict) Set of substitutions to apply in the form 'base':'sub'
 
         :returns:       (fragment_info) A dictionary of fragment metadata where each 
                         key is the coordinates of a fragment in index space and the 
@@ -425,7 +416,6 @@ class CFADataStore(NetCDF4DataStore):
                 units=units,
                 dtype=var.dtype,
                 cfa_options=self.cfa_options,
-                active_options=self.active_options,
                 named_dims=dimensions,
             ))
             

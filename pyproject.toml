@@ -5,15 +5,19 @@ build-backend = "setuptools.build_meta"
 [project]
 requires-python=">=3.7"
 name="CFAPyX"
-version="2024.7.30"
+version="2024.9.0"
 dynamic = ["dependencies"]
 authors = [{name = "Daniel Westwood", email = "daniel.westwood@stfc.ac.uk"}]
+readme="README.md"
+description="Xarray Backend Engine for interpreting CF-netCDF Aggregation files (CFA-netCDF)"
+license = {file = "LICENSE"}
+keywords = ["cf", "cf-conventions","xarray","cloud","ArrayPartition"]
 
-#[tool.setuptools.dynamic]
-#dependencies = {file = ["requirements.txt"]}
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools]
 packages = ["CFAPyX"]
 
 [project.entry-points."xarray.backends"]
-CFA = "CFAPyX:CFANetCDFBackendEntrypoint"
+CFA = "CFAPyX.backend:CFANetCDFBackendEntrypoint"

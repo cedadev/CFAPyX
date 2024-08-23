@@ -13,6 +13,8 @@ from arraypartition import (
     combine_slices
 )
 
+from .subactive import SubDaskActiveArray
+
 import dask.array as da
 from dask.array.core import getter
 from dask.base import tokenize
@@ -51,7 +53,8 @@ class CFAArrayWrapper:
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa,
             'chunks': self.chunks,
-            'chunk_limits':self._chunk_limits
+            'chunk_limits':self._chunk_limits,
+            'use_active':self.use_active
         }
 
     @cfa_options.setter
@@ -77,15 +80,19 @@ class CFAArrayWrapper:
         self.chunks         = chunks
         self.use_active     = use_active
 
-    def _assemble_array(self, dsk, array_name, dask_chunks):
+    def _assemble_array(self, dsk, array_name, dask_chunks, subarray=False):
 
-        meta = np.empty(self.shape, dtype=self.dtype)
+        meta = da.empty(shape=self.shape, dtype=self.dtype)
         if not hasattr(self, 'use_active'):
             darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
             return darr
 
         if not self.use_active:
             darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
+            return darr
+        
+        if subarray:
+            darr = SubDaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
             return darr
         try:
             from XarrayActive import DaskActiveArray
@@ -98,7 +105,7 @@ class CFAArrayWrapper:
             )
         return darr
 
-class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
+class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper):
     """
     FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
     return a Dask-like array object. This class is essentially a constructor for the 
@@ -254,18 +261,28 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 self.shape
             )
 
-            positions = get_chunk_positions(chunk_space)
+            partition_space = get_partition_space(
+                self.fragment_space,
+                chunk_space
+            )
 
-            extents = {}
-            for p in positions:
+            #positions = get_chunk_positions(chunk_space)
+
+            #extents = {}
+            #for p in positions:
                 # Each chunk fits into the whole fragment array
-                extents[p] = get_chunk_extent(p, self.shape, chunk_space)
+                #extents[p] = get_chunk_extent(p, self.shape, chunk_space)
 
-            dsk = self._chunk_oversample(fragments, extents, array_name)
+            dsk, extents = self._chunk_oversample(
+                fragments, 
+                array_name, 
+                chunk_shape, 
+                chunk_space
+            )
 
             dask_chunks = get_dask_chunks(
                 self.shape, 
-                chunk_space,
+                partition_space,
                 extent=extents, # List of extents
                 dtype=self.dtype
             )
@@ -303,7 +320,13 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             )
         return dsk
 
-    def _chunk_oversample(self, fragments, extents, array_name):
+    def _chunk_oversample(
+            self, 
+            fragments, 
+            #extents, 
+            array_name,
+            cs,
+            chunk_space):
         """
         Assemble the base ``dsk`` task dependency graph which includes the chunk 
         objects plus the method to index each chunk object (with locking). In this 
@@ -324,22 +347,22 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             constructing the dask array.
         """
 
-        cs = get_chunk_shape(
-            self.chunks,
-            self.shape,
-            self.named_dims,
-            chunk_limits=self._chunk_limits
-        )
-        chunk_space = get_chunk_space(
-            cs,
-            self.shape
-        )
+        #cs = get_chunk_shape(
+        #    self.chunks,
+        #    self.shape,
+        #    self.named_dims,
+        #    chunk_limits=self._chunk_limits
+        #)
+        #chunk_space = get_chunk_space(
+        #    cs,
+        #    self.shape
+        #)
 
-        origin = get_chunk_extent(
-            tuple([0 for i in range(self.ndim)]),
-            self.shape,
-            chunk_space
-        )
+        #origin = get_chunk_extent(
+        #    tuple([0 for i in range(self.ndim)]),
+        #    self.shape,
+        #    chunk_space
+        #)
         mfwrapper = {}
 
         for fragment_coord in fragments.keys():
@@ -348,8 +371,9 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
 
             initial, final = [],[]
             for dim in range(len(fragment_coord)):
-
-                conversion = chunk_space[dim]/self.fragment_space[dim]
+                
+                # Divide specific chunk sizes
+                conversion = fs[dim]/cs[dim]
 
                 initial.append(
                     int(fragment_coord[dim] * conversion)
@@ -385,7 +409,35 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                     mfwrapper[c] = [newfragment]
 
         dsk = {}
+        extents = {}
 
+        for chunk in mfwrapper.keys():
+            for fragment in mfwrapper[chunk]:
+
+                extent = fragment.global_extent
+                pposition = get_partition_coord(
+                    self.fragment_space,
+                    chunk_space,
+                    self.shape,
+                    extent)
+                if pposition in extents:
+                    pass
+                extents[pposition] = fragment.get_extent()
+                fragment.position = pposition
+
+                mf_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
+                dsk[mf_identifier] = fragment
+                dsk[array_name + pposition] = (
+                    getter, # From dask docs - replaces fragment_getter
+                    mf_identifier,
+                    fragment.get_extent(),
+                    False,
+                    False
+                )
+
+        return dsk, extents
+
+        """
         for chunk in mfwrapper.keys():
             fragments = mfwrapper[chunk]
             mfwrap = CFAChunkWrapper(
@@ -410,6 +462,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 False,
                 False
             )
+        """
         return dsk
 
     def _apply_substitutions(self):
@@ -424,7 +477,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 for f in self.fragment_info.keys():
                     self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
 
-class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
+class CFAChunkWrapper(ArrayLike, CFAArrayWrapper):
     description = 'Brand new array class for handling any-size dask chunks.'
 
     """
@@ -486,7 +539,7 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             # f_indices is the initial_extent for the ArrayPartition
             extents[fragment_position] = fragment.get_extent()
 
-            origin = tuple([slice(0,i) for i in self.shape])
+            origin = tuple([slice(0,i) for i in fragment.shape])
 
             f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
             dsk[f_identifier] = fragment
@@ -505,7 +558,7 @@ class CFAChunkWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             self.dtype
         )
 
-        return self._assemble_array(dsk, array_name[0], dask_chunks)
+        return self._assemble_array(dsk, array_name[0], dask_chunks, subarray=True)
 
     def _organise_fragments(self, fragments):
 
@@ -655,7 +708,53 @@ def _overlap_in_1d(chunk, chunk_size, fragment, fragment_size):
 
     # From start and end subtract
     translation = fragment[0]*fragment_size
-    start = max(chunk[0]*chunk_size, fragment[0]*fragment_size) - translation
-    end   = min(chunk[1]*chunk_size, fragment[1]*fragment_size) - translation
+    start = max(chunk[0]*chunk_size, fragment[0]*fragment_size) + translation
+    end   = min(chunk[1]*chunk_size, fragment[1]*fragment_size) + translation
+
+    if end < 0 or end < start:
+        pass
 
     return slice(start, end) # And possibly more
+
+def get_partition_space(fragment_space, chunk_space):
+    pspace = []
+    for dim in range(len(fragment_space)):
+        pspace.append(len(partition_1d(
+            fragment_space[dim],
+            chunk_space[dim]
+        )))
+    return pspace
+
+def get_partition_coord(fragment_space, chunk_space, array_space, extent):
+    pcoord = [None for din in range(len(fragment_space))]
+    for dim in range(len(fragment_space)):
+
+        divset = sorted(
+            [0] + list(partition_1d(
+                fragment_space[dim],
+                chunk_space[dim]
+                ))
+            )
+        position = int(extent[dim].start * divset[-1]/array_space[dim])
+        for x in range(len(divset)):
+            if divset[x] == position:
+                pcoord[dim] = x
+        if pcoord[dim] == None:
+            pass
+    return tuple(pcoord)
+
+def partition_1d(space_1, space_2, lim=None):
+    total = space_1 * space_2
+
+    set1  = [i for i in range(space_1, total+1, space_1)]
+    set2  = [j for j in range(space_2, total+1, space_2)]
+
+    tset = set(set1 + set2)
+    if lim == None:
+        return tset
+    
+    rset = []
+    for item in tset:
+        if item < lim:
+            rset.append(item)
+    return set(rset)

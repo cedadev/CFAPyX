@@ -59,14 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Groups</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.group.VariableWrapper"><code class="docutils literal notranslate"><span class="pre">VariableWrapper</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.group.VariableWrapper.keys"><code class="docutils literal notranslate"><span class="pre">VariableWrapper.keys()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.group.CFAGroupWrapper"><code class="docutils literal notranslate"><span class="pre">CFAGroupWrapper</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Groups</a></li>
 </ul>
 
         </div>
@@ -107,26 +100,6 @@ where the aggregated variables link to global parameters.</p>
 <p>In order to facilitate loading both <code class="docutils literal notranslate"><span class="pre">global</span></code> and <code class="docutils literal notranslate"><span class="pre">group</span></code> parameters from the CFA dataset, a small change to the standard
 <code class="docutils literal notranslate"><span class="pre">NetCDF4ArrayWrapper</span></code> class from Xarray, where an attempt is made to load the variable from the <code class="docutils literal notranslate"><span class="pre">group</span></code> dataset first, but
 if this is unsuccessful then the <code class="docutils literal notranslate"><span class="pre">global</span></code> dataset is used.</p>
-<span class="target" id="module-CFAPyX.group"></span><dl class="py class">
-<dt class="sig sig-object py" id="CFAPyX.group.VariableWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.group.</span></span><span class="sig-name descname"><span class="pre">VariableWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_sets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/group.html#VariableWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.group.VariableWrapper" title="Permalink to this definition"></a></dt>
-<dd><p>Wrapper object for the <code class="docutils literal notranslate"><span class="pre">ds.variables</span></code> and <code class="docutils literal notranslate"><span class="pre">ds.attributes</span></code> objects which can handle
-either <code class="docutils literal notranslate"><span class="pre">global</span></code> or <code class="docutils literal notranslate"><span class="pre">group</span></code> based variables .</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.group.VariableWrapper.keys">
-<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/group.html#VariableWrapper.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.group.VariableWrapper.keys" title="Permalink to this definition"></a></dt>
-<dd><p>Requesting the set of keys should return the set of both keys combined in a <code class="docutils literal notranslate"><span class="pre">dict_keys</span></code> object.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="CFAPyX.group.CFAGroupWrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.group.</span></span><span class="sig-name descname"><span class="pre">CFAGroupWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ds_sets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/group.html#CFAGroupWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.group.CFAGroupWrapper" title="Permalink to this definition"></a></dt>
-<dd><p>Wrapper object for the CFADataStore <code class="docutils literal notranslate"><span class="pre">ds</span></code> parameter, required to bypass the issue
-with groups in Xarray, where all variables outside the group are ignored.</p>
-</dd></dl>
-
 </section>
 
 

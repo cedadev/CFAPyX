@@ -59,28 +59,7 @@
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Partitions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.partition.ArrayLike"><code class="docutils literal notranslate"><span class="pre">ArrayLike</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayLike.size"><code class="docutils literal notranslate"><span class="pre">ArrayLike.size</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayLike.ndim"><code class="docutils literal notranslate"><span class="pre">ArrayLike.ndim</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayLike.copy"><code class="docutils literal notranslate"><span class="pre">ArrayLike.copy()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayLike.get_kwargs"><code class="docutils literal notranslate"><span class="pre">ArrayLike.get_kwargs()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.partition.SuperLazyArrayLike"><code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.SuperLazyArrayLike.shape"><code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike.shape</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.SuperLazyArrayLike.copy"><code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike.copy()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.SuperLazyArrayLike.get_kwargs"><code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike.get_kwargs()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#CFAPyX.partition.ArrayPartition"><code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayPartition.get_kwargs"><code class="docutils literal notranslate"><span class="pre">ArrayPartition.get_kwargs()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayPartition.copy"><code class="docutils literal notranslate"><span class="pre">ArrayPartition.copy()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#CFAPyX.partition.ArrayPartition.open"><code class="docutils literal notranslate"><span class="pre">ArrayPartition.open()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -116,107 +95,6 @@
 currently manually updated across both versions. Future developments may include a way of keeping track of this
 in a more sophisticated manner.</p>
 </div>
-<span class="target" id="module-CFAPyX.partition"></span><dl class="py class">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayLike">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.partition.</span></span><span class="sig-name descname"><span class="pre">ArrayLike</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayLike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayLike" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Container class for Array-like behaviour</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayLike.size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#CFAPyX.partition.ArrayLike.size" title="Permalink to this definition"></a></dt>
-<dd><p>Size property is derived from the current shape. In an <code class="docutils literal notranslate"><span class="pre">ArrayLike</span></code> 
-instance the shape is fixed, but other classes may alter the shape
-at runtime.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayLike.ndim">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndim</span></span><a class="headerlink" href="#CFAPyX.partition.ArrayLike.ndim" title="Permalink to this definition"></a></dt>
-<dd><p>ndim property is derived from the current shape. In an <code class="docutils literal notranslate"><span class="pre">ArrayLike</span></code> 
-instance the shape is fixed, but other classes may alter the shape
-at runtime.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayLike.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayLike.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayLike.copy" title="Permalink to this definition"></a></dt>
-<dd><p>Return a new basic ArrayLike instance. Ignores provided kwargs
-this class does not require, but other inheritors may.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayLike.get_kwargs">
-<span class="sig-name descname"><span class="pre">get_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayLike.get_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayLike.get_kwargs" title="Permalink to this definition"></a></dt>
-<dd><p>Get the kwargs provided to this class initially - for creating a copy.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="CFAPyX.partition.SuperLazyArrayLike">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.partition.</span></span><span class="sig-name descname"><span class="pre">SuperLazyArrayLike</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">named_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#SuperLazyArrayLike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.SuperLazyArrayLike" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#CFAPyX.partition.ArrayLike" title="CFAPyX.partition.ArrayLike"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code></a></p>
-<p>Container class for SuperLazy Array-Like behaviour. <code class="docutils literal notranslate"><span class="pre">SuperLazy</span></code> behaviour is
-defined as Lazy-Slicing behaviour for objects that are below the ‘Dask Surface’,
-i.e for object that serve as Dask Chunks.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="CFAPyX.partition.SuperLazyArrayLike.shape">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#CFAPyX.partition.SuperLazyArrayLike.shape" title="Permalink to this definition"></a></dt>
-<dd><p>Apply the current <code class="docutils literal notranslate"><span class="pre">extent</span></code> slices to determine the current array shape,
-given all current slicing operations. This replaces shape as a simple
-attribute in <code class="docutils literal notranslate"><span class="pre">ArrayLike</span></code>, on instantiation the <code class="docutils literal notranslate"><span class="pre">_shape</span></code> private attribute
-is defined, and subsequent attempts to retrieve the <code class="docutils literal notranslate"><span class="pre">shape</span></code> will depend on
-the current <code class="docutils literal notranslate"><span class="pre">extent</span></code>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.SuperLazyArrayLike.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newextent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#SuperLazyArrayLike.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.SuperLazyArrayLike.copy" title="Permalink to this definition"></a></dt>
-<dd><p>Create a new instance of this class with all attributes of the current instance, but
-with a new initial extent made by combining the current instance extent with the <code class="docutils literal notranslate"><span class="pre">newextent</span></code>.
-Each ArrayLike class must overwrite this class to get the best performance with multiple 
-slicing operations.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.SuperLazyArrayLike.get_kwargs">
-<span class="sig-name descname"><span class="pre">get_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#SuperLazyArrayLike.get_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.SuperLazyArrayLike.get_kwargs" title="Permalink to this definition"></a></dt>
-<dd><p>Get the kwargs provided to this class initially - for creating a copy.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayPartition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CFAPyX.partition.</span></span><span class="sig-name descname"><span class="pre">ArrayPartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayPartition" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ActiveChunk</span></code>, <a class="reference internal" href="#CFAPyX.partition.SuperLazyArrayLike" title="CFAPyX.partition.SuperLazyArrayLike"><code class="xref py py-class docutils literal notranslate"><span class="pre">SuperLazyArrayLike</span></code></a></p>
-<p>Complete Array-like object with all proper methods for data retrieval.
-May include methods from <code class="docutils literal notranslate"><span class="pre">XarrayActive.ActiveChunk</span></code> if installed.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayPartition.get_kwargs">
-<span class="sig-name descname"><span class="pre">get_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayPartition.get_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayPartition.get_kwargs" title="Permalink to this definition"></a></dt>
-<dd><p>Return all the initial kwargs from instantiation, to support <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> mechanisms by higher classes.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayPartition.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newextent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayPartition.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayPartition.copy" title="Permalink to this definition"></a></dt>
-<dd><p>Create a new instance of this class with all attributes of the current instance, but
-with a new initial extent made by combining the current instance extent with the <code class="docutils literal notranslate"><span class="pre">newextent</span></code>.
-Each ArrayLike class must overwrite this class to get the best performance with multiple 
-slicing operations.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="CFAPyX.partition.ArrayPartition.open">
-<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/CFAPyX/partition.html#ArrayPartition.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CFAPyX.partition.ArrayPartition.open" title="Permalink to this definition"></a></dt>
-<dd><p>Open the source file for this chunk to extract data. Multiple file locations may be provided
-for this object, in which case there is a priority for ‘remote’ sources first, followed by 
-‘local’ sources - otherwise the order is as given in the fragment array variable <code class="docutils literal notranslate"><span class="pre">location</span></code>.</p>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 

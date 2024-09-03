@@ -274,7 +274,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         # and round to the nearest integer. Divide the array length by 2^(this number) and 
         # round again to give the optimised chunk size for that dimension.
 
-        for x, nd in self.named_dims:
+        for x, nd in enumerate(self.named_dims):
             if nd not in self.chunks:
                 continue
 
@@ -282,7 +282,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 nchunk = len(nchunks[x])
 
                 power  = round(math.log2(nchunk))
-                opsize = round(self.shape/2**power)
+                opsize = round(self.shape[x]/2**power)
 
                 self.chunks[nd] = opsize
 
@@ -310,7 +310,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 position = [0 for i in range(self.ndim)]
                 position[dim] = x 
 
-                fragment = fragments[position]
+                fragment = fragments[tuple(position)]
 
                 dchunks = normalize_partition_chunks( # Needs the chunks
                     self.chunks,
@@ -322,29 +322,52 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
                 dask_chunks[dim] += dchunks[dim]
                 fragment_coverage[dim].append(len(dchunks[dim]))
 
-        fragment_cumul  = [np.cumsum(d) for d in fragment_coverage]
-        partition_cumul = [np.cumsum(p) for p in dask_chunks]
+        def outer_cumsum(array):
+            cumsum = np.cumsum(array)
+            cumsum = np.append(cumsum, 0)
+            return np.roll(cumsum,1)
+        
+        def global_combine(internal, external):
+            local = []
+            for dim in range(len(internal)):
+                start = internal[dim].start - external[dim].start
+                stop  = internal[dim].stop  - external[dim].start
+                local.append(slice(start,stop))
+            return local
+
+        fragment_cumul  = [outer_cumsum(d) for d in fragment_coverage]
+        partition_cumul = [outer_cumsum(p) for p in dask_chunks]
         partition_space = [len(d) for d in dask_chunks]
 
         partitions = {}
         partition_coords = get_chunk_positions(partition_space)
         for coord in partition_coords:
             fragment_coord = []
-            extent = []
+            internal = []
             for dim, c in enumerate(coord):
                 cumulative = fragment_cumul[dim]
-                cumul = max(filter(lambda l: l < c, cumulative))
-                fc = cumulative.index(cumul) + 1
-                fragment_coord.append(fc)
+
+                if c < cumulative[0]:
+                    cumul = cumulative[0]
+                else:
+                    cumul = max(filter(lambda l: l <= c, cumulative))
+
+                fc = np.where(cumulative == cumul)[0]
+                fragment_coord.append(int(fc))
 
                 ext = slice(
                     partition_cumul[dim][c],
                     partition_cumul[dim][c+1]
                 )
-                extent[dim] = ext
+                internal.append(ext)
             
-            fragment = fragments[fragment_coord].copy(extent=extent)
-            partitions[coord] = fragment
+            # Currently applying GLOBAl extent not internal extent to each fragment.
+
+            source   = fragments[tuple(fragment_coord)]
+            external = source.global_extent
+            extent   = global_combine(internal, external)
+
+            partitions[coord] = source.copy(extent=extent)
 
         return dask_chunks, partitions
 

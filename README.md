@@ -11,7 +11,7 @@ For use with the Xarray module as an additional backend.
 
 ```
 pip install xarray==2024.6.0
-pip install CFAPyX==2024.9.1
+pip install CFAPyX
 ```
 
 # Usage

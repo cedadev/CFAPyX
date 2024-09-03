@@ -5,8 +5,8 @@ The CFA-Xarray Engine
 CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will 
 collect the package and add it to a list of backends on performing ``import xarray``.
 
-.. image:: _images/structure_2024.7.30.png
-   :alt: CFAPyX Structure v2024.7.30
+.. image:: _images/DaskStructure.png
+   :alt: CFAPyX Structure 03/09/2024
 
 1. Entrypoint
 -------------

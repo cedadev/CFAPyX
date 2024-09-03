@@ -28,10 +28,11 @@ optimise the retrieval of data.
 .. image:: _images/FragmentChunkPartition.png
    :alt: Fragments, Chunks and Partitions example.
 
-The above figure shows a case where the provided Chunk scheme overlaps the Fragment scheme, and for each Dask chunk there may be multiple Fragments which
-contribute. In this case it is necessary to use another term for these array portions: a ``Partition``. This is now the general term for any subsection of 
-an array within this package, meaning both ``Fragments`` and ``Chunks`` are considered to be ``Partitions``. A ``Partition`` can take any shape within the
-given ``space`` (see Terms in CFAPyX below). 
+The above figure shows a case where a Chunk scheme is provided, as well as the underlying Fragment structure. The convention within this package is to 
+refer to any array section as a ``Partition``. Both ``Fragments`` and ``Chunks`` are considered to be ``Partitions``. A ``Partition`` can take any shape within the
+given ``space`` (see Terms in CFAPyX below). Originally it was thought that the Chunk and Fragment schemes should be allowed to overlap, and a nested Dask array 
+could be used to handle  the various shapes and positions, but it was later shown to be much simpler to match the provided chunk structure to the existing fragment
+structure, so each chunk is composed of exactly one fragment.
 
 In CFAPyX, all Fragment/Chunk/Partition objects inherit from a generalised ``ArrayPartition`` class which defines certain Lazy behaviour. For the case in the
 figure above, CFA would create a Dask array from several ``ChunkWrapper`` objects, corresponding to each (Orange) Dask chunk. These ``ChunkWrapper`` instances

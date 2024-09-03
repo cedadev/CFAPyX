@@ -108,12 +108,18 @@
 <li><p><strong>Substitutions</strong>: Additional substitutions provided to the CFA decoder for this file, following the CF 1.12 conventions
 for syntax with ‘base’ and ‘sub’.</p></li>
 <li><p><strong>Decode CFA</strong>: Optional parameter to disable decoding of aggregation variables if required. Default is True.</p></li>
-<li><p><strong>Chunks</strong>: Replaces the typical <code class="docutils literal notranslate"><span class="pre">chunks={}</span></code> normally provided to Xarray for Dask chunks. You may still use the normal
+<li><p><strong>Chunks</strong>: Replaces the typical <code class="docutils literal notranslate"><span class="pre">chunks={}</span></code> normally provided to Xarray for Dask chunks. You can still use the normal
 dask chunks keyword but may get better performance using CFA chunks because this takes into account the underlying storage
 regime including Fragment extents. See the diagram in <a class="reference internal" href="fragments.html#fragments-chunks-and-partitions"><span class="std std-ref">Fragments, Chunks and Partitions</span></a> for more details.</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">chunks</span></code> option for CFAPyX now includes an additional option: <code class="docutils literal notranslate"><span class="pre">optimised</span></code>. This is an upgrade from the dask <code class="docutils literal notranslate"><span class="pre">auto</span></code>
+chunks option, where the chunk size is automatically calculated by dask, then shifted such that the number of chunks approaches
+a power of 2. This has significant computational performance benefits.</p>
+</div>
 </section>
 
 

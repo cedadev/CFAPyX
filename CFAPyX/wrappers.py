@@ -10,7 +10,8 @@ from arraypartition import (
     get_chunk_positions,
     get_chunk_extent,
     get_dask_chunks,
-    combine_slices
+    combine_slices,
+    normalize_partition_chunks
 )
 
 import dask.array as da
@@ -227,7 +228,7 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             fragments[pos] = fragment
         
         if not self.chunks:
-            dsk = self._chunk_by_fragment(fragments, array_name)
+            dsk = self._assemble_dsk_dict(fragments, array_name)
 
             global_extent = {
                 k: fragment_info[k]["global_extent"] for k in fragment_info.keys()
@@ -242,40 +243,158 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             )
 
         else:
-            raise NotImplementedError(
-                '"Chunks" option not yet implemented.'
-            )
+            dask_chunks, partitions = self._create_partitions(fragments)
+                
+            dsk = self._assemble_dsk_dict(partitions, array_name)
 
-        # The dask_chunks should reflect the proper chunk structure to cover
-        # the whole array here.
         darr = self._assemble_array(dsk, array_name[0], dask_chunks)
         return darr
 
-    def _chunk_by_fragment(self, fragments, array_name):
+    def _optimise_chunks(self):
+        """
+        Replace the keyword ``optimised`` in the provided chunks with a chunk size for 
+        the specified dimension that will be most optimised. The optimal chunk sizes are such 
+        that the number of chunks is close to a power of 2."""
+
+        auto_chunks = {}
+        for c in self.chunks:
+            if self.chunks[c] == 'optimised':
+                auto_chunks[c] = 'auto'
+            else:
+                auto_chunks[c] = self.chunks[c]
+
+        nchunks = normalize_partition_chunks(
+            auto_chunks,
+            self.shape,
+            self.dtype,
+            self.named_dims
+        )
+
+        # For each 'optimised' dimension, take the log2 of the number of chunks (len)
+        # and round to the nearest integer. Divide the array length by 2^(this number) and 
+        # round again to give the optimised chunk size for that dimension.
+
+        for x, nd in enumerate(self.named_dims):
+            if nd not in self.chunks:
+                continue
+
+            if self.chunks[nd] == 'optimised':
+                nchunk = len(nchunks[x])
+
+                power  = round(math.log2(nchunk))
+                opsize = round(self.shape[x]/2**power)
+
+                self.chunks[nd] = opsize
+
+    def _create_partitions(self, fragments):
+        """
+        Creates a partition structure that falls along the existing fragment boundaries.
+        This is done by simply chunking each fragment given the user provided chunks, rather 
+        than the whole array, because user provided chunk sizes apply to each fragment equally.
+
+        :param fragments:       (dict) The set of fragment objects (CFAPartitions) in ``fragment space``
+            before any chunking is applied.
+
+        :returns:   The set of dask chunks to provide to dask when building the array and the corresponding
+            set of copied fragment objects for each partition.
+        """
+        if 'optimised' in self.chunks.items():
+            # Running on standard dask chunking mode.
+            self._optimise_chunks()
+            
+        dask_chunks       = [[] for i in range(self.ndim)]
+        fragment_coverage = [[] for i in range(self.ndim)]
+        for dim in range(self.ndim):
+            for x in range(self.fragment_space[dim]):
+                # Position eg. 0, 0, X
+                position = [0 for i in range(self.ndim)]
+                position[dim] = x 
+
+                fragment = fragments[tuple(position)]
+
+                dchunks = normalize_partition_chunks( # Needs the chunks
+                    self.chunks,
+                    fragment.shape,
+                    dtype=self.dtype,
+                    named_dims=self.named_dims
+                )
+
+                dask_chunks[dim] += dchunks[dim]
+                fragment_coverage[dim].append(len(dchunks[dim]))
+
+        def outer_cumsum(array):
+            cumsum = np.cumsum(array)
+            cumsum = np.append(cumsum, 0)
+            return np.roll(cumsum,1)
+        
+        def global_combine(internal, external):
+            local = []
+            for dim in range(len(internal)):
+                start = internal[dim].start - external[dim].start
+                stop  = internal[dim].stop  - external[dim].start
+                local.append(slice(start,stop))
+            return local
+
+        fragment_cumul  = [outer_cumsum(d) for d in fragment_coverage]
+        partition_cumul = [outer_cumsum(p) for p in dask_chunks]
+        partition_space = [len(d) for d in dask_chunks]
+
+        partitions = {}
+        partition_coords = get_chunk_positions(partition_space)
+        for coord in partition_coords:
+            fragment_coord = []
+            internal = []
+            for dim, c in enumerate(coord):
+                cumulative = fragment_cumul[dim]
+
+                if c < cumulative[0]:
+                    cumul = cumulative[0]
+                else:
+                    cumul = max(filter(lambda l: l <= c, cumulative))
+
+                fc = np.where(cumulative == cumul)[0]
+                fragment_coord.append(int(fc))
+
+                ext = slice(
+                    partition_cumul[dim][c],
+                    partition_cumul[dim][c+1]
+                )
+                internal.append(ext)
+            
+            # Currently applying GLOBAl extent not internal extent to each fragment.
+
+            source   = fragments[tuple(fragment_coord)]
+            external = source.global_extent
+            extent   = global_combine(internal, external)
+
+            partitions[coord] = source.copy(extent=extent)
+
+        return dask_chunks, partitions
+
+    def _assemble_dsk_dict(self, partitions, array_name):
         """
         Assemble the base ``dsk`` task dependency graph which includes the fragment objects 
         plus the method to index each object (with locking).
 
-        :param fragments:   (dict) The set of Fragment objects (CFAPartition) with 
-            their positions in ``fragment space``.
+        :param partitions:   (dict) The set of partition objects (CFAPartition) with 
+            their positions in the relevant ``space``.
 
-        :returns:       A task dependency graph with all the fragments included to use 
+        :returns:       A task dependency graph with all the partitions included to use 
             when constructing the dask array.
         """
 
         dsk = {}
-        for fragment_position in fragments.keys():
-            fragment = fragments[fragment_position]
+        for part_position in partitions.keys():
+            part = partitions[part_position]
 
-            f_identifier = f"{fragment.__class__.__name__}-{tokenize(fragment)}"
-            dsk[f_identifier] = fragment
-            dsk[array_name + fragment_position] = (
+            p_identifier = f"{part.__class__.__name__}-{tokenize(part)}"
+            dsk[p_identifier] = part
+            dsk[array_name + part_position] = (
                 getter, 
-                # Method of retrieving the 'data' from each fragment - but each fragment is Array-like.
-                f_identifier,
-                fragment.get_extent(),
+                p_identifier,
+                part.get_extent(),
                 False,
-                getattr(fragment, "_lock", False) # Check version cf-python
+                getattr(part, "_lock", False) # Check version cf-python
             )
         return dsk
 

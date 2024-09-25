@@ -408,7 +408,12 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
             for s in self._substitutions:
                 base, substitution = s.split(':')
                 for f in self.fragment_info.keys():
-                    self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
+
+                    if isinstance(self.fragment_info[f]['location'], str):
+                        self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
+                    else:
+                        for finfo in self.fragment_info[f]['location']:
+                            finfo = finfo.replace(base, substitution)
                 
 class CFAPartition(ArrayPartition):
     """

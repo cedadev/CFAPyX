@@ -241,7 +241,11 @@ class CFADataStore(NetCDF4DataStore):
         if substitutions:
             for value in fragment_info.values():
                 for base, sub in substitutions.items():
-                    value["location"] = value["location"].replace(base, sub)
+                    if isinstance(value['location'], str):
+                        value["location"] = value["location"].replace(base, sub)
+                    else:
+                        for v in value["location"]:
+                            v = v.replace(base, sub)
 
         return fragment_info, fragment_space
 

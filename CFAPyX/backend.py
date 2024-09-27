@@ -78,7 +78,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
     def open_dataset(
             self,
             filename_or_obj,
-            *args,
+            *,
             drop_variables=None,
             mask_and_scale=None,
             decode_times=None,
@@ -97,12 +97,6 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
         """
 
         cfa_options = cfa_options or {}
-
-        if args != {}:
-            print(
-                'ArgumentWarning: The following arguments are not recognised '
-                f'by CFAPyX and will therefore be ignored: "{args.keys()}"'
-            )
 
         return open_cfa_dataset(
             filename_or_obj, 

@@ -3,9 +3,9 @@ requires = ["setuptools>=40.8.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-requires-python=">=3.7"
+requires-python=">=3.11"
 name="CFAPyX"
-version="2024.9.2"
+version="2024.9.25"
 dynamic = ["dependencies"]
 authors = [{name = "Daniel Westwood", email = "daniel.westwood@stfc.ac.uk"}]
 readme="README.md"

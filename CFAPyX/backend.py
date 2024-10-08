@@ -9,6 +9,10 @@ from xarray import conventions
 
 from CFAPyX.datastore import CFADataStore
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def open_cfa_dataset(
         filename_or_obj,
         drop_variables=None,

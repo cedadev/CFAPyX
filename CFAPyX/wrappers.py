@@ -30,10 +30,14 @@ except:
     class ActiveOptionsContainer:
         pass
 
-class CFAArrayWrapper:
+import logging
+
+logger = logging.getLogger(__name__)
+
+class CFAOptionsMixin:
     """
-    Simple container for CFA options properties, shared by ``FragmentArrayWrapper`` and
-    ``CFAChunkWrapper``"""
+    Simple container for CFA options properties.
+    """
 
     __slots__ = (
         'chunks',
@@ -78,28 +82,7 @@ class CFAArrayWrapper:
         self.chunks         = chunks
         self.use_active     = use_active
 
-    def _assemble_array(self, dsk, array_name, dask_chunks):
-
-        meta = da.empty(self.shape, dtype=self.dtype)
-        if not hasattr(self, 'use_active'):
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-            return darr
-
-        if not self.use_active:
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-            return darr
-        try:
-            from XarrayActive import DaskActiveArray
-
-            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-        except ImportError:
-            raise ImportError(
-                '"DaskActiveArray" from XarrayActive failed to import - please ensure '
-                'you have the XarrayActive package installed.'
-            )
-        return darr
-
-class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
+class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
     """
     FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
     return a Dask-like array object. This class is essentially a constructor for the 
@@ -399,22 +382,52 @@ class FragmentArrayWrapper(ArrayLike, CFAArrayWrapper, ActiveOptionsContainer):
         return dsk
 
     def _apply_substitutions(self):
-        # Perform substitutions for this fragment array
-        if self._substitutions:
+        """
+        Perform substitutions for this fragment array.
+        """
+        if not self._substitutions:
+            return
 
-            if type(self._substitutions) != list:
-                self._substitutions = [self._substitutions]
+        if type(self._substitutions) != list:
+            self._substitutions = [self._substitutions]
 
-            for s in self._substitutions:
-                base, substitution = s.split(':')
-                for f in self.fragment_info.keys():
+        for s in self._substitutions:
+            base, substitution = s.split(':')
+            for f in self.fragment_info.keys():
 
-                    if isinstance(self.fragment_info[f]['location'], str):
-                        self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
-                    else:
-                        for finfo in self.fragment_info[f]['location']:
-                            finfo = finfo.replace(base, substitution)
+                if isinstance(self.fragment_info[f]['location'], str):
+                    self.fragment_info[f]['location'] = self.fragment_info[f]['location'].replace(base, substitution)
+                else:
+                    for finfo in self.fragment_info[f]['location']:
+                        finfo = finfo.replace(base, substitution)
                 
+    def _assemble_array(self, dsk, array_name, dask_chunks):
+
+        """
+        Assemble the dask/dask-like array for this FragmentArrayWrapper from the 
+        assembled ``dsk`` dict and set of dask chunks. Also provides an array name
+        for the dask tree to register.
+        """
+
+        meta = da.empty(self.shape, dtype=self.dtype)
+        if not hasattr(self, 'use_active'):
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
+            return darr
+
+        if not self.use_active:
+            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
+            return darr
+        try:
+            from XarrayActive import DaskActiveArray
+
+            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
+        except ImportError:
+            raise ImportError(
+                '"DaskActiveArray" from XarrayActive failed to import - please ensure '
+                'you have the XarrayActive package installed.'
+            )
+        return darr
+            
 class CFAPartition(ArrayPartition):
     """
     Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 

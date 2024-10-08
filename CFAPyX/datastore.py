@@ -19,6 +19,10 @@ from CFAPyX.wrappers import FragmentArrayWrapper
 from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
 from CFAPyX.group import CFAGroupWrapper
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 xarray_subs = {
     'file:///':'/'
@@ -141,11 +145,10 @@ class CFADataStore(NetCDF4DataStore):
             shape, 
             address, 
             location, 
-            array_shape, 
+            array_shape,
             value=None, 
             cformat='', 
-            substitutions=None,
-            dims=None):
+            substitutions=None):
         """
         Private method for performing the decoding of the standard ``fragment array 
         variables``. Any convention version-specific adjustments should be made prior 
@@ -213,40 +216,23 @@ class CFADataStore(NetCDF4DataStore):
 
             return fragment_info, fragment_space
 
-        constructor_shape = location.shape
-
         if not address.ndim: # Scalar address
             addr    = address.getValue()
             adtype  = np.array(addr).dtype
-            address = np.full(constructor_shape, addr, dtype=adtype)
+            address = np.full(fragment_space, addr, dtype=adtype)
 
         if cformat != '':
             if not cformat.ndim:
                 cft = cformat.getValue()
                 npdtype = np.array(cft).dtype
-                cformat = np.full(constructor_shape, cft, dtype=npdtype)
-
-        print(fragment_positions)
+                cformat = np.full(fragment_space, cft, dtype=npdtype)
 
         for frag_pos in fragment_positions:
 
-            loc_frag_pos = [0 for x in range(location.ndim-1)]
-            # Versions should always be at the end
-
-            ldims = location.dimensions
-
-            # Match frag_pos coords to location dimensions.
-            for i, dim in enumerate(dims):
-                for j, ld in enumerate(ldims):
-                    if dim in ld:
-                        loc_frag_pos[j] = frag_pos[i]
-                        
-            loc_frag_pos = tuple(loc_frag_pos)
-
             fragment_info[frag_pos] = {
                 "shape"    : shapes[frag_pos],
-                "location" : location[loc_frag_pos],
-                "address"  : address[loc_frag_pos],
+                "location" : location[frag_pos],
+                "address"  : address[frag_pos],
                 "extent"   : extent[frag_pos],
                 "global_extent": global_extent[frag_pos]
             }
@@ -267,7 +253,7 @@ class CFADataStore(NetCDF4DataStore):
 
     # Public class methods
 
-    def perform_decoding(self, array_shape, agg_data, dims=None):
+    def perform_decoding(self, array_shape, agg_data):
         """
         Public method ``perform_decoding`` involves extracting the aggregated 
         information parameters and assembling the required information for actual 
@@ -291,27 +277,22 @@ class CFADataStore(NetCDF4DataStore):
                     value    = self.ds.variables[agg_data['value']]
 
             address = self.ds.variables[agg_data['address']]
-        except:
+        except Exception as err:
             raise ValueError(
                 'One or more aggregated data features specified could not be '
                 'found in the data: '
                 f'"{tuple(agg_data.keys())}"'
+                f' - original error: {err}'
             )
-        
-        agg_dims = []
-        for d in dims:
-            for ld in location.dimensions:
-                if d in ld:
-                    agg_dims.append(d)
-        
+
         subs = {}
         if hasattr(location, 'substitutions'):
             subs = location.substitutions.replace('https://', 'https@//')
             subs = self._decode_feature_data(subs, readd={'https://':'https@//'})
 
-        return self._perform_decoding(shape, address, location, array_shape, 
+        return self._perform_decoding(shape, address, location, array_shape,
                                       cformat=cformat, value=value, 
-                                      substitutions = xarray_subs | subs, dims=agg_dims) 
+                                      substitutions = xarray_subs | subs) 
         # Combine substitutions with known defaults for using in xarray.
 
     def get_variables(self):
@@ -419,7 +400,7 @@ class CFADataStore(NetCDF4DataStore):
         dimensions  = tuple(real_dims.keys())
         array_shape = tuple(real_dims.values())
 
-        fragment_info, fragment_space = self.perform_decoding(array_shape, agg_data, dims=dimensions)
+        fragment_info, fragment_space = self.perform_decoding(array_shape, agg_data)
 
         units = ''
         if hasattr(var, 'units'):

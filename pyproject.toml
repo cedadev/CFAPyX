@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 requires-python=">=3.11"
 name="CFAPyX"
-version="2024.9.25"
+version="2024.10.11"
 dynamic = ["dependencies"]
 authors = [{name = "Daniel Westwood", email = "daniel.westwood@stfc.ac.uk"}]
 readme="README.md"

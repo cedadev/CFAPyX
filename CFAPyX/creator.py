@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 import netCDF4
 import numpy as np
 import logging
+import glob
 
 from collections import OrderedDict
 
@@ -368,6 +369,27 @@ class CFACreateMixin:
         
         return location
 
+    def _apply_agg_dims(
+            self,
+            var_info,
+            agg_dims
+        ):
+        for var, meta in var_info.items():
+
+            aggs = []
+
+            if 'cdims' not in meta:
+                continue
+
+            for cd in meta['cdims']:
+                if cd in agg_dims:
+                    aggs.append(cd)
+
+            if aggs:
+                var_info[var]['adims'] = aggs
+    
+        return var_info
+
     def _determine_non_aggregated(
             self, 
             var_info : dict, 
@@ -390,7 +412,7 @@ class CFACreateMixin:
         logger.debug(f'Non-aggregated variables: {tuple(non_aggregated)}')
         return non_aggregated
 
-    def _determine_size_opts(self, var_info: dict) -> list:
+    def _determine_size_opts(self, var_info: dict, agg_dims: list) -> list:
         """
         Determine the combinations of dimensions from the information
         around each variable. Each combination requires a different 
@@ -401,8 +423,10 @@ class CFACreateMixin:
         cdimopts = []
         for v in var_info.values():
             cds = v['dims']
-            if cds and sorted(cds) not in cdimopts:
-                cdimopts.append(cds)
+
+            if (set(agg_dims) & set(cds)):
+                if cds and sorted(cds) not in cdimopts:
+                    cdimopts.append(cds)
 
         logger.debug(f'Determined {len(cdimopts)} size options:')
         for c in cdimopts:
@@ -501,7 +525,7 @@ class CFAWriteMixin:
 
         for var, meta in self.var_info.items():
 
-            if not meta['cdims']:
+            if 'adims' not in meta:
                 variable = self._write_nonagg_variable(var, meta)
             else:
 
@@ -533,7 +557,7 @@ class CFAWriteMixin:
 
         addrs = []
         for variable, meta in self.var_info.items():
-            if not meta['dims']:
+            if 'adims' not in meta:
                 continue
             addr = self.ds.createVariable(
                 f'fragment_address_{variable}',
@@ -707,9 +731,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         here if needed."""
 
         if isinstance(files, str):
-            raise NotImplementedError(
-                'Matching files from a pattern not yet implemented'
-            )
+            files = glob.glob(files)
+            self.files = self._filter_files(files)
         else:
             self.files = self._filter_files(files)
 
@@ -745,11 +768,14 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         # First pass collect info
         arranged_files, global_attrs, var_info, dim_info = self._first_pass(agg_dims=agg_dims)
 
+        global_attrs, var_info, dim_info = self._apply_filters(updates, removals, global_attrs, var_info, dim_info)
+                    
         # Arrange aggregation dimensions
         dim_info, agg_dims = self._arrange_dimensions(dim_info, agg_dims=agg_dims)
+        var_info = self._apply_agg_dims(var_info, agg_dims)
 
         # Determine size options and non-aggregated variables
-        self.cdim_opts  = self._determine_size_opts(var_info)
+        self.cdim_opts  = self._determine_size_opts(var_info, agg_dims)
         non_aggregated = self._determine_non_aggregated(var_info, agg_dims)
 
         # Perform a second pass to collect non-aggregated variables if present.
@@ -801,6 +827,73 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
         self.ds.close()
 
+    def _apply_filters(self, updates, removals, global_attrs, var_info, dim_info):
+
+        global_attrs, var_info, dim_info = self._apply_updates(updates, global_attrs, var_info, dim_info)
+        global_attrs, var_info, dim_info = self._apply_removals(removals, global_attrs, var_info, dim_info)
+
+        return global_attrs, var_info, dim_info
+
+    def _apply_updates(self, updates, global_attrs, var_info, dim_info):
+        global_u, vars_u, dims_u = {}, {}, {}
+        for upd in updates.keys():
+            if '.' not in upd:
+                global_u[upd] = updates[upd]
+            else:
+                item = upd.split('.')[0]
+                if item in var_info.keys():
+                    vars_u[upd] = updates[upd]
+                elif item in dim_info.keys():
+                    dims_u[upd] = updates[upd]
+                else:
+                    logger.warning(
+                        'Attempting to set an attribute for a var/dim that'
+                        f'is not present: "{item}"'
+                    )
+        
+        for attr, upd in global_u.items():
+            global_attrs[attr] = upd
+
+        for attr, upd in vars_u.items():
+            (v, vattr) = attr.split('.')
+            var_info[v]['attrs'][vattr] = upd
+
+        for attr, upd in dims_u.items():
+            (d, dattr) = attr.split('.')
+            dim_info[d]['attrs'][dattr] = upd
+
+        return global_attrs, var_info, dim_info
+
+    def _apply_removals(self, removals, global_attrs, var_info, dim_info):
+        global_r, vars_r, dims_r = [],[],[]
+        for rem in removals:
+            if '.' not in rem:
+                global_r.append(rem)
+            else:
+                item = rem.split('.')[0]
+                if item in var_info.keys():
+                    vars_r.append(rem)
+                elif item in dim_info.keys():
+                    dims_r.append(rem)
+                else:
+                    logger.warning(
+                        'Attempting to remove an attribute for a var/dim that'
+                        f'is not present: "{item}"'
+                    )
+        
+        for rem in global_r:
+            global_attrs.pop(rem)
+
+        for rem in vars_r:
+            (v, vattr) = rem.split('.')
+            var_info[v]['attrs'].pop(rem)
+
+        for rem in dims_r:
+            (d, dattr) = rem.split('.')
+            dim_info[v]['attrs'].pop(rem)
+
+        return global_attrs, var_info, dim_info
+
     def _filter_files(self, files: list) -> list:
         """
         Filter the set of files to identify the trailing dimension
@@ -843,13 +936,13 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         """
 
         if isinstance(file, tuple):
-            self.ds = netCDF4.Dataset(file[0])
+            ds = netCDF4.Dataset(file[0])
             for f in file:
                 if len(f) > len(self.longest_filename):
                     self.longest_filename = f
         else:
-            self.ds = netCDF4.Dataset(file)
+            ds = netCDF4.Dataset(file)
             if len(file) > len(self.longest_filename):
                 self.longest_filename = file
 
-        return self.ds
+        return ds

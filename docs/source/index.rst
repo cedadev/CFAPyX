@@ -24,6 +24,7 @@ Current support is limited to local netCDF4 formatted files, but future addition
    Xarray Engine Overview <overview>
    Fragments, Partitions and Chunks <fragments>
    CFAPyX Usage and Options <options>
+   CFA Creator Usage <creator>
 
 
 .. toctree::

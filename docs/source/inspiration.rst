@@ -9,8 +9,8 @@ The need for cloud-accessible analysis-ready data is increasing due to high dema
 Current archival formats and access methods are insufficient for an increasing number of user needs, especially given the volume of data being
 produced by various projects globally. 
 
-.. image:: _images/CedaArchive1123.png
-   :alt: Contents of the CEDA Archive circa November 2023. 
+.. image:: _images/CedaArchive0824.png
+   :alt: Contents of the CEDA Archive circa August 2024. 
    :align: center
 
 The CEDA-operated JASMIN data analysis facility has a current (2024) data archive of more than 30 Petabytes, with more datasets being ingested 

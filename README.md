@@ -7,6 +7,8 @@ cfapyx on [Github](https://github.com/cedadev/CFAPyX)
 
 For use with the Xarray module as an additional backend.
 
+> **_NOTE:_** The `create` functionality was added to version 2024.10.11 and is currently in alpha release. Please report any unexpected errors or issues using the GitHub Issues tab for this repository.
+
 # Installation
 
 ```

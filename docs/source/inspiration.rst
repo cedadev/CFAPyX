@@ -45,6 +45,6 @@ CF aggregations
 
 CFA parameters are now included in the CF conventions (as of CF version 1.12 - November 2024), and define how so-called 'aggregation variables' should be defined within a CFA-netCDF file.
 A CFA-netCDF file acts as a reference file to a set of Fragment files (which may be netCDF or other formats), and an appropriate application reader (like
-CFAPyX) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
+cfapyx) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
 Accessing a subset of the data is then made more efficient as the application reader can fetch only the portions of the array required by the user for any
 particular computation.

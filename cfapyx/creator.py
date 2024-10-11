@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 CONCAT_MSG = 'See individual datasets for more information.'
 
 class CFACreateMixin:
+    """
+    Mixin class for ``Create`` methods for a CFA-netCDF dataset.
+    """
 
     def _first_pass(self, agg_dims: list = None) -> tuple:
         """
@@ -464,6 +467,10 @@ class CFACreateMixin:
         return attrs
 
 class CFAWriteMixin:
+    
+    """
+    Mixin class for ``Write`` methods for a CFA-netCDF dataset.
+    """
 
     def _write_dimensions(self):
         """
@@ -721,6 +728,11 @@ class CFAWriteMixin:
 
 class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
+    """
+    CFA-netCDF file constructor class, enables creation and 
+    writing of new CF1.12 aggregations.
+    """
+
     description = 'The CFAPyX Constructor class, for creating new CFA-netCDF files.'
 
     def __init__(self, files: list, concat_msg : str = CONCAT_MSG):
@@ -839,6 +851,9 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     @property
     def agg_dims(self):
+        """
+        Display the aggregated dimensions identified on creation.
+        """
         if not self.dim_info:
             return []
         
@@ -852,6 +867,10 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
     
     @property
     def pure_dims(self):
+        """
+        Display the 'pure' dimensions identified on creation. Pure dimensions
+        are defined only by a size, with no array of values.
+        """
         if not self.dim_info:
             return []
         
@@ -863,6 +882,11 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
     
     @property
     def coord_dims(self):
+        """
+        Display the coordinate dimensions identified on creation. Coordinate
+        dimensions include an array of values for the dimension as a variable with
+        the same name.
+        """
         if not self.dim_info:
             return []
         
@@ -874,6 +898,10 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     @property
     def scalar_vars(self):
+        """
+        Display the scalar variables identified on creation, which are
+        single valued and are dimensionless.
+        """
         if not self.var_info:
             return []
         
@@ -888,6 +916,9 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     @property
     def aggregated_vars(self):
+        """
+        Display the variables that vary across the aggregation dimensions.
+        """
         if not self.var_info:
             return []
         
@@ -899,6 +930,10 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     @property
     def identical_vars(self):
+        """
+        Display the variables that do not vary across the aggregation 
+        dimensions and must therefore be identical across all files.
+        """
         if not self.var_info:
             return []
         

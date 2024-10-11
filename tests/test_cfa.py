@@ -19,6 +19,13 @@ def test_cfa_write(tests=TESTS):
         removals={'test_remove'}
     )
 
+    assert ds.agg_dims == ('time',)
+    assert ds.coord_dims == ('time', 'latitude', 'longitude')
+    assert ds.pure_dims == ()
+    assert ds.aggregated_vars == ('p',)
+    assert ds.identical_vars == ()
+    assert ds.scalar_vars == ()
+
     ds.write(f'{tests}/testrain.nca')
 
     print('Integration tests: Write - complete')

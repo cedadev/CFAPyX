@@ -1,0 +1,428 @@
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFA Creator: CFANetCDF &mdash; CFAPyX Package 2024.10.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="_static/CFAPyX.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Xarray Backend Entrypoint for cfapyx" href="backend.html" />
+    <link rel="prev" title="CFA Creator" href="creator_use.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CFAPyX Package
+              <img src="_static/CFAPyX_long.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Details:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Creator</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._first_pass"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._first_pass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._second_pass"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._second_pass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._collect_dim_info"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._collect_dim_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._update_info"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._update_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._arrange_dimensions"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._arrange_dimensions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._assemble_location"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._assemble_location()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._determine_non_aggregated"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._determine_non_aggregated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._determine_size_opts"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._determine_size_opts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFACreateMixin._accumulate_attrs"><code class="docutils literal notranslate"><span class="pre">CFACreateMixin._accumulate_attrs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_dimensions"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_dimensions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_variables"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_variables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_fragment_addresses"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_fragment_addresses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_shape_dims"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_shape_dims()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_fragment_shapes"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_fragment_shapes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_aggregated_variable"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_aggregated_variable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFAWriteMixin._write_nonagg_variable"><code class="docutils literal notranslate"><span class="pre">CFAWriteMixin._write_nonagg_variable()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cfapyx.creator.CFANetCDF"><code class="docutils literal notranslate"><span class="pre">CFANetCDF</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.create"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.create()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.write"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.agg_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.agg_dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.pure_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.pure_dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.coord_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.coord_dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.scalar_vars"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.scalar_vars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.aggregated_vars"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.aggregated_vars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.identical_vars"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.identical_vars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF._filter_files"><code class="docutils literal notranslate"><span class="pre">CFANetCDF._filter_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF._call_file"><code class="docutils literal notranslate"><span class="pre">CFANetCDF._call_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CFAPyX Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CFA Creator: CFANetCDF</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/creator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-cfapyx.creator">
+<span id="cfa-creator-cfanetcdf"></span><h1>CFA Creator: CFANetCDF<a class="headerlink" href="#module-cfapyx.creator" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.creator.</span></span><span class="sig-name descname"><span class="pre">CFACreateMixin</span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Mixin class for <code class="docutils literal notranslate"><span class="pre">Create</span></code> methods for a CFA-netCDF dataset.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._first_pass">
+<span class="sig-name descname"><span class="pre">_first_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._first_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._first_pass" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a first pass across all provided files. Extracts the global
+attributes and information on all variables and dimensions into 
+separate python dictionaries. Also collects the set of files arranged
+by aggregated dimension coordinates, to be used later in constructing
+the CFA <code class="docutils literal notranslate"><span class="pre">fragment_location</span></code> properties.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._second_pass">
+<span class="sig-name descname"><span class="pre">_second_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_aggregated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._second_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._second_pass" title="Permalink to this definition"></a></dt>
+<dd><p>Second pass through a subset of the files (2) to collect non-aggregated variables
+which will be stored in the CFA file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._collect_dim_info">
+<span class="sig-name descname"><span class="pre">_collect_dim_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pure_dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord_variables</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._collect_dim_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._collect_dim_info" title="Permalink to this definition"></a></dt>
+<dd><p>Collect new info about each dimension. The collected attributes
+depend mostly on if the dimension is <code class="docutils literal notranslate"><span class="pre">pure</span></code> (i.e not a coordinate
+variable) or if it is a coordinate variable. Aggregated dimensions require
+collection of all array sequences that have a different <code class="docutils literal notranslate"><span class="pre">start</span></code> value. 
+If the aggregation dimensions are known, we do not have to collect arrays
+from each file from non-aggregated dimensions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._update_info">
+<span class="sig-name descname"><span class="pre">_update_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ncattr_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._update_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._update_info" title="Permalink to this definition"></a></dt>
+<dd><p>Update the information for a variable/dimension based on the
+current dataset. Certain properties are collected in lists while
+others are explicitly defined and should be equal across all files.
+Others still may differ across files, in which case the <code class="docutils literal notranslate"><span class="pre">concat_msg</span></code>
+is applied which usually indicates to inspect individual files for
+the correct value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._arrange_dimensions">
+<span class="sig-name descname"><span class="pre">_arrange_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._arrange_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._arrange_dimensions" title="Permalink to this definition"></a></dt>
+<dd><p>Arrange the aggregation dimensions by ordering the 
+start values collected from each file. Dimension arrays are 
+aggregated to a single array once properly ordered, and the sizes
+fragments in each dimension are recorded in the <code class="docutils literal notranslate"><span class="pre">dim_info</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._assemble_location">
+<span class="sig-name descname"><span class="pre">_assemble_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arranged_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._assemble_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._assemble_location" title="Permalink to this definition"></a></dt>
+<dd><p>Assemble the base CFA <code class="docutils literal notranslate"><span class="pre">fragment_location</span></code> from which all the 
+locations for different variables are derived. Locations are defined
+by the number of dimensions, and follow the same pattern for definition
+as the <code class="docutils literal notranslate"><span class="pre">fragment_shapes</span></code>. The combinations of dimensions that
+require their own <code class="docutils literal notranslate"><span class="pre">location</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> are recorded in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._determine_non_aggregated">
+<span class="sig-name descname"><span class="pre">_determine_non_aggregated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._determine_non_aggregated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._determine_non_aggregated" title="Permalink to this definition"></a></dt>
+<dd><p>Determine non-aggregated variables present in the fragment files.
+Non-aggregated variables are equivalent to the <code class="docutils literal notranslate"><span class="pre">identical</span> <span class="pre">variables</span></code>
+from kerchunk jargon. If the non-aggregated variables are later found
+to vary across the fragment files, an error will be raised.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._determine_size_opts">
+<span class="sig-name descname"><span class="pre">_determine_size_opts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._determine_size_opts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._determine_size_opts" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the combinations of dimensions from the information
+around each variable. Each combination requires a different 
+<code class="docutils literal notranslate"><span class="pre">location</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> fragment array variable in the final
+CFA-netCDF file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._accumulate_attrs">
+<span class="sig-name descname"><span class="pre">_accumulate_attrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncattrs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._accumulate_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._accumulate_attrs" title="Permalink to this definition"></a></dt>
+<dd><p>Accumulate attributes from the new source and the existing set.
+Ignore fill value attributes as these are handled elsewhere. 
+If attributes are not equal across files, the <code class="docutils literal notranslate"><span class="pre">concat_msg</span></code> is
+used to indicate where data users should seek out the source files
+for correct values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.creator.</span></span><span class="sig-name descname"><span class="pre">CFAWriteMixin</span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Mixin class for <code class="docutils literal notranslate"><span class="pre">Write</span></code> methods for a CFA-netCDF dataset.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_dimensions">
+<span class="sig-name descname"><span class="pre">_write_dimensions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_dimensions" title="Permalink to this definition"></a></dt>
+<dd><p>Write the collected dimensions in dim_info as new dimensions
+in the CFA-netCDF file. So-called <code class="docutils literal notranslate"><span class="pre">pure</span></code> dimensions which 
+have no variable component (no array of values) are defined 
+with size alone, whereas coordinate dimensions (coordinate
+variables) have an associated variable component. The so-called
+<code class="docutils literal notranslate"><span class="pre">f-dims</span></code> are also created here as the fragmented size of each 
+coordinate dimension.</p>
+<p>Note: if a coordinate dimension is not fragmented, it still has
+an attributed f-dim, equal to 1.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_variables">
+<span class="sig-name descname"><span class="pre">_write_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_variables" title="Permalink to this definition"></a></dt>
+<dd><p>Non-aggregated variables are defined exactly the same as in
+the fragment files, while aggregated variables contain 
+<code class="docutils literal notranslate"><span class="pre">aggregated_data</span></code> and <code class="docutils literal notranslate"><span class="pre">aggregated_dimensions</span></code> attributes, 
+which link to the fragment array variables.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_fragment_addresses">
+<span class="sig-name descname"><span class="pre">_write_fragment_addresses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_fragment_addresses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_fragment_addresses" title="Permalink to this definition"></a></dt>
+<dd><p>Create a <code class="docutils literal notranslate"><span class="pre">fragment_address</span></code> variable for each variable
+which is not dimension-less.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_shape_dims">
+<span class="sig-name descname"><span class="pre">_write_shape_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_shape_dims"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_shape_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Construct the shape and location dimensions for each 
+combination of dimensions stored in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>. This 
+utilises the  so-called <code class="docutils literal notranslate"><span class="pre">f-dims</span></code> previously created 
+for each coordinate dimension.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_fragment_shapes">
+<span class="sig-name descname"><span class="pre">_write_fragment_shapes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_fragment_shapes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_fragment_shapes" title="Permalink to this definition"></a></dt>
+<dd><p>Construct the <code class="docutils literal notranslate"><span class="pre">fragment_shape</span></code> variable part for each 
+combination of dimensions stored in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>. This 
+utilises the <code class="docutils literal notranslate"><span class="pre">shape</span></code> dimensions previously created.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_aggregated_variable">
+<span class="sig-name descname"><span class="pre">_write_aggregated_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_aggregated_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_aggregated_variable" title="Permalink to this definition"></a></dt>
+<dd><p>Create the netCDF parameters required for an aggregated variable.</p>
+<p>Note: The dimensions and variables referenced in <code class="docutils literal notranslate"><span class="pre">agg_data</span></code> need to 
+have already been defined for the dataset by this point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_nonagg_variable">
+<span class="sig-name descname"><span class="pre">_write_nonagg_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_nonagg_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_nonagg_variable" title="Permalink to this definition"></a></dt>
+<dd><p>Create a non-aggregated variable for the CFA-netCDF file.
+If this variable has some attributed data (which it should),
+the data is set for this variable in the new file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.creator.</span></span><span class="sig-name descname"><span class="pre">CFANetCDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">concat_msg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'See</span> <span class="pre">individual</span> <span class="pre">datasets</span> <span class="pre">for</span> <span class="pre">more</span> <span class="pre">information.'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF" title="Permalink to this definition"></a></dt>
+<dd><p>CFA-netCDF file constructor class, enables creation and 
+writing of new CF1.12 aggregations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.create" title="Permalink to this definition"></a></dt>
+<dd><p>Perform the operations and passes needed to accumulate the set of
+variable/dimension info and attributes to then construct a CFA-netCDF
+file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.write" title="Permalink to this definition"></a></dt>
+<dd><p>Use the accumulated dimension/variable info and attributes to 
+construct a CFA-netCDF file.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.agg_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">agg_dims</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.agg_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Display the aggregated dimensions identified on creation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.pure_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pure_dims</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.pure_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Display the ‘pure’ dimensions identified on creation. Pure dimensions
+are defined only by a size, with no array of values.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.coord_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coord_dims</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.coord_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Display the coordinate dimensions identified on creation. Coordinate
+dimensions include an array of values for the dimension as a variable with
+the same name.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.scalar_vars">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scalar_vars</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.scalar_vars" title="Permalink to this definition"></a></dt>
+<dd><p>Display the scalar variables identified on creation, which are
+single valued and are dimensionless.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.aggregated_vars">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aggregated_vars</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.aggregated_vars" title="Permalink to this definition"></a></dt>
+<dd><p>Display the variables that vary across the aggregation dimensions.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.identical_vars">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">identical_vars</span></span><a class="headerlink" href="#cfapyx.creator.CFANetCDF.identical_vars" title="Permalink to this definition"></a></dt>
+<dd><p>Display the variables that do not vary across the aggregation 
+dimensions and must therefore be identical across all files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF._filter_files">
+<span class="sig-name descname"><span class="pre">_filter_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF._filter_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF._filter_files" title="Permalink to this definition"></a></dt>
+<dd><p>Filter the set of files to identify the trailing dimension
+indicative of multiple file locations. Also identifies the 
+length of the longest filename to be used later when storing
+numpy string arrays.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF._call_file">
+<span class="sig-name descname"><span class="pre">_call_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF._call_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF._call_file" title="Permalink to this definition"></a></dt>
+<dd><p>Open the file as a netcdf dataset. If there are multiple filenames
+provided, use the first file. Also determine the longest filename
+to be used to define the <code class="docutils literal notranslate"><span class="pre">location</span></code> parameter later.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="creator_use.html" class="btn btn-neutral float-left" title="CFA Creator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="backend.html" class="btn btn-neutral float-right" title="Xarray Backend Entrypoint for cfapyx" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2024, Centre of Environmental Data Analysis Developers,Scientific and Technical Facilities Council (STFC),UK Research and Innovation (UKRI). BSD 2-Clause License. All rights reserved.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #0ecc5778;
+    }
+
+    .caption-text, .header h1 {
+        color: #45c347
+    }
+
+    .note {
+        background: #BEEF9E
+    }
+    .admonition-title {
+        background: #335145
+    }
+
+    .wy-nav-side {
+        background: #001711;
+    }
+
+  </style>
+
+
+</body>
+</html>

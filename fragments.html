@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFAPyX Terminology &mdash; CFAPyX Package 2024.8.9 documentation</title>
+  <title>cfapyx Terminology &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -17,13 +17,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CFAPyX Usage and Options" href="options.html" />
+    <link rel="next" title="cfapyx Usage and Options" href="options.html" />
     <link rel="prev" title="The CFA-Xarray Engine" href="overview.html" /> 
 </head>
 
@@ -53,17 +53,18 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Fragments, Partitions and Chunks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#fragments-chunks-and-partitions">Fragments, Chunks and Partitions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#terms-in-cfapyx">Terms in CFAPyX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terms-in-cfapyx">Terms in cfapyx</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -81,7 +82,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">CFAPyX Terminology</li>
+      <li class="breadcrumb-item active">cfapyx Terminology</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/fragments.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,18 +93,18 @@
            <div itemprop="articleBody">
              
   <section id="cfapyx-terminology">
-<h1>CFAPyX Terminology<a class="headerlink" href="#cfapyx-terminology" title="Permalink to this heading"></a></h1>
-<p>Provided here is a list of the terminology used throughout <code class="docutils literal notranslate"><span class="pre">CFAPyX</span></code> and the equivalents in the CF conventions. In general most terms
+<h1>cfapyx Terminology<a class="headerlink" href="#cfapyx-terminology" title="Permalink to this heading"></a></h1>
+<p>Provided here is a list of the terminology used throughout <code class="docutils literal notranslate"><span class="pre">cfapyx</span></code> and the equivalents in the CF conventions. In general most terms
 within the CF conventions for ‘Aggregated variables’ are preserved within this package, with only some additional terms required.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The page ‘CFAPyX Usage and Options’ covers keyword arguments to provide to <code class="docutils literal notranslate"><span class="pre">xarray.open_dataset</span></code> when using the <code class="docutils literal notranslate"><span class="pre">CFA</span></code> engine.
+<p>The page ‘cfapyx Usage and Options’ covers keyword arguments to provide to <code class="docutils literal notranslate"><span class="pre">xarray.open_dataset</span></code> when using the <code class="docutils literal notranslate"><span class="pre">CFA</span></code> engine.
 This page is specifically for the terms and conventions used within the package, and will enable developers to understand the meaning of
 terms across multiple functions and classes.</p>
 </div>
 <section id="fragments-chunks-and-partitions">
 <span id="id1"></span><h2>Fragments, Chunks and Partitions<a class="headerlink" href="#fragments-chunks-and-partitions" title="Permalink to this heading"></a></h2>
-<p>CFAPyX has three specific terms for dealing with portions of arrays in different contexts. Directly from the CF conventions, a <code class="docutils literal notranslate"><span class="pre">Fragment</span> <span class="pre">File</span></code> is a
+<p>cfapyx has three specific terms for dealing with portions of arrays in different contexts. Directly from the CF conventions, a <code class="docutils literal notranslate"><span class="pre">Fragment</span> <span class="pre">File</span></code> is a
 source file for an aggregated variable, therefore the term <code class="docutils literal notranslate"><span class="pre">Fragment</span></code> is in relation to an array from one of these source files which constitutes part
 of an aggregation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Chunks</span></code> is in reference to the <code class="docutils literal notranslate"><span class="pre">Dask</span> <span class="pre">Computer</span> <span class="pre">Chunks</span></code> provided by the user with the <code class="docutils literal notranslate"><span class="pre">chunks={}</span></code> argument. If there are no chunks specified,
@@ -113,17 +114,17 @@ optimise the retrieval of data.</p>
 <img alt="Fragments, Chunks and Partitions example." src="_images/FragmentChunkPartition.png" />
 <p>The above figure shows a case where a Chunk scheme is provided, as well as the underlying Fragment structure. The convention within this package is to
 refer to any array section as a <code class="docutils literal notranslate"><span class="pre">Partition</span></code>. Both <code class="docutils literal notranslate"><span class="pre">Fragments</span></code> and <code class="docutils literal notranslate"><span class="pre">Chunks</span></code> are considered to be <code class="docutils literal notranslate"><span class="pre">Partitions</span></code>. A <code class="docutils literal notranslate"><span class="pre">Partition</span></code> can take any shape within the
-given <code class="docutils literal notranslate"><span class="pre">space</span></code> (see Terms in CFAPyX below). Originally it was thought that the Chunk and Fragment schemes should be allowed to overlap, and a nested Dask array
+given <code class="docutils literal notranslate"><span class="pre">space</span></code> (see Terms in cfapyx below). Originally it was thought that the Chunk and Fragment schemes should be allowed to overlap, and a nested Dask array
 could be used to handle  the various shapes and positions, but it was later shown to be much simpler to match the provided chunk structure to the existing fragment
 structure, so each chunk is composed of exactly one fragment.</p>
-<p>In CFAPyX, all Fragment/Chunk/Partition objects inherit from a generalised <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> class which defines certain Lazy behaviour. For the case in the
+<p>In cfapyx, all Fragment/Chunk/Partition objects inherit from a generalised <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> class which defines certain Lazy behaviour. For the case in the
 figure above, CFA would create a Dask array from several <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> objects, corresponding to each (Orange) Dask chunk. These <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> instances
 would each contain a Dask array created from several <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects that hold some <code class="docutils literal notranslate"><span class="pre">extent</span></code> of a Fragment. This means there will be multiple
 low-level objects for each <code class="docutils literal notranslate"><span class="pre">Fragment</span></code> but their extents will not overlap, so all data points will be covered by exactly 1 low-level object and exactly 1
 ChunkWrapper (now considered the second level).</p>
 </section>
 <section id="terms-in-cfapyx">
-<h2>Terms in CFAPyX<a class="headerlink" href="#terms-in-cfapyx" title="Permalink to this heading"></a></h2>
+<h2>Terms in cfapyx<a class="headerlink" href="#terms-in-cfapyx" title="Permalink to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">fragment_size_per_dim</span></code> : The non-padded fragment sizes for each dimension (fragmented or otherwise).</p></li>
@@ -154,7 +155,7 @@ location/address <code class="docutils literal notranslate"><span class="pre">fr
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="overview.html" class="btn btn-neutral float-left" title="The CFA-Xarray Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="options.html" class="btn btn-neutral float-right" title="CFAPyX Usage and Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="options.html" class="btn btn-neutral float-right" title="cfapyx Usage and Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

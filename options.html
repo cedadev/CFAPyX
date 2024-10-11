@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFAPyX Usage and Options &mdash; CFAPyX Package 2024.8.9 documentation</title>
+  <title>cfapyx Usage and Options &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -17,14 +17,14 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Xarray Backend Entrypoint for CFAPyX" href="backend.html" />
-    <link rel="prev" title="CFAPyX Terminology" href="fragments.html" /> 
+    <link rel="next" title="CFA Creator" href="creator_use.html" />
+    <link rel="prev" title="cfapyx Terminology" href="fragments.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,14 +52,15 @@
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -77,7 +78,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">CFAPyX Usage and Options</li>
+      <li class="breadcrumb-item active">cfapyx Usage and Options</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/options.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -88,12 +89,12 @@
            <div itemprop="articleBody">
              
   <section id="cfapyx-usage-and-options">
-<h1>CFAPyX Usage and Options<a class="headerlink" href="#cfapyx-usage-and-options" title="Permalink to this heading"></a></h1>
-<p>The CFAPyX engine ‘CFA’ is enabled using the <code class="docutils literal notranslate"><span class="pre">engine</span></code> keyword to Xarray as follows:</p>
+<h1>cfapyx Usage and Options<a class="headerlink" href="#cfapyx-usage-and-options" title="Permalink to this heading"></a></h1>
+<p>The cfapyx engine ‘CFA’ is enabled using the <code class="docutils literal notranslate"><span class="pre">engine</span></code> keyword to Xarray as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cfa_file</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;CFA&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">ds</span></code> object can then be used as normal in Xarray. Keyword arguments are provided to CFAPyX with the following syntax:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ds</span></code> object can then be used as normal in Xarray. Keyword arguments are provided to cfapyx with the following syntax:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cfa_file</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;CFA&#39;</span><span class="p">,</span>
                     <span class="n">cfa_options</span> <span class="o">=</span> <span class="p">{</span>
                             <span class="s1">&#39;substitutions&#39;</span> <span class="p">:</span> <span class="p">{</span><span class="s1">&#39;base&#39;</span><span class="p">:</span><span class="s1">&#39;sub&#39;</span><span class="p">},</span>
@@ -116,7 +117,7 @@ regime including Fragment extents. See the diagram in <a class="reference intern
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">chunks</span></code> option for CFAPyX now includes an additional option: <code class="docutils literal notranslate"><span class="pre">optimised</span></code>. This is an upgrade from the dask <code class="docutils literal notranslate"><span class="pre">auto</span></code>
+<p>The <code class="docutils literal notranslate"><span class="pre">chunks</span></code> option for cfapyx now includes an additional option: <code class="docutils literal notranslate"><span class="pre">optimised</span></code>. This is an upgrade from the dask <code class="docutils literal notranslate"><span class="pre">auto</span></code>
 chunks option, where the chunk size is automatically calculated by dask, then shifted such that the number of chunks approaches
 a power of 2. This has significant computational performance benefits.</p>
 </div>
@@ -126,8 +127,8 @@ a power of 2. This has significant computational performance benefits.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="fragments.html" class="btn btn-neutral float-left" title="CFAPyX Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="backend.html" class="btn btn-neutral float-right" title="Xarray Backend Entrypoint for CFAPyX" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fragments.html" class="btn btn-neutral float-left" title="cfapyx Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="creator_use.html" class="btn btn-neutral float-right" title="CFA Creator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

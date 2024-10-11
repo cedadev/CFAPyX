@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFAPyX Documentation &mdash; CFAPyX Package 2024.8.9 documentation</title>
+  <title>cfapyx Documentation &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -17,7 +17,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
@@ -51,14 +51,15 @@
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -76,7 +77,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">CFAPyX Documentation</li>
+      <li class="breadcrumb-item active">cfapyx Documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,9 +88,9 @@
            <div itemprop="articleBody">
              
   <section id="cfapyx-documentation">
-<h1>CFAPyX Documentation<a class="headerlink" href="#cfapyx-documentation" title="Permalink to this heading"></a></h1>
-<p><strong>CFAPyX</strong> is an Xarray add-on module that enables the <strong>CFA-netCDF xarray engine</strong> in python.</p>
-<p>CFAPyX follows the <a class="reference external" href="https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md">CFA-conventions</a> for properly formatting a CFA-netCDF file to access distributed netCDF data.</p>
+<h1>cfapyx Documentation<a class="headerlink" href="#cfapyx-documentation" title="Permalink to this heading"></a></h1>
+<p><strong>cfapyx</strong> is an Xarray add-on module that enables the <strong>CFA-netCDF xarray engine</strong> in python.</p>
+<p>cfapyx follows the <a class="reference external" href="https://github.com/NCAS-CMS/cfa-conventions/blob/main/source/cfa.md">CFA-conventions</a> for properly formatting a CFA-netCDF file to access distributed netCDF data.</p>
 <p>The package can be enabled in xarray when opening a CFA file using the <cite>engine=”CFA”</cite> keyword argument. This will decode your CFA-netCDF file into a properly formatted Xarray Dataset, which will lazily load your data from distributed sources when reqired for computation or plotting.</p>
 <dl class="simple">
 <dt>Current support is limited to local netCDF4 formatted files, but future additions will provide access to:</dt><dd><ul class="simple">
@@ -104,16 +105,17 @@
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 </div>
@@ -128,7 +130,7 @@
 </section>
 <section id="acknowledgements">
 <h1>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this heading"></a></h1>
-<p>CFAPyX is being developed as part of a joint project between the Centre for Environmental Data Analysis (CEDA) and the NCAS Computational Modelling Services team (NCAS-CMS)</p>
+<p>cfapyx is being developed as part of a joint project between the Centre for Environmental Data Analysis (CEDA) and the NCAS Computational Modelling Services team (NCAS-CMS)</p>
 <a class="reference internal image-reference" href="_images/ceda.png"><img alt="CEDA Logo" src="_images/ceda.png" style="width: 300px;" /></a>
 <a class="reference internal image-reference" href="_images/ncas.png"><img alt="NCAS Logo" src="_images/ncas.png" style="width: 300px;" /></a>
 </section>

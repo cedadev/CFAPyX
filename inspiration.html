@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CFA and Distributed Data &mdash; CFAPyX Package 2024.8.9 documentation</title>
+  <title>CFA and Distributed Data &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -17,14 +17,14 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The CFA-Xarray Engine" href="overview.html" />
-    <link rel="prev" title="CFAPyX Documentation" href="index.html" /> 
+    <link rel="prev" title="cfapyx Documentation" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,14 +57,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -99,7 +100,7 @@
 <p>The need for cloud-accessible analysis-ready data is increasing due to high demand for cloud-native applications and wider usability of data.
 Current archival formats and access methods are insufficient for an increasing number of user needs, especially given the volume of data being
 produced by various projects globally.</p>
-<img alt="Contents of the CEDA Archive circa November 2023." class="align-center" src="_images/CedaArchive1123.png" />
+<img alt="Contents of the CEDA Archive circa August 2024." class="align-center" src="_images/CedaArchive0824.png" />
 <p>The CEDA-operated JASMIN data analysis facility has a current (2024) data archive of more than 30 Petabytes, with more datasets being ingested
 daily. Around 25% of all datasets are in NetCDF/HDF formats which are well-optimised for HPC architecture, but do not typically perform as well
 and are not as accessible for cloud-based applications. The standard NetCDF/HDF python readers for example require direct access to the source
@@ -125,7 +126,7 @@ like Zarr, but the key difference is that the <cite>chunks</cite> in CFA are jus
 <h2>CF aggregations<a class="headerlink" href="#cf-aggregations" title="Permalink to this heading"></a></h2>
 <p>CFA parameters are now included in the CF conventions (as of CF version 1.12 - November 2024), and define how so-called ‘aggregation variables’ should be defined within a CFA-netCDF file.
 A CFA-netCDF file acts as a reference file to a set of Fragment files (which may be netCDF or other formats), and an appropriate application reader (like
-CFAPyX) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
+cfapyx) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
 Accessing a subset of the data is then made more efficient as the application reader can fetch only the portions of the array required by the user for any
 particular computation.</p>
 </section>
@@ -135,7 +136,7 @@ particular computation.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="CFAPyX Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="cfapyx Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="overview.html" class="btn btn-neutral float-right" title="The CFA-Xarray Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -5,7 +5,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The CFA-Xarray Engine &mdash; CFAPyX Package 2024.8.9 documentation</title>
+  <title>The CFA-Xarray Engine &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -17,13 +17,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4fca6d66"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CFAPyX Terminology" href="fragments.html" />
+    <link rel="next" title="cfapyx Terminology" href="fragments.html" />
     <link rel="prev" title="CFA and Distributed Data" href="inspiration.html" /> 
 </head>
 
@@ -58,14 +58,15 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="options.html">CFAPyX Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="creator.html">CFA Creator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wrapper.html">CFA Wrappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partition.html">Partitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="groups.html">CFA Groups</a></li>
 </ul>
 
@@ -95,9 +96,9 @@
              
   <section id="the-cfa-xarray-engine">
 <h1>The CFA-Xarray Engine<a class="headerlink" href="#the-cfa-xarray-engine" title="Permalink to this heading"></a></h1>
-<p>CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will
+<p>cfapyx is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will
 collect the package and add it to a list of backends on performing <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">xarray</span></code>.</p>
-<img alt="CFAPyX Structure 03/09/2024" src="_images/DaskStructure.png" />
+<img alt="cfapyx Structure 03/09/2024" src="_images/DaskStructure.png" />
 <section id="entrypoint">
 <h2>1. Entrypoint<a class="headerlink" href="#entrypoint" title="Permalink to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint()</span></code> class provides a method called <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> which feeds the output of <code class="docutils literal notranslate"><span class="pre">open_cfa_dataset</span></code> directly back into xarray.
@@ -118,11 +119,11 @@ and encoding from the CFA file, but the data is more complicated.</p>
 <section id="data-from-fragments">
 <h2>3. Data from Fragments<a class="headerlink" href="#data-from-fragments" title="Permalink to this heading"></a></h2>
 <p>Xarray comes with an included <code class="docutils literal notranslate"><span class="pre">LazilyIndexedArray</span></code> wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn’t loaded immediately upon creating the Xarray variable.
-CFAPyX provides an Array-like wrapper class called <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
-set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. CFAPyX handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects when no chunks are present, and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> objects otherwise.
+cfapyx provides an Array-like wrapper class called <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
+set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. cfapyx handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects when no chunks are present, and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> objects otherwise.
 These are provided to the higher level Xarray wrapper by way of a Dask array, which is created as the <code class="docutils literal notranslate"><span class="pre">data</span></code> attribute of each variable.</p>
 <p>This means most of the complicated maths to relate an array partition to specific fragments is actually handled by Dask, the only thing the <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects have to do is act like indexable Arrays that only load the data when they are indexed.
-Since there are several Array-like objects in CFAPyX, these all inherit from classes in <code class="docutils literal notranslate"><span class="pre">CFAPyX.partition</span></code>, in the order <code class="docutils literal notranslate"><span class="pre">ArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">SuperLazyArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">ArrayPartition</span></code>. The <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> class is an example of an <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> while the
+Since there are several Array-like objects in cfapyx, these all inherit from classes in <code class="docutils literal notranslate"><span class="pre">cfapyx.partition</span></code>, in the order <code class="docutils literal notranslate"><span class="pre">ArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">SuperLazyArrayLike</span> <span class="pre">-&gt;</span> <span class="pre">ArrayPartition</span></code>. The <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> class is an example of an <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> while the
 <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> classes are merely <code class="docutils literal notranslate"><span class="pre">SuperLazyArrayLike</span></code> children.</p>
 <p>Loading each array partition is done using the python <code class="docutils literal notranslate"><span class="pre">netCDF4</span></code> library to load the associated <strong>fragment file</strong> for this partition, selecting the specific variable (from <code class="docutils literal notranslate"><span class="pre">`location`</span></code>) and loading a section of the array as a numpy array - depending on the
 partition structure. Performing the slice operations on the netCDF4 dataset at the latest point ensures the minimal amount of memory chunks are loaded from the file, since any slicing operations are optimised by Dask before being applied to the source data.</p>
@@ -153,7 +154,7 @@ or our page on the Inspiration for CFA. The CFA specifications version 0.6.2 wil
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="inspiration.html" class="btn btn-neutral float-left" title="CFA and Distributed Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="fragments.html" class="btn btn-neutral float-right" title="CFAPyX Terminology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fragments.html" class="btn btn-neutral float-right" title="cfapyx Terminology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

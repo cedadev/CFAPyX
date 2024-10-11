@@ -37,9 +37,10 @@ jobs:
         run: |
           mkdir gh-pages
           touch gh-pages/.nojekyll
-          cd docs/source/
+          pushd docs/source/
           poetry run sphinx-build -b html . _build
-          cp -r _build/* ../gh-pages/
+          popd
+          cp -r docs/source/_build/* gh-pages/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

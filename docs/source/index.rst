@@ -26,7 +26,6 @@ Current support is limited to local netCDF4 formatted files, but future addition
    cfapyx Usage and Options <options>
    CFA Creator Usage <creator_use>
 
-
 .. toctree::
    :maxdepth: 1
    :caption: API Reference
@@ -35,7 +34,6 @@ Current support is limited to local netCDF4 formatted files, but future addition
    CFA Backend Entrypoint <backend>
    CFA DataStore <datastore>
    CFA Wrappers <wrapper>
-   Partitions <partition>
    CFA Groups <groups>
    
 Indices and Tables

@@ -22,7 +22,7 @@ def open_cfa_dataset(
         decode_coords=None,
         use_cftime=None,
         decode_timedelta=None,
-        cfa_options=None,
+        cfa_options: dict=None,
         group=None,
         ):
     """

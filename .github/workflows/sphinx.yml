@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: html-docs
-          path: docs/gh-pages
+          path: gh-pages
       # Deploys to the gh-pages branch if the commit was made to main, the 
       # gh-pages then takes over serving the html
       - name: Deploy documentation
@@ -54,4 +54,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
-          folder: docs/gh-pages
+          folder: gh-pages

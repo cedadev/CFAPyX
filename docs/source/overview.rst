@@ -2,11 +2,11 @@
 The CFA-Xarray Engine
 =====================
 
-CFAPyX is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will 
+cfapyx is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will 
 collect the package and add it to a list of backends on performing ``import xarray``.
 
 .. image:: _images/DaskStructure.png
-   :alt: CFAPyX Structure 03/09/2024
+   :alt: cfapyx Structure 03/09/2024
 
 1. Entrypoint
 -------------
@@ -30,12 +30,12 @@ and encoding from the CFA file, but the data is more complicated.
 3. Data from Fragments
 ----------------------
 Xarray comes with an included ``LazilyIndexedArray`` wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn't loaded immediately upon creating the Xarray variable.
-CFAPyX provides an Array-like wrapper class called ``FragmentArrayWrapper`` for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
-set of distributed ``Fragments``. CFAPyX handles these fragments as individual ``CFAPartition`` objects when no chunks are present, and ``ChunkWrapper`` objects otherwise. 
+cfapyx provides an Array-like wrapper class called ``FragmentArrayWrapper`` for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
+set of distributed ``Fragments``. cfapyx handles these fragments as individual ``CFAPartition`` objects when no chunks are present, and ``ChunkWrapper`` objects otherwise. 
 These are provided to the higher level Xarray wrapper by way of a Dask array, which is created as the ``data`` attribute of each variable.
 
 This means most of the complicated maths to relate an array partition to specific fragments is actually handled by Dask, the only thing the ``CFAPartition`` objects have to do is act like indexable Arrays that only load the data when they are indexed.
-Since there are several Array-like objects in CFAPyX, these all inherit from classes in ``CFAPyX.partition``, in the order ``ArrayLike -> SuperLazyArrayLike -> ArrayPartition``. The ``CFAPartition`` class is an example of an ``ArrayPartition`` while the
+Since there are several Array-like objects in cfapyx, these all inherit from classes in ``cfapyx.partition``, in the order ``ArrayLike -> SuperLazyArrayLike -> ArrayPartition``. The ``CFAPartition`` class is an example of an ``ArrayPartition`` while the
 ``FragmentArrayWrapper`` and ``ChunkWrapper`` classes are merely ``SuperLazyArrayLike`` children.
 
 Loading each array partition is done using the python ``netCDF4`` library to load the associated **fragment file** for this partition, selecting the specific variable (from ```location```) and loading a section of the array as a numpy array - depending on the 

@@ -3,18 +3,20 @@
 CFA python Xarray module for using CFA files with xarray.
 
 See the [Documentation](https://cedadev.github.io/CFAPyX/) for more details.
-CFAPyX on [Github](https://github.com/cedadev/CFAPyX)
+cfapyx on [Github](https://github.com/cedadev/CFAPyX)
 
 For use with the Xarray module as an additional backend.
+
+> **_NOTE:_** The `create` functionality was added to version 2024.10.11 and is currently in alpha release. Please report any unexpected errors or issues using the GitHub Issues tab for this repository.
 
 # Installation
 
 ```
 pip install xarray==2024.6.0
-pip install CFAPyX
+pip install cfapyx
 ```
 
-# Usage
+# Usage as Xarray Engine
 
 ```
 import xarray as xr

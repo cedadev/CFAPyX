@@ -4,6 +4,10 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 from itertools import accumulate, product
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def get_fragment_positions(fragment_size_per_dim):
     """
     Get the positions in index space for each fragment.

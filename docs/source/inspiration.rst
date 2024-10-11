@@ -9,8 +9,8 @@ The need for cloud-accessible analysis-ready data is increasing due to high dema
 Current archival formats and access methods are insufficient for an increasing number of user needs, especially given the volume of data being
 produced by various projects globally. 
 
-.. image:: _images/CedaArchive1123.png
-   :alt: Contents of the CEDA Archive circa November 2023. 
+.. image:: _images/CedaArchive0824.png
+   :alt: Contents of the CEDA Archive circa August 2024. 
    :align: center
 
 The CEDA-operated JASMIN data analysis facility has a current (2024) data archive of more than 30 Petabytes, with more datasets being ingested 
@@ -45,6 +45,6 @@ CF aggregations
 
 CFA parameters are now included in the CF conventions (as of CF version 1.12 - November 2024), and define how so-called 'aggregation variables' should be defined within a CFA-netCDF file.
 A CFA-netCDF file acts as a reference file to a set of Fragment files (which may be netCDF or other formats), and an appropriate application reader (like
-CFAPyX) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
+cfapyx) is able to read and interpret the aggregated data into the proper set of variables and dimensions that cover the extent of the set of Fragment files.
 Accessing a subset of the data is then made more efficient as the application reader can fetch only the portions of the array required by the user for any
 particular computation.

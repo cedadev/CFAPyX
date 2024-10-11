@@ -16,7 +16,7 @@ copyright = ('2022-2024, Centre of Environmental Data Analysis Developers,'
              'UK Research and Innovation (UKRI). '
              'BSD 2-Clause License. All rights reserved')
 author = 'Daniel Westwood'
-release = '2024.8.9'
+release = '2024.10.11'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

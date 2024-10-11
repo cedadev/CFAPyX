@@ -7,7 +7,11 @@ from xarray.backends.common import AbstractDataStore
 from xarray.core.dataset import Dataset
 from xarray import conventions
 
-from CFAPyX.datastore import CFADataStore
+from cfapyx.datastore import CFADataStore
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 def open_cfa_dataset(
         filename_or_obj,
@@ -18,7 +22,7 @@ def open_cfa_dataset(
         decode_coords=None,
         use_cftime=None,
         decode_timedelta=None,
-        cfa_options={},
+        cfa_options: dict=None,
         group=None,
         ):
     """
@@ -41,6 +45,8 @@ def open_cfa_dataset(
                     NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
                     parameter in ``cfa_options`` is false.
     """
+
+    cfa_options = cfa_options or {}
 
     # Load the CFA datastore from the provided file (object not supported).
     store = CFADataStore.open(filename_or_obj, group=group)
@@ -70,7 +76,7 @@ def open_cfa_dataset(
 
 class CFANetCDFBackendEntrypoint(BackendEntrypoint):
 
-    description = "Open CFA-netCDF files (.nca) using CFA-PyX in Xarray"
+    description = 'Open CFA-netCDF files (.nca) using "cfapyx" in Xarray'
     url = "https://cedadev.github.io/CFAPyX/"
 
     def open_dataset(
@@ -84,7 +90,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             decode_coords=None,
             use_cftime=None,
             decode_timedelta=None,
-            cfa_options={},
+            cfa_options=None,
             group=None,
             # backend specific keyword arguments
             # do not use 'chunks' or 'cache' here
@@ -93,6 +99,8 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
         Returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
         CFA aggregated variables into proper arrays.
         """
+
+        cfa_options = cfa_options or {}
 
         return open_cfa_dataset(
             filename_or_obj, 
@@ -113,7 +121,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     def open_dataset(
         self,
         cfa_xarray_store,
-        *,
         mask_and_scale=True,
         decode_times=True,
         concat_characters=True,

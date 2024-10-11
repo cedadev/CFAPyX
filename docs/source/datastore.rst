@@ -2,5 +2,5 @@
 CFA Datastore in Xarray
 =======================
 
-.. automodule:: CFAPyX.datastore
+.. automodule:: cfapyx.datastore
     :members:

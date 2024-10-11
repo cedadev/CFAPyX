@@ -1,13 +1,13 @@
 ==================
-CFAPyX Terminology
+cfapyx Terminology
 ==================
 
-Provided here is a list of the terminology used throughout ``CFAPyX`` and the equivalents in the CF conventions. In general most terms
+Provided here is a list of the terminology used throughout ``cfapyx`` and the equivalents in the CF conventions. In general most terms
 within the CF conventions for 'Aggregated variables' are preserved within this package, with only some additional terms required.
 
 .. Note::
 
-    The page 'CFAPyX Usage and Options' covers keyword arguments to provide to ``xarray.open_dataset`` when using the ``CFA`` engine.
+    The page 'cfapyx Usage and Options' covers keyword arguments to provide to ``xarray.open_dataset`` when using the ``CFA`` engine.
     This page is specifically for the terms and conventions used within the package, and will enable developers to understand the meaning of
     terms across multiple functions and classes.
 
@@ -16,7 +16,7 @@ within the CF conventions for 'Aggregated variables' are preserved within this p
 Fragments, Chunks and Partitions
 --------------------------------
 
-CFAPyX has three specific terms for dealing with portions of arrays in different contexts. Directly from the CF conventions, a ``Fragment File`` is a 
+cfapyx has three specific terms for dealing with portions of arrays in different contexts. Directly from the CF conventions, a ``Fragment File`` is a 
 source file for an aggregated variable, therefore the term ``Fragment`` is in relation to an array from one of these source files which constitutes part
 of an aggregation.
 
@@ -30,17 +30,17 @@ optimise the retrieval of data.
 
 The above figure shows a case where a Chunk scheme is provided, as well as the underlying Fragment structure. The convention within this package is to 
 refer to any array section as a ``Partition``. Both ``Fragments`` and ``Chunks`` are considered to be ``Partitions``. A ``Partition`` can take any shape within the
-given ``space`` (see Terms in CFAPyX below). Originally it was thought that the Chunk and Fragment schemes should be allowed to overlap, and a nested Dask array 
+given ``space`` (see Terms in cfapyx below). Originally it was thought that the Chunk and Fragment schemes should be allowed to overlap, and a nested Dask array 
 could be used to handle  the various shapes and positions, but it was later shown to be much simpler to match the provided chunk structure to the existing fragment
 structure, so each chunk is composed of exactly one fragment.
 
-In CFAPyX, all Fragment/Chunk/Partition objects inherit from a generalised ``ArrayPartition`` class which defines certain Lazy behaviour. For the case in the
+In cfapyx, all Fragment/Chunk/Partition objects inherit from a generalised ``ArrayPartition`` class which defines certain Lazy behaviour. For the case in the
 figure above, CFA would create a Dask array from several ``ChunkWrapper`` objects, corresponding to each (Orange) Dask chunk. These ``ChunkWrapper`` instances
 would each contain a Dask array created from several ``CFAPartition`` objects that hold some ``extent`` of a Fragment. This means there will be multiple
 low-level objects for each ``Fragment`` but their extents will not overlap, so all data points will be covered by exactly 1 low-level object and exactly 1
 ChunkWrapper (now considered the second level).
 
-Terms in CFAPyX
+Terms in cfapyx
 ---------------
 
  - ``fragment_size_per_dim`` : The non-padded fragment sizes for each dimension (fragmented or otherwise).

@@ -1,23 +1,30 @@
-[build-system]
-requires = ["setuptools>=40.8.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-requires-python=">=3.7"
-name="CFAPyX"
-version="2024.9.2"
-dynamic = ["dependencies"]
-authors = [{name = "Daniel Westwood", email = "daniel.westwood@stfc.ac.uk"}]
-readme="README.md"
-description="Xarray Backend Engine for interpreting CF-netCDF Aggregation files (CFA-netCDF)"
-license = {file = "LICENSE"}
+[tool.poetry]
+name = "cfapyx"
+version = "2024.10.11"
+description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
+authors = ["dwest77 <daniel.westwood@stfc.ac.uk>"]
+license = "{file = \"LICENSE\"}"
+readme = "README.md"
 keywords = ["cf", "cf-conventions","xarray","cloud","ArrayPartition"]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+[tool.poetry.dependencies]
+python = "^3.11"
+scipy = "1.12.0"
+xarray = "2024.6.0"
+cfdm = "1.11.1.0"
+netCDF4 = "1.6.5"
+h5py = "3.11.0"
+dask = "2024.7.0"
+cftime = "1.6.4"
+cfunits = "3.3.7"
+pytest = "7.2.0"
+ArrayPartition = "^1.0.1"
+sphinx = "7.1.2"
+sphinx-rtd-theme = "2.0.0"
 
-[tool.setuptools]
-packages = ["CFAPyX"]
+[build-system]
+requires = ["poetry-core", "wheel"]
+build-backend = "poetry.core.masonry.api"
 
-[project.entry-points."xarray.backends"]
-CFA = "CFAPyX.backend:CFANetCDFBackendEntrypoint"
+[tool.poetry.plugins."xarray.backends"]
+CFA = "cfapyx.backend:CFANetCDFBackendEntrypoint"

@@ -15,9 +15,13 @@ import netCDF4
 import numpy as np
 import re
 
-from CFAPyX.wrappers import FragmentArrayWrapper
-from CFAPyX.decoder import get_fragment_positions, get_fragment_extents
-from CFAPyX.group import CFAGroupWrapper
+from cfapyx.wrappers import FragmentArrayWrapper
+from cfapyx.decoder import get_fragment_positions, get_fragment_extents
+from cfapyx.group import CFAGroupWrapper
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 xarray_subs = {
@@ -141,7 +145,7 @@ class CFADataStore(NetCDF4DataStore):
             shape, 
             address, 
             location, 
-            array_shape, 
+            array_shape,
             value=None, 
             cformat='', 
             substitutions=None):
@@ -212,18 +216,16 @@ class CFADataStore(NetCDF4DataStore):
 
             return fragment_info, fragment_space
 
-        constructor_shape = location.shape
-
         if not address.ndim: # Scalar address
             addr    = address.getValue()
             adtype  = np.array(addr).dtype
-            address = np.full(constructor_shape, addr, dtype=adtype)
+            address = np.full(fragment_space, addr, dtype=adtype)
 
         if cformat != '':
             if not cformat.ndim:
                 cft = cformat.getValue()
                 npdtype = np.array(cft).dtype
-                cformat = np.full(constructor_shape, cft, dtype=npdtype)
+                cformat = np.full(fragment_space, cft, dtype=npdtype)
 
         for frag_pos in fragment_positions:
 
@@ -241,7 +243,11 @@ class CFADataStore(NetCDF4DataStore):
         if substitutions:
             for value in fragment_info.values():
                 for base, sub in substitutions.items():
-                    value["location"] = value["location"].replace(base, sub)
+                    if isinstance(value['location'], str):
+                        value["location"] = value["location"].replace(base, sub)
+                    else:
+                        for v in value["location"]:
+                            v = v.replace(base, sub)
 
         return fragment_info, fragment_space
 
@@ -271,19 +277,20 @@ class CFADataStore(NetCDF4DataStore):
                     value    = self.ds.variables[agg_data['value']]
 
             address = self.ds.variables[agg_data['address']]
-        except:
+        except Exception as err:
             raise ValueError(
                 'One or more aggregated data features specified could not be '
                 'found in the data: '
                 f'"{tuple(agg_data.keys())}"'
+                f' - original error: {err}'
             )
-        
+
         subs = {}
         if hasattr(location, 'substitutions'):
             subs = location.substitutions.replace('https://', 'https@//')
             subs = self._decode_feature_data(subs, readd={'https://':'https@//'})
 
-        return self._perform_decoding(shape, address, location, array_shape, 
+        return self._perform_decoding(shape, address, location, array_shape,
                                       cformat=cformat, value=value, 
                                       substitutions = xarray_subs | subs) 
         # Combine substitutions with known defaults for using in xarray.

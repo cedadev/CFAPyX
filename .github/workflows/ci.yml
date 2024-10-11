@@ -14,19 +14,19 @@ jobs:
 
       # Firstly, checkout repo
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       # Set up Python env
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
       # Install dependencies
       - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-          pip3 install -e .
+          pip3 install poetry
+          poetry install
       # Test with pytest
       - name: Run pytest
         run: |
-          pytest
+          poetry run pytest

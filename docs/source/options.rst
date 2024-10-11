@@ -1,14 +1,14 @@
 ========================
-CFAPyX Usage and Options
+cfapyx Usage and Options
 ========================
 
-The CFAPyX engine 'CFA' is enabled using the ``engine`` keyword to Xarray as follows:
+The cfapyx engine 'CFA' is enabled using the ``engine`` keyword to Xarray as follows:
 
 ::
 
     ds = xr.open_dataset(cfa_file, engine='CFA')
 
-The ``ds`` object can then be used as normal in Xarray. Keyword arguments are provided to CFAPyX with the following syntax:
+The ``ds`` object can then be used as normal in Xarray. Keyword arguments are provided to cfapyx with the following syntax:
 
 ::
 
@@ -30,6 +30,6 @@ Three keyword arguments are currently supported within ``cfa_options``:
 
 .. Note::
   
-    The ``chunks`` option for CFAPyX now includes an additional option: ``optimised``. This is an upgrade from the dask ``auto``
+    The ``chunks`` option for cfapyx now includes an additional option: ``optimised``. This is an upgrade from the dask ``auto``
     chunks option, where the chunk size is automatically calculated by dask, then shifted such that the number of chunks approaches
     a power of 2. This has significant computational performance benefits.

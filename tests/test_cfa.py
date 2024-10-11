@@ -1,14 +1,50 @@
 # All routines for testing CFA general methods.
 import xarray as xr
+import os
+import pytest
 
-def test_cfa_pure(active=False):
+from cfapyx import CFANetCDF
+
+TESTS = 'tests/test_space'
+
+@pytest.mark.dependency()
+def test_cfa_write(tests=TESTS):
+
+    filepattern = f'{tests}/rain/example*.nc'
+
+    ds = CFANetCDF(filepattern, concat_msg='ThisIsATests')
+
+    ds.create(
+        updates={'test_name':'alpha', 'test_remove':'not removed'},
+        removals={'test_remove'}
+    )
+
+    assert ds.agg_dims == ('time',)
+    assert ds.coord_dims == ('time', 'latitude', 'longitude')
+    assert ds.pure_dims == ()
+    assert ds.aggregated_vars == ('p',)
+    assert ds.identical_vars == ()
+    assert ds.scalar_vars == ()
+
+    ds.write(f'{tests}/testrain.nca')
+
+    print('Integration tests: Write - complete')
+
+@pytest.mark.dependency(depends=['test_cfa_write'])
+def test_cfa_pure(tests=TESTS, active=False):
+
+    FILE = f'{tests}/testrain.nca'
 
     # Local testing: Add CFAPyX before tests
-    ds = xr.open_dataset('tests/rain/rainmaker.nca', engine='CFA',
-                         cfa_options={
-                             'substitutions':"/home/users/dwest77/Documents/cfa_python_dw/testfiles/:tests/",
-                             'use_active':active
-                             })
+    try:
+        ds = xr.open_dataset(FILE, engine='CFA',
+                            cfa_options={
+                                'use_active':active
+                                })
+    except Exception as err:
+        assert isinstance(err, ImportError)
+        print(f'Integration tests: Read(pure, active={active}) - skipped')
+        return
     
     ## Test global dataset
     assert not hasattr(ds,'address')
@@ -34,13 +70,16 @@ def test_cfa_pure(active=False):
 
     assert p_value.shape == ()
     assert (p_value.to_numpy() - 0.511954) < 0.01
-    print('All tests passed!')
 
-def test_cfa_chunks():
+    print(f'Integration tests: Read(pure, active={active}) - complete')
 
-    ds = xr.open_dataset('tests/rain/rainmaker.nca', engine='CFA',
+@pytest.mark.dependency(depends=['test_cfa_write'])
+def test_cfa_chunks(tests=TESTS):
+
+    FILE = f'{tests}/testrain.nca'
+
+    ds = xr.open_dataset(FILE, engine='CFA',
                          cfa_options={
-                             'substitutions':"/home/users/dwest77/Documents/cfa_python_dw/testfiles/:tests/",
                              'chunks': {'longitude':180},
                              'chunk_limits':False})
     
@@ -69,7 +108,20 @@ def test_cfa_chunks():
     assert p_value.shape == ()
     assert (p_value.to_numpy() - 0.490389) < 0.01
 
+    print(f'Integration tests: Read(chunked) - complete')
+
+@pytest.mark.dependency(depends=['test_cfa_write', 'test_cfa_pure', 'test_cfa_chunks'])
+def test_cleanup(tests=TESTS):
+    os.system(f'rm {tests}/testrain.nca')
+    print('Integration tests: Cleanup - complete')
+
 if __name__ == '__main__':
-    test_cfa_pure(active=False)
-    test_cfa_pure(active=True)
-    test_cfa_chunks()
+
+    tests = '/home/users/dwest77/cedadev/cfatests/CFAPyX/tests/test_space'
+
+    test_cfa_write(tests=tests)
+    test_cfa_pure(tests=tests, active=False)
+    test_cfa_pure(tests=tests, active=True)
+    test_cfa_chunks(tests=tests)
+
+    print('All Integration tests complete.')

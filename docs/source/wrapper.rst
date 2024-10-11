@@ -2,7 +2,7 @@
 CFA Array Wrapper Classes
 =========================
 
-.. automodule:: CFAPyX.wrappers
+.. automodule:: cfapyx.wrappers
     :members:
     :special-members:
     :show-inheritance:

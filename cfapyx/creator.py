@@ -849,6 +849,69 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
         self.ds.close()
 
+    def display_attrs(self):
+        """
+        Display the global attributes consolidated in the 
+        aggregation process.
+        """
+        print('Global Attributes:')
+        _display_attrs(self.global_attrs)
+
+    def display_variables(self):
+        """
+        Display the variables and some basic properties about each.
+        """
+        if not self.var_info:
+            return
+        
+        for v, m in self.var_info.items():
+            print(f'{v}: dtype={m["dtype"]}, dimensions={m["dims"]}')
+
+    def display_dimensions(self):
+        """
+        Display the dimensions and some basic properties about each.
+        """
+        if not self.dim_info:
+            return
+        
+        for d, m in self.dim_info.items():
+            print(f'{d}: dtype={m["dtype"]}, size={m["size"]}', end='')
+            if 'f_size' in m:
+                print(f', f_size={m["f_size"]}')
+            else:
+                print()
+
+    def display_variable(self, var):
+        """
+        Handler for displaying information about a variable
+        """
+        if not self.var_info:
+            return ''
+        if var not in self.var_info:
+            return ''
+        self._display_item(self.var_info[var])
+
+    def display_dimension(self, dim):
+        """
+        Handler for displaying information about a variable
+        """
+        if not self.dim_info:
+            return ''
+        if dim not in self.dim_info:
+            return ''
+        self._display_item(self.dim_info[dim])
+
+    def _display_item(self, keyset):
+        """
+        Display the information about a dimension/variable
+        """
+        for attr, value in keyset.items():
+            if attr == 'attrs':
+                print('Attributes:')
+                _display_attrs(value)
+            else:
+                print(f'{attr}: {value}')
+
     @property
     def agg_dims(self):
         """
@@ -1064,3 +1127,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
                 self.longest_filename = file
 
         return ds
+
+def _display_attrs(attrs):
+    for k, v in attrs.items():
+        print(f' - {k}: {v}')

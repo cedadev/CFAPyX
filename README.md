@@ -3,7 +3,7 @@
 CFA python Xarray module for using CFA files with xarray.
 
 See the [Documentation](https://cedadev.github.io/CFAPyX/) for more details.
-CFAPyX on [Github](https://github.com/cedadev/CFAPyX)
+cfapyx on [Github](https://github.com/cedadev/CFAPyX)
 
 For use with the Xarray module as an additional backend.
 
@@ -11,7 +11,7 @@ For use with the Xarray module as an additional backend.
 
 ```
 pip install xarray==2024.6.0
-pip install CFAPyX
+pip install cfapyx
 ```
 
 # Usage as Xarray Engine

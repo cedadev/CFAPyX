@@ -386,7 +386,7 @@ class CFACreateMixin:
                     aggs.append(cd)
 
             if aggs:
-                var_info[var]['adims'] = aggs
+                var_info[var]['adims'] = tuple(aggs)
     
         return var_info
 
@@ -748,9 +748,9 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
         self.longest_filename = ''
 
-        self.global_attrs = {}
-        self.var_info     = {}
-        self.dim_info     = {}
+        self.global_attrs = None
+        self.var_info     = None
+        self.dim_info     = None
 
         self.fragment_space = None
         self.location = None
@@ -836,6 +836,79 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         self._write_variables()
 
         self.ds.close()
+
+    @property
+    def agg_dims(self):
+        if not self.dim_info:
+            return []
+        
+        agg_dims = []
+        for dim, meta in self.dim_info.items():
+            if 'f_size' not in meta:
+                continue
+            if meta['f_size'] > 1:
+                agg_dims.append(dim)
+        return tuple(agg_dims)
+    
+    @property
+    def pure_dims(self):
+        if not self.dim_info:
+            return []
+        
+        pure_dims = []
+        for dim, meta in self.dim_info.items():
+            if meta['type'] == 'pure':
+                pure_dims.append(dim)
+        return tuple(pure_dims)
+    
+    @property
+    def coord_dims(self):
+        if not self.dim_info:
+            return []
+        
+        coord_dims = []
+        for dim, meta in self.dim_info.items():
+            if meta['type'] == 'coord':
+                coord_dims.append(dim)
+        return tuple(coord_dims)
+
+    @property
+    def scalar_vars(self):
+        if not self.var_info:
+            return []
+        
+        scalar_vars = []
+        for var, meta in self.var_info.items():
+            if 'dims' not in meta:
+                scalar_vars.append(var)
+            elif meta['dims'] == ():
+                scalar_vars.append(var)
+
+        return tuple(scalar_vars)
+
+    @property
+    def aggregated_vars(self):
+        if not self.var_info:
+            return []
+        
+        agg_vars = []
+        for var, meta in self.var_info.items():
+            if 'adims' in meta:
+                agg_vars.append(var)
+        return tuple(agg_vars)
+
+    @property
+    def identical_vars(self):
+        if not self.var_info:
+            return []
+        
+        id_vars = []
+        for var, meta in self.var_info.items():
+            if 'adims' not in meta:
+                id_vars.append(var)
+            elif meta['adims'] == ():
+                id_vars.append(var)
+        return tuple(id_vars)
 
     def _apply_filters(self, updates, removals, global_attrs, var_info, dim_info):
 

@@ -460,6 +460,10 @@ class CFACreateMixin:
                     logger.warning(f'AttributeWarning: Attribute "{attr}" not present in all files')
                     attrs[attr] = self.concat_msg
             else:
+                if isinstance(ncattrs[attr], np.array):
+                    if not np.array_equal(attrs[attr], ncattrs[attr]):
+                        attrs[attr] = self.concat_msg
+                    continue
                 if attrs[attr] != ncattrs[attr]:
                     attrs[attr] = self.concat_msg
                 else:

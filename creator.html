@@ -83,6 +83,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#cfapyx.creator.CFANetCDF"><code class="docutils literal notranslate"><span class="pre">CFANetCDF</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.create"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.create()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.write"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.display_attrs"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.display_attrs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.display_variables"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.display_variables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.display_dimensions"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.display_dimensions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.display_variable"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.display_variable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.display_dimension"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.display_dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF._display_item"><code class="docutils literal notranslate"><span class="pre">CFANetCDF._display_item()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.agg_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.agg_dims</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.pure_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.pure_dims</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.creator.CFANetCDF.coord_dims"><code class="docutils literal notranslate"><span class="pre">CFANetCDF.coord_dims</span></code></a></li>
@@ -306,6 +312,43 @@ file.</p>
 <span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.write" title="Permalink to this definition"></a></dt>
 <dd><p>Use the accumulated dimension/variable info and attributes to 
 construct a CFA-netCDF file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.display_attrs">
+<span class="sig-name descname"><span class="pre">display_attrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.display_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.display_attrs" title="Permalink to this definition"></a></dt>
+<dd><p>Display the global attributes consolidated in the 
+aggregation process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.display_variables">
+<span class="sig-name descname"><span class="pre">display_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.display_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.display_variables" title="Permalink to this definition"></a></dt>
+<dd><p>Display the variables and some basic properties about each.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.display_dimensions">
+<span class="sig-name descname"><span class="pre">display_dimensions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.display_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.display_dimensions" title="Permalink to this definition"></a></dt>
+<dd><p>Display the dimensions and some basic properties about each.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.display_variable">
+<span class="sig-name descname"><span class="pre">display_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.display_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.display_variable" title="Permalink to this definition"></a></dt>
+<dd><p>Handler for displaying information about a variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF.display_dimension">
+<span class="sig-name descname"><span class="pre">display_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF.display_dimension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF.display_dimension" title="Permalink to this definition"></a></dt>
+<dd><p>Handler for displaying information about a variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.creator.CFANetCDF._display_item">
+<span class="sig-name descname"><span class="pre">_display_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keyset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF._display_item"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF._display_item" title="Permalink to this definition"></a></dt>
+<dd><p>Display the information about a dimension/variable</p>
 </dd></dl>
 
 <dl class="py property">

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cfapyx"
-version = "2024.10.11"
+version = "2024.11.6"
 description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
 authors = ["dwest77 <daniel.westwood@stfc.ac.uk>"]
 license = "{file = \"LICENSE\"}"

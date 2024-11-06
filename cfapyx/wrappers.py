@@ -336,7 +336,7 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
                     cumul = max(filter(lambda l: l <= c, cumulative))
 
                 fc = np.where(cumulative == cumul)[0]
-                fragment_coord.append(int(fc))
+                fragment_coord.append(int(fc.squeeze()))
 
                 ext = slice(
                     partition_cumul[dim][c],

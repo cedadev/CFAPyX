@@ -428,7 +428,7 @@ class CFACreateMixin:
             cds = v['dims']
 
             if (set(agg_dims) & set(cds)):
-                if cds and sorted(cds) not in cdimopts:
+                if cds and cds not in cdimopts:
                     cdimopts.append(cds)
 
         logger.debug(f'Determined {len(cdimopts)} size options:')
@@ -460,7 +460,7 @@ class CFACreateMixin:
                     logger.warning(f'AttributeWarning: Attribute "{attr}" not present in all files')
                     attrs[attr] = self.concat_msg
             else:
-                if isinstance(ncattrs[attr], np.array):
+                if isinstance(ncattrs[attr], (np.ndarray, np.generic)):
                     if not np.array_equal(attrs[attr], ncattrs[attr]):
                         attrs[attr] = self.concat_msg
                     continue

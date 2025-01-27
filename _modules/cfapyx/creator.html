@@ -1,11 +1,11 @@
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>cfapyx.creator &mdash; CFAPyX Package 2024.10.11 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -16,9 +16,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=24c5af4a"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/documentation_options.js?v=b1adf121"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -90,23 +90,27 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
-<span class="kn">import</span> <span class="nn">netCDF4</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">CONCAT_MSG</span> <span class="o">=</span> <span class="s1">&#39;See individual datasets for more information.&#39;</span>
 
-<div class="viewcode-block" id="CFACreateMixin"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin">[docs]</a><span class="k">class</span> <span class="nc">CFACreateMixin</span><span class="p">:</span>
+<div class="viewcode-block" id="CFACreateMixin">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFACreateMixin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mixin class for ``Create`` methods for a CFA-netCDF dataset.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CFACreateMixin._first_pass"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._first_pass">[docs]</a>    <span class="k">def</span> <span class="nf">_first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<div class="viewcode-block" id="CFACreateMixin._first_pass">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._first_pass">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform a first pass across all provided files. Extracts the global</span>
 <span class="sd">        attributes and information on all variables and dimensions into </span>
@@ -227,7 +231,10 @@
 
         <span class="k">return</span> <span class="n">arranged_files</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._second_pass"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._second_pass">[docs]</a>    <span class="k">def</span> <span class="nf">_second_pass</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFACreateMixin._second_pass">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._second_pass">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_second_pass</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">var_info</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
             <span class="n">non_aggregated</span> <span class="p">:</span> <span class="nb">list</span>
@@ -258,7 +265,10 @@
                         <span class="p">)</span>
         <span class="k">return</span> <span class="n">var_info</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._collect_dim_info"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._collect_dim_info">[docs]</a>    <span class="k">def</span> <span class="nf">_collect_dim_info</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFACreateMixin._collect_dim_info">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._collect_dim_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_collect_dim_info</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">ds</span><span class="p">,</span>
             <span class="n">d</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -313,7 +323,10 @@
 
         <span class="k">return</span> <span class="n">new_info</span><span class="p">,</span> <span class="n">arr_components</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._update_info"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._update_info">[docs]</a>    <span class="k">def</span> <span class="nf">_update_info</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFACreateMixin._update_info">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._update_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_info</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">ncattr_obj</span><span class="p">,</span>
             <span class="n">info</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -351,7 +364,10 @@
 
         <span class="k">return</span> <span class="n">info</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._arrange_dimensions"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._arrange_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">_arrange_dimensions</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFACreateMixin._arrange_dimensions">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._arrange_dimensions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_arrange_dimensions</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">dim_info</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
             <span class="n">agg_dims</span> <span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
@@ -419,7 +435,10 @@
 
         <span class="k">return</span> <span class="n">dim_info</span><span class="p">,</span> <span class="n">aggregation_dims</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._assemble_location"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._assemble_location">[docs]</a>    <span class="k">def</span> <span class="nf">_assemble_location</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFACreateMixin._assemble_location">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._assemble_location">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assemble_location</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">arranged_files</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> 
             <span class="n">dim_info</span> <span class="p">:</span> <span class="nb">dict</span>
@@ -460,7 +479,8 @@
         
         <span class="k">return</span> <span class="n">location</span></div>
 
-    <span class="k">def</span> <span class="nf">_apply_agg_dims</span><span class="p">(</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_agg_dims</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">var_info</span><span class="p">,</span>
             <span class="n">agg_dims</span>
@@ -481,7 +501,9 @@
     
         <span class="k">return</span> <span class="n">var_info</span>
 
-<div class="viewcode-block" id="CFACreateMixin._determine_non_aggregated"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._determine_non_aggregated">[docs]</a>    <span class="k">def</span> <span class="nf">_determine_non_aggregated</span><span class="p">(</span>
+<div class="viewcode-block" id="CFACreateMixin._determine_non_aggregated">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._determine_non_aggregated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_determine_non_aggregated</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">var_info</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> 
             <span class="n">agg_dims</span> <span class="p">:</span> <span class="nb">list</span>
@@ -503,7 +525,10 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Non-aggregated variables: </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">non_aggregated</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">non_aggregated</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._determine_size_opts"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._determine_size_opts">[docs]</a>    <span class="k">def</span> <span class="nf">_determine_size_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CFACreateMixin._determine_size_opts">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._determine_size_opts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_determine_size_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine the combinations of dimensions from the information</span>
 <span class="sd">        around each variable. Each combination requires a different </span>
@@ -524,7 +549,10 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; - </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cdimopts</span></div>
 
-<div class="viewcode-block" id="CFACreateMixin._accumulate_attrs"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._accumulate_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">_accumulate_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CFACreateMixin._accumulate_attrs">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._accumulate_attrs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_accumulate_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accumulate attributes from the new source and the existing set.</span>
 <span class="sd">        Ignore fill value attributes as these are handled elsewhere. </span>
@@ -556,15 +584,21 @@
                     <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_msg</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">attrs</span></div></div>
+        <span class="k">return</span> <span class="n">attrs</span></div>
+</div>
 
-<div class="viewcode-block" id="CFAWriteMixin"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin">[docs]</a><span class="k">class</span> <span class="nc">CFAWriteMixin</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CFAWriteMixin">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFAWriteMixin</span><span class="p">:</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mixin class for ``Write`` methods for a CFA-netCDF dataset.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_dimensions"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">_write_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CFAWriteMixin._write_dimensions">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_dimensions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the collected dimensions in dim_info as new dimensions</span>
 <span class="sd">        in the CFA-netCDF file. So-called ``pure`` dimensions which </span>
@@ -614,7 +648,10 @@
 
         <span class="k">return</span> <span class="n">f_dims</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_variables"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_variables">[docs]</a>    <span class="k">def</span> <span class="nf">_write_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_variables">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Non-aggregated variables are defined exactly the same as in</span>
 <span class="sd">        the fragment files, while aggregated variables contain </span>
@@ -648,7 +685,10 @@
 
                 <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_aggregated_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_fragment_addresses"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_fragment_addresses">[docs]</a>    <span class="k">def</span> <span class="nf">_write_fragment_addresses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_fragment_addresses">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_fragment_addresses">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_fragment_addresses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a ``fragment_address`` variable for each variable</span>
 <span class="sd">        which is not dimension-less.</span>
@@ -666,7 +706,10 @@
             <span class="n">addr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
             <span class="n">addrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_shape_dims"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_shape_dims">[docs]</a>    <span class="k">def</span> <span class="nf">_write_shape_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_dims</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_shape_dims">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_shape_dims">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_shape_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_dims</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct the shape and location dimensions for each </span>
 <span class="sd">        combination of dimensions stored in ``cdim_opts``. This </span>
@@ -699,14 +742,17 @@
 
             <span class="n">location</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vopt</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_fragment_shapes"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_fragment_shapes">[docs]</a>    <span class="k">def</span> <span class="nf">_write_fragment_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_fragment_shapes">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_fragment_shapes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_fragment_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct the ``fragment_shape`` variable part for each </span>
 <span class="sd">        combination of dimensions stored in ``cdim_opts``. This </span>
 <span class="sd">        utilises the ``shape`` dimensions previously created.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">fill_empty</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">fill_empty</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
             <span class="n">array</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
             <span class="n">init_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="n">init_length</span><span class="p">):</span>
@@ -751,7 +797,10 @@
             <span class="n">shapes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shapes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">(</span><span class="n">shapes</span><span class="o">==</span><span class="mi">0</span><span class="p">))</span>
             <span class="n">shape</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">shapes</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_aggregated_variable"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_aggregated_variable">[docs]</a>    <span class="k">def</span> <span class="nf">_write_aggregated_variable</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_aggregated_variable">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_aggregated_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_aggregated_variable</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">var</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
             <span class="n">meta</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> 
@@ -786,7 +835,10 @@
         <span class="n">var_arr</span><span class="o">.</span><span class="n">aggregated_dimensions</span> <span class="o">=</span> <span class="n">agg_dims</span>
         <span class="n">var_arr</span><span class="o">.</span><span class="n">aggregated_data</span> <span class="o">=</span> <span class="n">agg_data</span></div>
 
-<div class="viewcode-block" id="CFAWriteMixin._write_nonagg_variable"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_nonagg_variable">[docs]</a>    <span class="k">def</span> <span class="nf">_write_nonagg_variable</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFAWriteMixin._write_nonagg_variable">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFAWriteMixin._write_nonagg_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_nonagg_variable</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">var</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
             <span class="n">meta</span><span class="p">:</span> <span class="nb">dict</span>
@@ -816,9 +868,13 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="s1">&#39;data&#39;</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
-            <span class="n">var_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span></div></div>
+            <span class="n">var_arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span></div>
+</div>
 
-<div class="viewcode-block" id="CFANetCDF"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF">[docs]</a><span class="k">class</span> <span class="nc">CFANetCDF</span><span class="p">(</span><span class="n">CFACreateMixin</span><span class="p">,</span> <span class="n">CFAWriteMixin</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFANetCDF</span><span class="p">(</span><span class="n">CFACreateMixin</span><span class="p">,</span> <span class="n">CFAWriteMixin</span><span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CFA-netCDF file constructor class, enables creation and </span>
@@ -827,7 +883,7 @@
 
     <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;The CFAPyX Constructor class, for creating new CFA-netCDF files.&#39;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">concat_msg</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CONCAT_MSG</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">concat_msg</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">CONCAT_MSG</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialise this CFANetCDF instance with some basic values, and filter</span>
@@ -864,7 +920,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ds</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="CFANetCDF.create"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span>
+<div class="viewcode-block" id="CFANetCDF.create">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.create">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">updates</span> <span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">removals</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -907,7 +965,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">var_info</span>   <span class="o">=</span> <span class="n">var_info</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">location</span>   <span class="o">=</span> <span class="n">location</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.write"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span>
+
+<div class="viewcode-block" id="CFANetCDF.write">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.write">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">outfile</span><span class="p">:</span> <span class="nb">str</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -941,7 +1002,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.display_attrs"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">display_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF.display_attrs">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_attrs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the global attributes consolidated in the </span>
 <span class="sd">        aggregation process.</span>
@@ -949,7 +1013,10 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Global Attributes:&#39;</span><span class="p">)</span>
         <span class="n">_display_attrs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_attrs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.display_variables"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_variables">[docs]</a>    <span class="k">def</span> <span class="nf">display_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF.display_variables">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the variables and some basic properties about each.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -959,7 +1026,10 @@
         <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">: dtype=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">, dimensions=</span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;dims&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.display_dimensions"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">display_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF.display_dimensions">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_dimensions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the dimensions and some basic properties about each.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -973,7 +1043,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.display_variable"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_variable">[docs]</a>    <span class="k">def</span> <span class="nf">display_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF.display_variable">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handler for displaying information about a variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -983,7 +1056,10 @@
             <span class="k">return</span> <span class="s1">&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_display_item</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_info</span><span class="p">[</span><span class="n">var</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="CFANetCDF.display_dimension"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_dimension">[docs]</a>    <span class="k">def</span> <span class="nf">display_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF.display_dimension">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF.display_dimension">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handler for displaying information about a variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -993,7 +1069,10 @@
             <span class="k">return</span> <span class="s1">&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_display_item</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim_info</span><span class="p">[</span><span class="n">dim</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="CFANetCDF._display_item"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._display_item">[docs]</a>    <span class="k">def</span> <span class="nf">_display_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyset</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFANetCDF._display_item">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._display_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_display_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keyset</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the information about a dimension/variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1004,8 +1083,9 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">agg_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">agg_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the aggregated dimensions identified on creation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1021,7 +1101,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">agg_dims</span><span class="p">)</span>
     
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">pure_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pure_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the &#39;pure&#39; dimensions identified on creation. Pure dimensions</span>
 <span class="sd">        are defined only by a size, with no array of values.</span>
@@ -1036,7 +1116,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pure_dims</span><span class="p">)</span>
     
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">coord_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coord_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the coordinate dimensions identified on creation. Coordinate</span>
 <span class="sd">        dimensions include an array of values for the dimension as a variable with</span>
@@ -1052,7 +1132,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">coord_dims</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">scalar_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scalar_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the scalar variables identified on creation, which are</span>
 <span class="sd">        single valued and are dimensionless.</span>
@@ -1070,7 +1150,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar_vars</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">aggregated_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">aggregated_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the variables that vary across the aggregation dimensions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1084,7 +1164,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">agg_vars</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">identical_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">identical_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display the variables that do not vary across the aggregation </span>
 <span class="sd">        dimensions and must therefore be identical across all files.</span>
@@ -1100,14 +1180,14 @@
                 <span class="n">id_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">id_vars</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
 
         <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_updates</span><span class="p">(</span><span class="n">updates</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">)</span>
         <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_removals</span><span class="p">(</span><span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span>
 
-    <span class="k">def</span> <span class="nf">_apply_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
         <span class="n">global_u</span><span class="p">,</span> <span class="n">vars_u</span><span class="p">,</span> <span class="n">dims_u</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">upd</span> <span class="ow">in</span> <span class="n">updates</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">upd</span><span class="p">:</span>
@@ -1137,7 +1217,7 @@
 
         <span class="k">return</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span>
 
-    <span class="k">def</span> <span class="nf">_apply_removals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_removals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>
         <span class="n">global_r</span><span class="p">,</span> <span class="n">vars_r</span><span class="p">,</span> <span class="n">dims_r</span> <span class="o">=</span> <span class="p">[],[],[]</span>
         <span class="k">for</span> <span class="n">rem</span> <span class="ow">in</span> <span class="n">removals</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rem</span><span class="p">:</span>
@@ -1167,7 +1247,9 @@
 
         <span class="k">return</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span>
 
-<div class="viewcode-block" id="CFANetCDF._filter_files"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._filter_files">[docs]</a>    <span class="k">def</span> <span class="nf">_filter_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<div class="viewcode-block" id="CFANetCDF._filter_files">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._filter_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Filter the set of files to identify the trailing dimension</span>
 <span class="sd">        indicative of multiple file locations. Also identifies the </span>
@@ -1201,7 +1283,10 @@
 
         <span class="k">return</span> <span class="n">filtered</span></div>
 
-<div class="viewcode-block" id="CFANetCDF._call_file"><a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._call_file">[docs]</a>    <span class="k">def</span> <span class="nf">_call_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CFANetCDF._call_file">
+<a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFANetCDF._call_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_call_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Open the file as a netcdf dataset. If there are multiple filenames</span>
 <span class="sd">        provided, use the first file. Also determine the longest filename</span>
@@ -1218,9 +1303,11 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longest_filename</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">longest_filename</span> <span class="o">=</span> <span class="n">file</span>
 
-        <span class="k">return</span> <span class="n">ds</span></div></div>
+        <span class="k">return</span> <span class="n">ds</span></div>
+</div>
 
-<span class="k">def</span> <span class="nf">_display_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">):</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_display_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; - </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>

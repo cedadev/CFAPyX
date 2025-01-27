@@ -1,11 +1,11 @@
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>cfapyx.datastore &mdash; CFAPyX Package 2024.10.11 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -16,9 +16,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=24c5af4a"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/documentation_options.js?v=b1adf121"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -90,24 +90,24 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
-<span class="kn">from</span> <span class="nn">xarray.backends</span> <span class="kn">import</span> <span class="p">(</span> 
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span> 
     <span class="n">NetCDF4DataStore</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">xarray.core.utils</span> <span class="kn">import</span> <span class="n">FrozenDict</span>
-<span class="kn">from</span> <span class="nn">xarray.core</span> <span class="kn">import</span> <span class="n">indexing</span>
-<span class="kn">from</span> <span class="nn">xarray.coding.variables</span> <span class="kn">import</span> <span class="n">pop_to</span>
-<span class="kn">from</span> <span class="nn">xarray.core.variable</span> <span class="kn">import</span> <span class="n">Variable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">indexing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">pop_to</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
 
-<span class="kn">import</span> <span class="nn">netCDF4</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">from</span> <span class="nn">cfapyx.wrappers</span> <span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
-<span class="kn">from</span> <span class="nn">cfapyx.decoder</span> <span class="kn">import</span> <span class="n">get_fragment_positions</span><span class="p">,</span> <span class="n">get_fragment_extents</span>
-<span class="kn">from</span> <span class="nn">cfapyx.group</span> <span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fragment_positions</span><span class="p">,</span> <span class="n">get_fragment_extents</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.group</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -116,7 +116,9 @@
     <span class="s1">&#39;file:///&#39;</span><span class="p">:</span><span class="s1">&#39;/&#39;</span>
 <span class="p">}</span>
 
-<div class="viewcode-block" id="CFADataStore"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore">[docs]</a><span class="k">class</span> <span class="nc">CFADataStore</span><span class="p">(</span><span class="n">NetCDF4DataStore</span><span class="p">):</span>
+<div class="viewcode-block" id="CFADataStore">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFADataStore</span><span class="p">(</span><span class="n">NetCDF4DataStore</span><span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines </span>
@@ -127,17 +129,17 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;_cfa_chunks&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span>
         <span class="k">return</span> <span class="kc">None</span>
     
     <span class="nd">@chunks</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Property of the datastore that relates private option variables to the standard </span>
 <span class="sd">        ``cfa_options`` parameter.</span>
@@ -152,10 +154,10 @@
         <span class="p">}</span>
 
     <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_cfa_options</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
             <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -185,7 +187,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>  <span class="o">=</span> <span class="n">chunk_limits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span>     <span class="o">=</span> <span class="n">use_active</span>
 
-    <span class="k">def</span> <span class="nf">_acquire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">needs_lock</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_acquire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">needs_lock</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch the global or group dataset from the Datastore Caching Manager (NetCDF4)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -196,7 +198,7 @@
 
         <span class="k">return</span> <span class="n">ds</span>
 
-    <span class="k">def</span> <span class="nf">_decode_feature_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_data</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_feature_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_data</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Decode the value of an object which is expected to be of the form of a </span>
 <span class="sd">        ``feature: variable`` blank-separated element list.</span>
@@ -210,7 +212,7 @@
 
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])}</span>
 
-    <span class="k">def</span> <span class="nf">_check_applied_conventions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_applied_conventions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check that the aggregated data complies with the conventions specified in the</span>
 <span class="sd">        CFA-netCDF file</span>
@@ -228,7 +230,7 @@
                     <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_perform_decoding</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_perform_decoding</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">shape</span><span class="p">,</span> 
             <span class="n">address</span><span class="p">,</span> 
@@ -341,7 +343,9 @@
 
     <span class="c1"># Public class methods</span>
 
-<div class="viewcode-block" id="CFADataStore.perform_decoding"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.perform_decoding">[docs]</a>    <span class="k">def</span> <span class="nf">perform_decoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
+<div class="viewcode-block" id="CFADataStore.perform_decoding">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.perform_decoding">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">perform_decoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Public method ``perform_decoding`` involves extracting the aggregated </span>
 <span class="sd">        information parameters and assembling the required information for actual </span>
@@ -381,9 +385,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_decoding</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span>
                                       <span class="n">cformat</span><span class="o">=</span><span class="n">cformat</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> 
                                       <span class="n">substitutions</span> <span class="o">=</span> <span class="n">xarray_subs</span> <span class="o">|</span> <span class="n">subs</span><span class="p">)</span> </div>
+
         <span class="c1"># Combine substitutions with known defaults for using in xarray.</span>
 
-<div class="viewcode-block" id="CFADataStore.get_variables"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_variables">[docs]</a>    <span class="k">def</span> <span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CFADataStore.get_variables">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch the netCDF4.Dataset variables and perform some CFA decoding if </span>
 <span class="sd">        necessary.</span>
@@ -431,14 +438,20 @@
             <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">real_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CFADataStore.get_attrs"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFADataStore.get_attrs">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_attrs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or </span>
 <span class="sd">        ``CFAGroupWrapper`` in the case of using a group or nested group tree.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="CFADataStore.open_variable"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_variable">[docs]</a>    <span class="k">def</span> <span class="nf">open_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFADataStore.open_variable">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable </span>
 <span class="sd">        or as a CFA aggregated variable which requires additional decoding.</span>
@@ -461,7 +474,10 @@
             <span class="n">variable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_store_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">variable</span></div>
 
-<div class="viewcode-block" id="CFADataStore.open_cfa_variable"><a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_cfa_variable">[docs]</a>    <span class="k">def</span> <span class="nf">open_cfa_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFADataStore.open_cfa_variable">
+<a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_cfa_variable">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open_cfa_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Open a CFA Aggregated variable with the correct parameters to create an </span>
 <span class="sd">        Xarray ``Variable`` instance.</span>
@@ -550,7 +566,9 @@
         <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;original_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="n">v</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">attributes</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">v</span></div></div>
+        <span class="k">return</span> <span class="n">v</span></div>
+</div>
+
     
 </pre></div>
 

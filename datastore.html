@@ -1,12 +1,12 @@
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CFA Datastore in Xarray &mdash; CFAPyX Package 2024.10.11 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -17,9 +17,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/documentation_options.js?v=b1adf121"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -100,10 +100,10 @@
            <div itemprop="articleBody">
              
   <section id="module-cfapyx.datastore">
-<span id="cfa-datastore-in-xarray"></span><h1>CFA Datastore in Xarray<a class="headerlink" href="#module-cfapyx.datastore" title="Permalink to this heading"></a></h1>
+<span id="cfa-datastore-in-xarray"></span><h1>CFA Datastore in Xarray<a class="headerlink" href="#module-cfapyx.datastore" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.datastore.</span></span><span class="sig-name descname"><span class="pre">CFADataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock=CombinedLock([&lt;SerializableLock:</span> <span class="pre">1f1e2052-df01-4490-883a-39af4a93a27c&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;SerializableLock:</span> <span class="pre">2e7fec7f-64f9-4e7c-ab71-b09e6b96f483&gt;])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoclose=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.datastore.</span></span><span class="sig-name descname"><span class="pre">CFADataStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock=CombinedLock([&lt;SerializableLock:</span> <span class="pre">46d59f07-15a2-4014-b636-5d15b87bad2d&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;SerializableLock:</span> <span class="pre">74449fa8-8695-4997-96cf-a6af1270a8be&gt;])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoclose=False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore" title="Link to this definition"></a></dt>
 <dd><p>DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines 
 directly related to the specific variables and attributes. The <code class="docutils literal notranslate"><span class="pre">NetCDF4Datastore</span></code>
 Xarray class from which this class inherits, has an <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method which 
@@ -111,14 +111,14 @@ cannot easily be overriden, so properties are used instead for specific variable
 that may be un-set at time of use.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.cfa_options">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cfa_options</span></span><a class="headerlink" href="#cfapyx.datastore.CFADataStore.cfa_options" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cfa_options</span></span><a class="headerlink" href="#cfapyx.datastore.CFADataStore.cfa_options" title="Link to this definition"></a></dt>
 <dd><p>Property of the datastore that relates private option variables to the standard 
 <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> parameter.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.perform_decoding">
-<span class="sig-name descname"><span class="pre">perform_decoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.perform_decoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.perform_decoding" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">perform_decoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.perform_decoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.perform_decoding" title="Link to this definition"></a></dt>
 <dd><p>Public method <code class="docutils literal notranslate"><span class="pre">perform_decoding</span></code> involves extracting the aggregated 
 information parameters and assembling the required information for actual 
 decoding.</p>
@@ -126,7 +126,7 @@ decoding.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.get_variables">
-<span class="sig-name descname"><span class="pre">get_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.get_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.get_variables" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_variables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.get_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.get_variables" title="Link to this definition"></a></dt>
 <dd><p>Fetch the netCDF4.Dataset variables and perform some CFA decoding if 
 necessary.</p>
 <p><code class="docutils literal notranslate"><span class="pre">ds</span></code> is now a <code class="docutils literal notranslate"><span class="pre">GroupedDatasetWrapper</span></code> object from <code class="docutils literal notranslate"><span class="pre">CFAPyX.group</span></code> which 
@@ -143,14 +143,14 @@ variables are standard NetCDF4 or CFA Aggregated variables.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.get_attrs">
-<span class="sig-name descname"><span class="pre">get_attrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.get_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.get_attrs" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_attrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.get_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.get_attrs" title="Link to this definition"></a></dt>
 <dd><p>Produce the FrozenDict of attributes from the <code class="docutils literal notranslate"><span class="pre">NetCDF4.Dataset</span></code> or 
 <code class="docutils literal notranslate"><span class="pre">CFAGroupWrapper</span></code> in the case of using a group or nested group tree.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.open_variable">
-<span class="sig-name descname"><span class="pre">open_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.open_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.open_variable" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">open_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.open_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.open_variable" title="Link to this definition"></a></dt>
 <dd><p>Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable 
 or as a CFA aggregated variable which requires additional decoding.</p>
 <dl class="field-list simple">
@@ -171,7 +171,7 @@ or CFA aggregated variable.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.datastore.CFADataStore.open_cfa_variable">
-<span class="sig-name descname"><span class="pre">open_cfa_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.open_cfa_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.open_cfa_variable" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">open_cfa_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/datastore.html#CFADataStore.open_cfa_variable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.datastore.CFADataStore.open_cfa_variable" title="Link to this definition"></a></dt>
 <dd><p>Open a CFA Aggregated variable with the correct parameters to create an 
 Xarray <code class="docutils literal notranslate"><span class="pre">Variable</span></code> instance.</p>
 <dl class="field-list simple">

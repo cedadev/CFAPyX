@@ -1,11 +1,11 @@
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>cfapyx.wrappers &mdash; CFAPyX Package 2024.10.11 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
   
@@ -16,9 +16,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=24c5af4a"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/documentation_options.js?v=b1adf121"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -90,7 +90,7 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
-<span class="kn">from</span> <span class="nn">arraypartition</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ArrayPartition</span><span class="p">,</span> 
     <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">get_chunk_shape</span><span class="p">,</span>
@@ -102,27 +102,29 @@
     <span class="n">normalize_partition_chunks</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
-<span class="kn">from</span> <span class="nn">dask.array.core</span> <span class="kn">import</span> <span class="n">getter</span>
-<span class="kn">from</span> <span class="nn">dask.base</span> <span class="kn">import</span> <span class="n">tokenize</span>
-<span class="kn">from</span> <span class="nn">dask.utils</span> <span class="kn">import</span> <span class="n">SerializableLock</span><span class="p">,</span> <span class="n">is_arraylike</span>
-<span class="kn">from</span> <span class="nn">dask.array.reductions</span> <span class="kn">import</span> <span class="n">numel</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dask.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">da</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">getter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokenize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SerializableLock</span><span class="p">,</span> <span class="n">is_arraylike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.reductions</span><span class="w"> </span><span class="kn">import</span> <span class="n">numel</span>
 
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">XarrayActive</span> <span class="kn">import</span> <span class="n">ActiveOptionsContainer</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">XarrayActive</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActiveOptionsContainer</span>
 <span class="k">except</span><span class="p">:</span>
-    <span class="k">class</span> <span class="nc">ActiveOptionsContainer</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">ActiveOptionsContainer</span><span class="p">:</span>
         <span class="k">pass</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CFAOptionsMixin"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAOptionsMixin">[docs]</a><span class="k">class</span> <span class="nc">CFAOptionsMixin</span><span class="p">:</span>
+<div class="viewcode-block" id="CFAOptionsMixin">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAOptionsMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFAOptionsMixin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simple container for CFA options properties.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -135,7 +137,7 @@
     <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Relates private option variables to the ``cfa_options`` parameter of the backend.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -148,10 +150,10 @@
         <span class="p">}</span>
 
     <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_set_cfa_options</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -170,7 +172,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>         <span class="o">=</span> <span class="n">chunks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span>     <span class="o">=</span> <span class="n">use_active</span></div>
 
-<div class="viewcode-block" id="FragmentArrayWrapper"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper">[docs]</a><span class="k">class</span> <span class="nc">FragmentArrayWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">CFAOptionsMixin</span><span class="p">,</span> <span class="n">ActiveOptionsContainer</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FragmentArrayWrapper">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FragmentArrayWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">CFAOptionsMixin</span><span class="p">,</span> <span class="n">ActiveOptionsContainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    FragmentArrayWrapper behaves like an Array that can be indexed or referenced to </span>
 <span class="sd">    return a Dask-like array object. This class is essentially a constructor for the </span>
@@ -179,7 +184,9 @@
     
     <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper-class for the array of fragment objects&#39;</span>
 
-<div class="viewcode-block" id="FragmentArrayWrapper.__init__"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="FragmentArrayWrapper.__init__">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
             <span class="n">fragment_info</span><span class="p">,</span> 
             <span class="n">fragment_space</span><span class="p">,</span> 
@@ -233,14 +240,20 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__array_function__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span></div>
 
-<div class="viewcode-block" id="FragmentArrayWrapper.__getitem__"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FragmentArrayWrapper.__getitem__">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__getitem__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Non-lazy retrieval of the dask array when this object is indexed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selection</span><span class="p">)]</span></div>
+
     
-<div class="viewcode-block" id="FragmentArrayWrapper.__array__"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__array__">[docs]</a>    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FragmentArrayWrapper.__array__">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__array__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Non-lazy array construction, this will occur as soon as the instance is ``indexed`` </span>
 <span class="sd">        or any other ``array`` behaviour is attempted. Construction of a Dask-like array </span>
@@ -321,7 +334,8 @@
         <span class="n">darr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dask_chunks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">darr</span></div>
 
-    <span class="k">def</span> <span class="nf">_optimise_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optimise_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Replace the keyword ``optimised`` in the provided chunks with a chunk size for </span>
 <span class="sd">        the specified dimension that will be most optimised. The optimal chunk sizes are such </span>
@@ -357,7 +371,7 @@
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">[</span><span class="n">nd</span><span class="p">]</span> <span class="o">=</span> <span class="n">opsize</span>
 
-    <span class="k">def</span> <span class="nf">_create_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fragments</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a partition structure that falls along the existing fragment boundaries.</span>
 <span class="sd">        This is done by simply chunking each fragment given the user provided chunks, rather </span>
@@ -393,12 +407,12 @@
                 <span class="n">dask_chunks</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">dchunks</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
                 <span class="n">fragment_coverage</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dchunks</span><span class="p">[</span><span class="n">dim</span><span class="p">]))</span>
 
-        <span class="k">def</span> <span class="nf">outer_cumsum</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">outer_cumsum</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
             <span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
             <span class="n">cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cumsum</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">cumsum</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
         
-        <span class="k">def</span> <span class="nf">global_combine</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">external</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">global_combine</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">external</span><span class="p">):</span>
             <span class="n">local</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">internal</span><span class="p">)):</span>
                 <span class="n">start</span> <span class="o">=</span> <span class="n">internal</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">external</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
@@ -442,7 +456,7 @@
 
         <span class="k">return</span> <span class="n">dask_chunks</span><span class="p">,</span> <span class="n">partitions</span>
 
-    <span class="k">def</span> <span class="nf">_assemble_dsk_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partitions</span><span class="p">,</span> <span class="n">array_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assemble_dsk_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partitions</span><span class="p">,</span> <span class="n">array_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Assemble the base ``dsk`` task dependency graph which includes the fragment objects </span>
 <span class="sd">        plus the method to index each object (with locking).</span>
@@ -469,7 +483,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">dsk</span>
 
-    <span class="k">def</span> <span class="nf">_apply_substitutions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_substitutions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform substitutions for this fragment array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -489,7 +503,7 @@
                     <span class="k">for</span> <span class="n">finfo</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">f</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]:</span>
                         <span class="n">finfo</span> <span class="o">=</span> <span class="n">finfo</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">substitution</span><span class="p">)</span>
                 
-    <span class="k">def</span> <span class="nf">_assemble_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">dask_chunks</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assemble_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">dask_chunks</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Assemble the dask/dask-like array for this FragmentArrayWrapper from the </span>
@@ -506,7 +520,7 @@
             <span class="n">darr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">darr</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">XarrayActive</span> <span class="kn">import</span> <span class="n">DaskActiveArray</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">XarrayActive</span><span class="w"> </span><span class="kn">import</span> <span class="n">DaskActiveArray</span>
 
             <span class="n">darr</span> <span class="o">=</span> <span class="n">DaskActiveArray</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -515,8 +529,11 @@
                 <span class="s1">&#39;you have the XarrayActive package installed.&#39;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">darr</span></div>
+
             
-<div class="viewcode-block" id="CFAPartition"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition">[docs]</a><span class="k">class</span> <span class="nc">CFAPartition</span><span class="p">(</span><span class="n">ArrayPartition</span><span class="p">):</span>
+<div class="viewcode-block" id="CFAPartition">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFAPartition</span><span class="p">(</span><span class="n">ArrayPartition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific </span>
 <span class="sd">    methods.</span>
@@ -525,7 +542,9 @@
     <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper object for a CFA Partition (Fragment or Chunk)&#39;</span>
 
 
-<div class="viewcode-block" id="CFAPartition.__init__"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<div class="viewcode-block" id="CFAPartition.__init__">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">filename</span><span class="p">,</span>
                  <span class="n">address</span><span class="p">,</span>
                  <span class="n">aggregated_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -558,7 +577,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span> <span class="o">=</span> <span class="n">aggregated_calendar</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_extent</span> <span class="o">=</span> <span class="n">global_extent</span></div>
 
-<div class="viewcode-block" id="CFAPartition.copy"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CFAPartition.copy">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new instance of this class from its own methods and attributes, and </span>
 <span class="sd">        apply a new extent to the copy if required.</span>
@@ -582,12 +604,13 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">new</span></div>
 
-    <span class="k">def</span> <span class="nf">_post_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Correct units/data conversions - if necessary at this stage&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="kn">from</span> <span class="nn">cfunits</span> <span class="kn">import</span> <span class="n">Units</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">cfunits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Units</span>
             <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Encountered issue when trying to import the &quot;cfunits&quot; library:&#39;</span>
@@ -599,11 +622,15 @@
             <span class="n">data</span> <span class="o">=</span> <span class="n">Units</span><span class="o">.</span><span class="n">conform</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
 
-<div class="viewcode-block" id="CFAPartition.get_kwargs"><a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.get_kwargs">[docs]</a>    <span class="k">def</span> <span class="nf">get_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CFAPartition.get_kwargs">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.get_kwargs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;aggregated_units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">,</span>
             <span class="s1">&#39;aggregated_calendar&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span>
-        <span class="p">}</span> <span class="o">|</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span></div></div>
+        <span class="p">}</span> <span class="o">|</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span></div>
+</div>
+
 </pre></div>
 
            </div>

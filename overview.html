@@ -1,12 +1,12 @@
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The CFA-Xarray Engine &mdash; CFAPyX Package 2024.10.11 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -17,9 +17,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=24c5af4a"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/documentation_options.js?v=b1adf121"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -95,12 +95,12 @@
            <div itemprop="articleBody">
              
   <section id="the-cfa-xarray-engine">
-<h1>The CFA-Xarray Engine<a class="headerlink" href="#the-cfa-xarray-engine" title="Permalink to this heading"></a></h1>
+<h1>The CFA-Xarray Engine<a class="headerlink" href="#the-cfa-xarray-engine" title="Link to this heading"></a></h1>
 <p>cfapyx is registered as an available backend to xarray when installed into your virtual environment, which means that xarray will
 collect the package and add it to a list of backends on performing <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">xarray</span></code>.</p>
 <img alt="cfapyx Structure 03/09/2024" src="_images/DaskStructure.png" />
 <section id="entrypoint">
-<h2>1. Entrypoint<a class="headerlink" href="#entrypoint" title="Permalink to this heading"></a></h2>
+<h2>1. Entrypoint<a class="headerlink" href="#entrypoint" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">CFANetCDFBackendEntrypoint()</span></code> class provides a method called <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> which feeds the output of <code class="docutils literal notranslate"><span class="pre">open_cfa_dataset</span></code> directly back into xarray.
 There are other methods which may be useful to implement in the future, but for now only the basic opener is used.</p>
 <div class="admonition note">
@@ -111,13 +111,13 @@ methods are required. There is therefore a large number of methods with CFA clas
 <p>Opening a CFA dataset requires opening the CFA-netCDF file into a <code class="docutils literal notranslate"><span class="pre">CFADataStore</span></code> object (inherits from Xarray’s <code class="docutils literal notranslate"><span class="pre">NetCDF4DataStore</span></code>) which is then used as the <code class="docutils literal notranslate"><span class="pre">store</span></code> attribute in later methods inherited from parent Xarray/NetCDF classes.</p>
 </section>
 <section id="datastore">
-<h2>2. Datastore<a class="headerlink" href="#datastore" title="Permalink to this heading"></a></h2>
+<h2>2. Datastore<a class="headerlink" href="#datastore" title="Link to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">CFA</span> <span class="pre">Datastore</span></code> handles global and group variables where a group is present, and determines which variables are <code class="docutils literal notranslate"><span class="pre">aggregated</span> <span class="pre">variables</span></code>, which are decoded in <code class="docutils literal notranslate"><span class="pre">open_cfa_variable</span></code>
 The set of variables are returned from <code class="docutils literal notranslate"><span class="pre">get_variables</span></code> as an xarray <code class="docutils literal notranslate"><span class="pre">FrozenDict</span></code> object of xarray <code class="docutils literal notranslate"><span class="pre">Variable</span></code> objects. Each Variable is defined using the dimensions, attributes
 and encoding from the CFA file, but the data is more complicated.</p>
 </section>
 <section id="data-from-fragments">
-<h2>3. Data from Fragments<a class="headerlink" href="#data-from-fragments" title="Permalink to this heading"></a></h2>
+<h2>3. Data from Fragments<a class="headerlink" href="#data-from-fragments" title="Link to this heading"></a></h2>
 <p>Xarray comes with an included <code class="docutils literal notranslate"><span class="pre">LazilyIndexedArray</span></code> wrapper for containing indexable Array-like objects. The data is indexed via this first level of wrapper so the data isn’t loaded immediately upon creating the Xarray variable.
 cfapyx provides an Array-like wrapper class called <code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code> for handling calls to the whole array of all fragments. At this point we are still dealing with what looks like a single Array in xarray, rather than a
 set of distributed <code class="docutils literal notranslate"><span class="pre">Fragments</span></code>. cfapyx handles these fragments as individual <code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code> objects when no chunks are present, and <code class="docutils literal notranslate"><span class="pre">ChunkWrapper</span></code> objects otherwise.
@@ -129,7 +129,7 @@ Since there are several Array-like objects in cfapyx, these all inherit from cla
 partition structure. Performing the slice operations on the netCDF4 dataset at the latest point ensures the minimal amount of memory chunks are loaded from the file, since any slicing operations are optimised by Dask before being applied to the source data.</p>
 </section>
 <section id="result">
-<h2>4. Result<a class="headerlink" href="#result" title="Permalink to this heading"></a></h2>
+<h2>4. Result<a class="headerlink" href="#result" title="Link to this heading"></a></h2>
 <p>All of the above is abstracted from the user into the simple <code class="docutils literal notranslate"><span class="pre">open_dataset</span></code> command from Xarray. The dataset which is built looks like any other xarray dataset, which includes the loaded attributes and a Dask array for each variable.
 This only becomes an array of ‘real’ data following a <code class="docutils literal notranslate"><span class="pre">compute()</span></code> or <code class="docutils literal notranslate"><span class="pre">plot()</span></code> method (or equivalent), otherwise the data has yet to be loaded. Performing slices or reduction methods is handled entirely by Dask such that the operations are
 combined and applied at the latest stage for optimal performance.</p>

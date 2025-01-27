@@ -1,14 +1,15 @@
 [tool.poetry]
 name = "cfapyx"
-version = "2024.11.27"
+version = "2025.1.27"
 description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
 authors = ["dwest77 <daniel.westwood@stfc.ac.uk>"]
-license = "{file = \"LICENSE\"}"
+license = "BSD 3"
 readme = "README.md"
 keywords = ["cf", "cf-conventions","xarray","cloud","ArrayPartition"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
+poetry = "^1.8.5"
 scipy = "1.12.0"
 xarray = "2024.6.0"
 cfdm = "1.11.1.0"
@@ -19,7 +20,7 @@ cftime = "1.6.4"
 cfunits = "3.3.7"
 pytest = "7.2.0"
 ArrayPartition = "^1.0.1"
-sphinx = "7.1.2"
+sphinx = "^7.1.2"
 sphinx-rtd-theme = "2.0.0"
 
 [build-system]

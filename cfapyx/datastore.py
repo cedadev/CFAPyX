@@ -2,24 +2,20 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
-from xarray.backends import ( 
-    NetCDF4DataStore
-)
-
-from xarray.core.utils import FrozenDict
-from xarray.core import indexing
-from xarray.coding.variables import pop_to
-from xarray.core.variable import Variable
+import logging
+import re
 
 import netCDF4
 import numpy as np
-import re
+from xarray.backends import NetCDF4DataStore
+from xarray.coding.variables import pop_to
+from xarray.core import indexing
+from xarray.core.utils import FrozenDict
+from xarray.core.variable import Variable
 
-from cfapyx.wrappers import FragmentArrayWrapper
-from cfapyx.decoder import get_fragment_positions, get_fragment_extents
+from cfapyx.decoder import get_fragment_extents, get_fragment_positions
 from cfapyx.group import CFAGroupWrapper
-
-import logging
+from cfapyx.wrappers import FragmentArrayWrapper
 
 logger = logging.getLogger(__name__)
 

@@ -2,12 +2,12 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
+import glob
+import logging
+from collections import OrderedDict
+
 import netCDF4
 import numpy as np
-import logging
-import glob
-
-from collections import OrderedDict
 
 logger = logging.getLogger(__name__)
 

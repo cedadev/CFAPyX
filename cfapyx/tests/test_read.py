@@ -1,7 +1,8 @@
 # All routines for testing CFA general methods.
-import xarray as xr
 import os
+
 import pytest
+import xarray as xr
 
 TESTDIR = 'cfapyx/tests/test_space'
 

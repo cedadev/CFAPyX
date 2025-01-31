@@ -2,27 +2,19 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
-from arraypartition import (
-    ArrayPartition, 
-    ArrayLike,
-    get_chunk_shape,
-    get_chunk_space,
-    get_chunk_positions,
-    get_chunk_extent,
-    get_dask_chunks,
-    combine_slices,
-    normalize_partition_chunks
-)
+import math
+from itertools import product
 
 import dask.array as da
+import numpy as np
+from arraypartition import (ArrayLike, ArrayPartition, combine_slices,
+                            get_chunk_extent, get_chunk_positions,
+                            get_chunk_shape, get_chunk_space, get_dask_chunks,
+                            normalize_partition_chunks)
 from dask.array.core import getter
+from dask.array.reductions import numel
 from dask.base import tokenize
 from dask.utils import SerializableLock, is_arraylike
-from dask.array.reductions import numel
-
-from itertools import product
-import math
-import numpy as np
 
 try:
     from XarrayActive import ActiveOptionsContainer

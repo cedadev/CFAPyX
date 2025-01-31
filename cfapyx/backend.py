@@ -2,14 +2,14 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
-from xarray.backends import StoreBackendEntrypoint, BackendEntrypoint
+import logging
+
+from xarray import conventions
+from xarray.backends import BackendEntrypoint, StoreBackendEntrypoint
 from xarray.backends.common import AbstractDataStore
 from xarray.core.dataset import Dataset
-from xarray import conventions
 
 from cfapyx.datastore import CFADataStore
-
-import logging
 
 logger = logging.getLogger(__name__)
 

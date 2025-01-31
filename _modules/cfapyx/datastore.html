@@ -90,24 +90,20 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span> 
-    <span class="n">NetCDF4DataStore</span>
-<span class="p">)</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenDict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">indexing</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">pop_to</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">NetCDF4DataStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">pop_to</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">indexing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fragment_positions</span><span class="p">,</span> <span class="n">get_fragment_extents</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fragment_extents</span><span class="p">,</span> <span class="n">get_fragment_positions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.group</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 

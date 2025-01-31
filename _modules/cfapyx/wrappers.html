@@ -90,27 +90,19 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ArrayPartition</span><span class="p">,</span> 
-    <span class="n">ArrayLike</span><span class="p">,</span>
-    <span class="n">get_chunk_shape</span><span class="p">,</span>
-    <span class="n">get_chunk_space</span><span class="p">,</span>
-    <span class="n">get_chunk_positions</span><span class="p">,</span>
-    <span class="n">get_chunk_extent</span><span class="p">,</span>
-    <span class="n">get_dask_chunks</span><span class="p">,</span>
-    <span class="n">combine_slices</span><span class="p">,</span>
-    <span class="n">normalize_partition_chunks</span>
-<span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dask.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">da</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayPartition</span><span class="p">,</span> <span class="n">combine_slices</span><span class="p">,</span>
+                            <span class="n">get_chunk_extent</span><span class="p">,</span> <span class="n">get_chunk_positions</span><span class="p">,</span>
+                            <span class="n">get_chunk_shape</span><span class="p">,</span> <span class="n">get_chunk_space</span><span class="p">,</span> <span class="n">get_dask_chunks</span><span class="p">,</span>
+                            <span class="n">normalize_partition_chunks</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">getter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.reductions</span><span class="w"> </span><span class="kn">import</span> <span class="n">numel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokenize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SerializableLock</span><span class="p">,</span> <span class="n">is_arraylike</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.reductions</span><span class="w"> </span><span class="kn">import</span> <span class="n">numel</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">XarrayActive</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActiveOptionsContainer</span>

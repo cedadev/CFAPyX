@@ -1,5 +1,6 @@
 ![CFAPyX long logo: Blue, Green and White squares arranged in Diamond formation](https://github.com/cedadev/CFAPyX/blob/main/docs/source/_images/CFAPyX_long.jpg)
 
+![Static Badge](https://img.shields.io/badge/Xarray%20Engine%20Component-1E4B23)
 [![PyPI version](https://badge.fury.io/py/cfapyx.svg)](https://pypi.python.org/pypi/cfapyx/)
 
 CFA python Xarray module for using CFA files with xarray.

@@ -1,14 +1,14 @@
-import os
+import logging
 
 from cfapyx import CFANetCDF
+from cfapyx import set_verbose
+
+set_verbose(0)
 
 TESTDIR = 'cfapyx/tests/test_space'
 
 class TestCFAWrite:
     def test_cfa_write(self, testdir=TESTDIR):
-
-
-        os.system(f'touch {testdir.replace("/","_")}')
 
         filepattern = f'{testdir}/rain/example*.nc'
 
@@ -29,3 +29,6 @@ class TestCFAWrite:
         ds.write(f'{testdir}/testrain.nca')
 
         print('Integration tests: Write - complete')
+
+if __name__ == '__main__':
+    TestCFAWrite().test_cfa_write()

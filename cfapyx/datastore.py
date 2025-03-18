@@ -34,6 +34,8 @@ class CFADataStore(NetCDF4DataStore):
     that may be un-set at time of use.
     """
 
+    wrapper = FragmentArrayWrapper
+
     @property
     def chunks(self):
         if hasattr(self,'_cfa_chunks'):
@@ -55,8 +57,7 @@ class CFADataStore(NetCDF4DataStore):
             'substitutions': self._substitutions,
             'decode_cfa': self._decode_cfa,
             'chunks': self.chunks,
-            'chunk_limits': self._chunk_limits,
-            'use_active': self.use_active
+            'chunk_limits': self._chunk_limits
         }
 
     @cfa_options.setter
@@ -69,7 +70,6 @@ class CFADataStore(NetCDF4DataStore):
             decode_cfa=True,
             chunks={},
             chunk_limits=True,
-            use_active=False,
         ):
         """
         Method to set cfa options.
@@ -80,8 +80,6 @@ class CFADataStore(NetCDF4DataStore):
         :param decode_cfa:      (bool) Optional setting to disable CFA decoding 
                                 in some cases, default is True.
 
-        :param use_active:      (bool) Enable for use with XarrayActive.
-
         :param chunks:          (dict) Not implemented in 2024.9.0
 
         :param chunk_limits:    (dict) Not implemented in 2024.9.0
@@ -91,7 +89,6 @@ class CFADataStore(NetCDF4DataStore):
         self._substitutions = substitutions
         self._decode_cfa    = decode_cfa
         self._chunk_limits  = chunk_limits
-        self.use_active     = use_active
 
     def _acquire(self, needs_lock=True):
         """
@@ -360,7 +357,7 @@ class CFADataStore(NetCDF4DataStore):
         :returns:       The variable object opened as either a standard store variable 
                         or CFA aggregated variable.
         """
-        if type(var) == tuple:
+        if isinstance(var, tuple):
             if var[1] and self._decode_cfa:
                 variable = self.open_cfa_variable(name, var[0])
             else:
@@ -412,7 +409,7 @@ class CFADataStore(NetCDF4DataStore):
 
         ## Array-like object 
         data = indexing.LazilyIndexedArray(
-            FragmentArrayWrapper(
+            self.wrapper(
                 fragment_info,
                 fragment_space,
                 shape=array_shape,

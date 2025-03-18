@@ -1,26 +1,20 @@
 # All routines for testing CFA general methods.
-import os
-
-import pytest
 import xarray as xr
 
 TESTDIR = 'cfapyx/tests/test_space'
 
 class TestCFARead:
 
-    def test_cfa_pure(self, testdir=TESTDIR, active=False):
+    def test_cfa_pure(self, testdir=TESTDIR):
 
         FILE = f'{testdir}/testrain.nca'
 
         # Local testing: Add CFAPyX before tests
         try:
-            ds = xr.open_dataset(FILE, engine='CFA',
-                                cfa_options={
-                                    'use_active':active
-                                    })
+            ds = xr.open_dataset(FILE, engine='CFA')
         except Exception as err:
             assert isinstance(err, ImportError)
-            print(f'Integration tests: Read(pure, active={active}) - skipped')
+            print('Integration tests: Read(pure) - skipped')
             return
         
         ## Test global dataset
@@ -48,7 +42,7 @@ class TestCFARead:
         assert p_value.shape == ()
         assert (p_value.to_numpy() - 0.511954) < 0.01
 
-        print(f'Integration tests: Read(pure, active={active}) - complete')
+        print('Integration tests: Read(pure) - complete')
 
     def test_cfa_chunks(self, testdir=TESTDIR):
 
@@ -84,8 +78,14 @@ class TestCFARead:
         assert p_value.shape == ()
         assert (p_value.to_numpy() - 0.490389) < 0.01
 
-        print(f'Integration tests: Read(chunked) - complete')
+        print('Integration tests: Read(chunked) - complete')
 
 if __name__ == '__main__':
+
+    #import os
+    #os.chdir('CFAPyX')
+
+    TestCFARead().test_cfa_pure()
+    TestCFARead().test_cfa_chunks()
 
     print('Run with poetry run pytest -v -s')

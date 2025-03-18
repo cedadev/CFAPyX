@@ -1,9 +1,6 @@
 import logging
 
 from cfapyx import CFANetCDF
-from cfapyx import set_verbose
-
-set_verbose(0)
 
 TESTDIR = 'cfapyx/tests/test_space'
 

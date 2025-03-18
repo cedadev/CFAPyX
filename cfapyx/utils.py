@@ -4,7 +4,7 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARN)
 logstream = logging.StreamHandler()
 
 formatter = logging.Formatter('%(levelname)s [%(name)s]: %(message)s')

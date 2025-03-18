@@ -20,6 +20,7 @@ dependencies = [
 pytest = "^7"
 poetry = "^2"
 sphinx = "^7.1.2"
+sphinx-rtd-theme = "^3.0.2"
 
 [tool.poetry.plugins."xarray.backends"]
 CFA = "cfapyx.backend:CFANetCDFBackendEntrypoint"

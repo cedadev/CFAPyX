@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
@@ -6,19 +8,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>cfapyx.wrappers &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
     <link rel="shortcut icon" href="../../_static/CFAPyX.ico"/>
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=b1adf121"></script>
-        <script src="../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=b1adf121"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -90,84 +88,129 @@
 <span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dask.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">da</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayPartition</span><span class="p">,</span> <span class="n">combine_slices</span><span class="p">,</span>
-                            <span class="n">get_chunk_extent</span><span class="p">,</span> <span class="n">get_chunk_positions</span><span class="p">,</span>
-                            <span class="n">get_chunk_shape</span><span class="p">,</span> <span class="n">get_chunk_space</span><span class="p">,</span> <span class="n">get_dask_chunks</span><span class="p">,</span>
-                            <span class="n">normalize_partition_chunks</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayPartition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">arraypartition.partition</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">combine_slices</span><span class="p">,</span> <span class="n">get_chunk_extent</span><span class="p">,</span>
+                                      <span class="n">get_chunk_positions</span><span class="p">,</span> <span class="n">get_chunk_shape</span><span class="p">,</span>
+                                      <span class="n">get_chunk_space</span><span class="p">,</span> <span class="n">get_dask_chunks</span><span class="p">,</span>
+                                      <span class="n">normalize_partition_chunks</span><span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">getter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.array.reductions</span><span class="w"> </span><span class="kn">import</span> <span class="n">numel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokenize</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dask.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SerializableLock</span><span class="p">,</span> <span class="n">is_arraylike</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">XarrayActive</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActiveOptionsContainer</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="k">class</span><span class="w"> </span><span class="nc">ActiveOptionsContainer</span><span class="p">:</span>
-        <span class="k">pass</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CFAOptionsMixin">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAOptionsMixin">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">CFAOptionsMixin</span><span class="p">:</span>
+
+<div class="viewcode-block" id="CFAPartition">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFAPartition</span><span class="p">(</span><span class="n">ArrayPartition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Simple container for CFA options properties.</span>
+<span class="sd">    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific </span>
+<span class="sd">    methods.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+  
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper object for a CFA Partition (Fragment or Chunk)&#39;</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s1">&#39;chunks&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;_chunk_limits&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;_substitutions&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;_decode_cfa&#39;</span>
-    <span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CFAPartition.__init__">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">filename</span><span class="p">,</span>
+                 <span class="n">address</span><span class="p">,</span>
+                 <span class="n">aggregated_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">aggregated_calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">global_extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">):</span>
+<span class="w">        </span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Relates private option variables to the ``cfa_options`` parameter of the backend.</span>
+<span class="sd">        Wrapper object for the &#39;array&#39; section of a fragment. Contains some metadata </span>
+<span class="sd">        to ensure the correct fragment is selected, but generally just serves the </span>
+<span class="sd">        fragment array to dask when required.</span>
+
+<span class="sd">        :param filename:        (str) The path to a Fragment file from which this </span>
+<span class="sd">            partition object will access data from. The partition may represent </span>
+<span class="sd">            all or a subset of the data from the Fragment file.</span>
+
+<span class="sd">        :param address:         (str) The address of the data variable within the </span>
+<span class="sd">            Fragment file, may include a group hierarchy structure.</span>
+
+<span class="sd">        :param aggregated_units:    (obj) The expected units for the received data.</span>
+<span class="sd">            If the units of the received data are not equal to the ``aggregated_units``</span>
+<span class="sd">            then the data is &#39;post-processed&#39; using the cfunits ``conform`` function.</span>
+
+<span class="sd">        :param aggregated_calendar:     None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">aggregated_units</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span>    <span class="o">=</span> <span class="n">aggregated_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span> <span class="o">=</span> <span class="n">aggregated_calendar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_extent</span> <span class="o">=</span> <span class="n">global_extent</span></div>
+
+
+<div class="viewcode-block" id="CFAPartition.copy">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new instance of this class from its own methods and attributes, and </span>
+<span class="sd">        apply a new extent to the copy if required.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;units&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">extent</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combine_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_extent</span><span class="p">()),</span> <span class="n">extent</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;global_extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combine_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_extent</span><span class="p">),</span> <span class="n">extent</span><span class="p">)</span>
+
+        <span class="n">new</span> <span class="o">=</span> <span class="n">CFAPartition</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">new</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Correct units/data conversions - if necessary at this stage&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">cfunits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Units</span>
+            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Encountered issue when trying to import the &quot;cfunits&quot; library:&#39;</span>
+                    <span class="s2">&quot;cfunits requires UNIDATA UDUNITS-2. Can&#39;t find the &#39;udunits2&#39; library.&quot;</span>
+                    <span class="s1">&#39; - Consider setting up a conda environment, and installing &#39;</span>
+                    <span class="s1">&#39;`conda install -c conda-forge udunits2`&#39;</span>
+                <span class="p">)</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="n">Units</span><span class="o">.</span><span class="n">conform</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+<div class="viewcode-block" id="CFAPartition.get_kwargs">
+<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.get_kwargs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
-            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">,</span>
-            <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
-            <span class="s1">&#39;chunk_limits&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>
-        <span class="p">}</span>
-
-    <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">chunks</span><span class="o">=</span><span class="p">{},</span>
-            <span class="n">chunk_limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">use_active</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sets the private variables referred by the ``cfa_options`` parameter to the backend. </span>
-<span class="sd">        Ignores additional kwargs.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>    <span class="o">=</span> <span class="n">decode_cfa</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>  <span class="o">=</span> <span class="n">chunk_limits</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>         <span class="o">=</span> <span class="n">chunks</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span>     <span class="o">=</span> <span class="n">use_active</span></div>
+            <span class="s1">&#39;aggregated_units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">,</span>
+            <span class="s1">&#39;aggregated_calendar&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span>
+        <span class="p">}</span> <span class="o">|</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span></div>
+</div>
 
 
 <div class="viewcode-block" id="FragmentArrayWrapper">
 <a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FragmentArrayWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">CFAOptionsMixin</span><span class="p">,</span> <span class="n">ActiveOptionsContainer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FragmentArrayWrapper</span><span class="p">(</span><span class="n">ArrayLike</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    FragmentArrayWrapper behaves like an Array that can be indexed or referenced to </span>
 <span class="sd">    return a Dask-like array object. This class is essentially a constructor for the </span>
@@ -175,6 +218,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper-class for the array of fragment objects&#39;</span>
+
+    <span class="n">partition</span> <span class="o">=</span> <span class="n">CFAPartition</span>
 
 <div class="viewcode-block" id="FragmentArrayWrapper.__init__">
 <a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__init__">[docs]</a>
@@ -254,54 +299,11 @@
 
         <span class="n">array_name</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
 
-        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
-        <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
-
-        <span class="n">calendar</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Fix later</span>
-
         <span class="c1"># Fragment info dict at this point</span>
         <span class="n">fragment_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span>
 
-        <span class="c1"># For now expect to deal only with NetCDF Files</span>
-
         <span class="c1"># dict of array-like objects to pass to the dask Array constructor.</span>
-        <span class="n">fragments</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-
-            <span class="n">fragment_shape</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span>
-            <span class="n">fragment_position</span> <span class="o">=</span> <span class="n">pos</span>
-            <span class="n">global_extent</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;global_extent&#39;</span><span class="p">]</span>
-            <span class="n">extent</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span>
-
-            <span class="n">fragment_format</span>   <span class="o">=</span> <span class="s1">&#39;nc&#39;</span>
-
-            <span class="k">if</span> <span class="s1">&#39;fill_value&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">]:</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="c1"># Extra handling required for this condition.</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">filename</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
-                <span class="n">address</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;address&#39;</span><span class="p">]</span>
-                
-                <span class="c1"># Wrong extent type for both scenarios but keep as a different label for </span>
-                <span class="c1"># dask chunking.</span>
-
-            <span class="n">fragment</span> <span class="o">=</span> <span class="n">CFAPartition</span><span class="p">(</span>
-                <span class="n">filename</span><span class="p">,</span>
-                <span class="n">address</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span>
-                <span class="n">shape</span><span class="o">=</span><span class="n">fragment_shape</span><span class="p">,</span>
-                <span class="n">position</span><span class="o">=</span><span class="n">fragment_position</span><span class="p">,</span>
-                <span class="n">aggregated_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
-                <span class="n">aggregated_calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="n">fragment_format</span><span class="p">,</span>
-                <span class="n">named_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span><span class="p">,</span>
-                <span class="n">global_extent</span><span class="o">=</span><span class="n">global_extent</span>
-            <span class="p">)</span>
-
-            <span class="n">fragments</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
+        <span class="n">fragments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fragments</span><span class="p">()</span>
         
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">:</span>
             <span class="n">dsk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_dsk_dict</span><span class="p">(</span><span class="n">fragments</span><span class="p">,</span> <span class="n">array_name</span><span class="p">)</span>
@@ -326,6 +328,89 @@
         <span class="n">darr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dask_chunks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">darr</span></div>
 
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Relates private option variables to the ``cfa_options`` parameter of the backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
+            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">,</span>
+            <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
+            <span class="s1">&#39;chunk_limits&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>
+        <span class="p">}</span>
+
+    <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">chunks</span><span class="o">=</span><span class="p">{},</span>
+            <span class="n">chunk_limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the private variables referred by the ``cfa_options`` parameter to the backend. </span>
+<span class="sd">        Ignores additional kwargs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>    <span class="o">=</span> <span class="n">decode_cfa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>  <span class="o">=</span> <span class="n">chunk_limits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span>         <span class="o">=</span> <span class="n">chunks</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the set of fragment objects to pass to dask.&quot;&quot;&quot;</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+
+        <span class="n">calendar</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Fix later</span>
+
+        <span class="n">fragments</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+            <span class="n">fragment_shape</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span>
+            <span class="n">fragment_position</span> <span class="o">=</span> <span class="n">pos</span>
+            <span class="n">global_extent</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;global_extent&#39;</span><span class="p">]</span>
+            <span class="n">extent</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span>
+
+            <span class="n">fragment_format</span>   <span class="o">=</span> <span class="s1">&#39;nc&#39;</span>
+
+            <span class="k">if</span> <span class="s1">&#39;fill_value&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">]:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="c1"># Extra handling required for this condition.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filename</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;location&#39;</span><span class="p">]</span>
+                <span class="n">address</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fragment_info</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="s1">&#39;address&#39;</span><span class="p">]</span>
+                
+                <span class="c1"># Wrong extent type for both scenarios but keep as a different label for </span>
+                <span class="c1"># dask chunking.</span>
+
+            <span class="n">fragment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">address</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">fragment_shape</span><span class="p">,</span>
+                <span class="n">position</span><span class="o">=</span><span class="n">fragment_position</span><span class="p">,</span>
+                <span class="n">aggregated_units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                <span class="n">aggregated_calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="n">fragment_format</span><span class="p">,</span>
+                <span class="n">named_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">named_dims</span><span class="p">,</span>
+                <span class="n">global_extent</span><span class="o">=</span><span class="n">global_extent</span>
+            <span class="p">)</span>
+
+            <span class="n">fragments</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">fragment</span>
+        
+        <span class="k">return</span> <span class="n">fragments</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_optimise_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -482,7 +567,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">:</span>
@@ -504,124 +589,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">meta</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;use_active&#39;</span><span class="p">):</span>
-            <span class="n">darr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">darr</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_active</span><span class="p">:</span>
-            <span class="n">darr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">darr</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">XarrayActive</span><span class="w"> </span><span class="kn">import</span> <span class="n">DaskActiveArray</span>
-
-            <span class="n">darr</span> <span class="o">=</span> <span class="n">DaskActiveArray</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-                <span class="s1">&#39;&quot;DaskActiveArray&quot; from XarrayActive failed to import - please ensure &#39;</span>
-                <span class="s1">&#39;you have the XarrayActive package installed.&#39;</span>
-            <span class="p">)</span>
+        <span class="n">darr</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">dsk</span><span class="p">,</span> <span class="n">array_name</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">dask_chunks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">darr</span></div>
-
-            
-<div class="viewcode-block" id="CFAPartition">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">CFAPartition</span><span class="p">(</span><span class="n">ArrayPartition</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific </span>
-<span class="sd">    methods.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-  
-    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Wrapper object for a CFA Partition (Fragment or Chunk)&#39;</span>
-
-
-<div class="viewcode-block" id="CFAPartition.__init__">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">filename</span><span class="p">,</span>
-                 <span class="n">address</span><span class="p">,</span>
-                 <span class="n">aggregated_units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">aggregated_calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">global_extent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="o">**</span><span class="n">kwargs</span>
-            <span class="p">):</span>
-<span class="w">        </span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Wrapper object for the &#39;array&#39; section of a fragment. Contains some metadata </span>
-<span class="sd">        to ensure the correct fragment is selected, but generally just serves the </span>
-<span class="sd">        fragment array to dask when required.</span>
-
-<span class="sd">        :param filename:        (str) The path to a Fragment file from which this </span>
-<span class="sd">            partition object will access data from. The partition may represent </span>
-<span class="sd">            all or a subset of the data from the Fragment file.</span>
-
-<span class="sd">        :param address:         (str) The address of the data variable within the </span>
-<span class="sd">            Fragment file, may include a group hierarchy structure.</span>
-
-<span class="sd">        :param aggregated_units:    (obj) The expected units for the received data.</span>
-<span class="sd">            If the units of the received data are not equal to the ``aggregated_units``</span>
-<span class="sd">            then the data is &#39;post-processed&#39; using the cfunits ``conform`` function.</span>
-
-<span class="sd">        :param aggregated_calendar:     None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">aggregated_units</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span>    <span class="o">=</span> <span class="n">aggregated_units</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span> <span class="o">=</span> <span class="n">aggregated_calendar</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">global_extent</span> <span class="o">=</span> <span class="n">global_extent</span></div>
-
-
-<div class="viewcode-block" id="CFAPartition.copy">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.copy">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a new instance of this class from its own methods and attributes, and </span>
-<span class="sd">        apply a new extent to the copy if required.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="s1">&#39;units&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]:</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aggregated_units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span>
-            <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;units&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">extent</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combine_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_extent</span><span class="p">()),</span> <span class="n">extent</span><span class="p">)</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;global_extent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combine_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">global_extent</span><span class="p">),</span> <span class="n">extent</span><span class="p">)</span>
-
-        <span class="n">new</span> <span class="o">=</span> <span class="n">CFAPartition</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">new</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_post_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Correct units/data conversions - if necessary at this stage&quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="kn">from</span><span class="w"> </span><span class="nn">cfunits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Units</span>
-            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Encountered issue when trying to import the &quot;cfunits&quot; library:&#39;</span>
-                    <span class="s2">&quot;cfunits requires UNIDATA UDUNITS-2. Can&#39;t find the &#39;udunits2&#39; library.&quot;</span>
-                    <span class="s1">&#39; - Consider setting up a conda environment, and installing &#39;</span>
-                    <span class="s1">&#39;`conda install -c conda-forge udunits2`&#39;</span>
-                <span class="p">)</span>
-
-            <span class="n">data</span> <span class="o">=</span> <span class="n">Units</span><span class="o">.</span><span class="n">conform</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span>
-
-<div class="viewcode-block" id="CFAPartition.get_kwargs">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.CFAPartition.get_kwargs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s1">&#39;aggregated_units&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_units</span><span class="p">,</span>
-            <span class="s1">&#39;aggregated_calendar&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregated_calendar</span>
-        <span class="p">}</span> <span class="o">|</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_kwargs</span><span class="p">()</span></div>
-</div>
 
 </pre></div>
 

@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -7,19 +9,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CFA Array Wrapper Classes &mdash; CFAPyX Package 2024.10.11 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
     <link rel="shortcut icon" href="_static/CFAPyX.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b1adf121"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b1adf121"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -61,21 +59,18 @@
 <li class="toctree-l1"><a class="reference internal" href="backend.html">CFA Backend Entrypoint</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore.html">CFA DataStore</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">CFA Wrappers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#cfapyx.wrappers.CFAOptionsMixin"><code class="docutils literal notranslate"><span class="pre">CFAOptionsMixin</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.CFAOptionsMixin.cfa_options"><code class="docutils literal notranslate"><span class="pre">CFAOptionsMixin.cfa_options</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__init__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__getitem__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__getitem__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__array__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__array__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__weakref__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__weakref__</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#cfapyx.wrappers.CFAPartition"><code class="docutils literal notranslate"><span class="pre">CFAPartition</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.CFAPartition.__init__"><code class="docutils literal notranslate"><span class="pre">CFAPartition.__init__()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.CFAPartition.copy"><code class="docutils literal notranslate"><span class="pre">CFAPartition.copy()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.CFAPartition.get_kwargs"><code class="docutils literal notranslate"><span class="pre">CFAPartition.get_kwargs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.partition"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.partition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__init__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__getitem__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__getitem__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.__array__"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.__array__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cfapyx.wrappers.FragmentArrayWrapper.cfa_options"><code class="docutils literal notranslate"><span class="pre">FragmentArrayWrapper.cfa_options</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -110,14 +105,45 @@
   <section id="module-cfapyx.wrappers">
 <span id="cfa-array-wrapper-classes"></span><h1>CFA Array Wrapper Classes<a class="headerlink" href="#module-cfapyx.wrappers" title="Link to this heading"></a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAOptionsMixin">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.wrappers.</span></span><span class="sig-name descname"><span class="pre">CFAOptionsMixin</span></span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAOptionsMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAOptionsMixin" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Simple container for CFA options properties.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAOptionsMixin.cfa_options">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cfa_options</span></span><a class="headerlink" href="#cfapyx.wrappers.CFAOptionsMixin.cfa_options" title="Link to this definition"></a></dt>
-<dd><p>Relates private option variables to the <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> parameter of the backend.</p>
+<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.wrappers.</span></span><span class="sig-name descname"><span class="pre">CFAPartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayPartition</span></code></p>
+<p>Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
+methods.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.__init__" title="Link to this definition"></a></dt>
+<dd><p>Wrapper object for the ‘array’ section of a fragment. Contains some metadata 
+to ensure the correct fragment is selected, but generally just serves the 
+fragment array to dask when required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – (str) The path to a Fragment file from which this 
+partition object will access data from. The partition may represent 
+all or a subset of the data from the Fragment file.</p></li>
+<li><p><strong>address</strong> – (str) The address of the data variable within the 
+Fragment file, may include a group hierarchy structure.</p></li>
+<li><p><strong>aggregated_units</strong> – (obj) The expected units for the received data.
+If the units of the received data are not equal to the <code class="docutils literal notranslate"><span class="pre">aggregated_units</span></code>
+then the data is ‘post-processed’ using the cfunits <code class="docutils literal notranslate"><span class="pre">conform</span></code> function.</p></li>
+<li><p><strong>aggregated_calendar</strong> – None</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.copy" title="Link to this definition"></a></dt>
+<dd><p>Create a new instance of this class from its own methods and attributes, and 
+apply a new extent to the copy if required.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.get_kwargs">
+<span class="sig-name descname"><span class="pre">get_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.get_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.get_kwargs" title="Link to this definition"></a></dt>
+<dd><p>Return all the initial kwargs from instantiation, to support <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> mechanisms by higher classes.</p>
 </dd></dl>
 
 </dd></dl>
@@ -125,10 +151,16 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="cfapyx.wrappers.FragmentArrayWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.wrappers.</span></span><span class="sig-name descname"><span class="pre">FragmentArrayWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fragment_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfa_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">named_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#FragmentArrayWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.FragmentArrayWrapper" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>, <a class="reference internal" href="#cfapyx.wrappers.CFAOptionsMixin" title="cfapyx.wrappers.CFAOptionsMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">CFAOptionsMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ActiveOptionsContainer</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code></p>
 <p>FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
 return a Dask-like array object. This class is essentially a constructor for the 
 partitions that feed into the returned Dask-like array into Xarray.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cfapyx.wrappers.FragmentArrayWrapper.partition">
+<span class="sig-name descname"><span class="pre">partition</span></span><a class="headerlink" href="#cfapyx.wrappers.FragmentArrayWrapper.partition" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#cfapyx.wrappers.CFAPartition" title="cfapyx.wrappers.CFAPartition"><code class="xref py py-class docutils literal notranslate"><span class="pre">CFAPartition</span></code></a></p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.wrappers.FragmentArrayWrapper.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fragment_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fragment_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfa_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">named_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#FragmentArrayWrapper.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.FragmentArrayWrapper.__init__" title="Link to this definition"></a></dt>
@@ -176,54 +208,10 @@ or any other <code class="docutils literal notranslate"><span class="pre">array<
 occurs here based on the decoded fragment info and any other specified settings.</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cfapyx.wrappers.FragmentArrayWrapper.__weakref__">
-<span class="sig-name descname"><span class="pre">__weakref__</span></span><a class="headerlink" href="#cfapyx.wrappers.FragmentArrayWrapper.__weakref__" title="Link to this definition"></a></dt>
-<dd><p>list of weak references to the object</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cfapyx.wrappers.</span></span><span class="sig-name descname"><span class="pre">CFAPartition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayPartition</span></code></p>
-<p>Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
-methods.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregated_calendar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.__init__" title="Link to this definition"></a></dt>
-<dd><p>Wrapper object for the ‘array’ section of a fragment. Contains some metadata 
-to ensure the correct fragment is selected, but generally just serves the 
-fragment array to dask when required.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – (str) The path to a Fragment file from which this 
-partition object will access data from. The partition may represent 
-all or a subset of the data from the Fragment file.</p></li>
-<li><p><strong>address</strong> – (str) The address of the data variable within the 
-Fragment file, may include a group hierarchy structure.</p></li>
-<li><p><strong>aggregated_units</strong> – (obj) The expected units for the received data.
-If the units of the received data are not equal to the <code class="docutils literal notranslate"><span class="pre">aggregated_units</span></code>
-then the data is ‘post-processed’ using the cfunits <code class="docutils literal notranslate"><span class="pre">conform</span></code> function.</p></li>
-<li><p><strong>aggregated_calendar</strong> – None</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.copy" title="Link to this definition"></a></dt>
-<dd><p>Create a new instance of this class from its own methods and attributes, and 
-apply a new extent to the copy if required.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cfapyx.wrappers.CFAPartition.get_kwargs">
-<span class="sig-name descname"><span class="pre">get_kwargs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/wrappers.html#CFAPartition.get_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.wrappers.CFAPartition.get_kwargs" title="Link to this definition"></a></dt>
-<dd><p>Return all the initial kwargs from instantiation, to support <code class="docutils literal notranslate"><span class="pre">.copy()</span></code> mechanisms by higher classes.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="cfapyx.wrappers.FragmentArrayWrapper.cfa_options">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cfa_options</span></span><a class="headerlink" href="#cfapyx.wrappers.FragmentArrayWrapper.cfa_options" title="Link to this definition"></a></dt>
+<dd><p>Relates private option variables to the <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> parameter of the backend.</p>
 </dd></dl>
 
 </dd></dl>

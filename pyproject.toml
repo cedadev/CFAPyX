@@ -19,6 +19,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 pytest = "^7"
 poetry = "^2"
+sphinx = "^7.1.2"
 
 [tool.poetry.plugins."xarray.backends"]
 CFA = "cfapyx.backend:CFANetCDFBackendEntrypoint"

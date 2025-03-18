@@ -9,7 +9,16 @@ from collections import OrderedDict
 import netCDF4
 import numpy as np
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('CFA_CREATE')
+
+logging.basicConfig(level=logging.DEBUG)
+logstream = logging.StreamHandler()
+
+formatter = logging.Formatter('%(levelname)s [%(name)s]: %(message)s')
+logstream.setFormatter(formatter)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 CONCAT_MSG = 'See individual datasets for more information.'
 
@@ -93,7 +102,6 @@ class CFACreateMixin:
                         f'Files contain differing numbers of dimensions. "{d}"'
                         'appears to not be present in all files.'
                     )
-                
                 new_info, arr_components = self._collect_dim_info(
                     ds, d, pure_dimensions, coord_variables, 
                     agg_dims=agg_dims, first_time=first_time)
@@ -305,7 +313,7 @@ class CFACreateMixin:
                 sort = np.argsort(arr)
 
                 cdimarr = None
-                nds = []
+                nds, nstarts = [],[]
                 for s in sort:
 
                     if cdimarr is None:
@@ -314,12 +322,16 @@ class CFACreateMixin:
                         cdimarr = np.concatenate((cdimarr, np.array(arrays[s])))
 
                     nds.append(sizes[s])
+                    nstarts.append(starts[s])
 
                 ndimsizes   = tuple(nds) # Removed np.array here
 
             info['size'] = cdimarr.size
             info['array'] = cdimarr
             info['sizes'] = ndimsizes
+
+            # Reorder starts like with sizes
+            info['starts'] = nstarts
 
         if agg_dims is not None:
             if len(agg_dims) != len(aggregation_dims):
@@ -328,7 +340,7 @@ class CFACreateMixin:
                     f'User defined: ({list(agg_dims)})'
                     f'Derived: ({list(aggregation_dims)})'
                 )
-
+            
         return dim_info, aggregation_dims
 
     def _assemble_location(

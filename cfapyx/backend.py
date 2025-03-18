@@ -11,7 +11,12 @@ from xarray.core.dataset import Dataset
 
 from cfapyx.datastore import CFADataStore
 
+from cfapyx.utils import logstream
+
 logger = logging.getLogger(__name__)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 def open_cfa_dataset(
         filename_or_obj,

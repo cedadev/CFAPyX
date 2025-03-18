@@ -9,13 +9,9 @@ from collections import OrderedDict
 import netCDF4
 import numpy as np
 
-logger = logging.getLogger('CFA_CREATE')
+from cfapyx.utils import logstream
 
-logging.basicConfig(level=logging.DEBUG)
-logstream = logging.StreamHandler()
-
-formatter = logging.Formatter('%(levelname)s [%(name)s]: %(message)s')
-logstream.setFormatter(formatter)
+logger = logging.getLogger(__name__)
 
 logger.addHandler(logstream)
 logger.propagate = False

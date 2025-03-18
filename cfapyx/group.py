@@ -4,7 +4,12 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 
+from cfapyx.utils import logstream
+
 logger = logging.getLogger(__name__)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 class VariableWrapper:
     """

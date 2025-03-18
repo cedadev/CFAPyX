@@ -17,7 +17,12 @@ from cfapyx.decoder import get_fragment_extents, get_fragment_positions
 from cfapyx.group import CFAGroupWrapper
 from cfapyx.wrappers import FragmentArrayWrapper
 
+from cfapyx.utils import logstream
+
 logger = logging.getLogger(__name__)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 
 xarray_subs = {

@@ -2,79 +2,115 @@ __author__    = "Daniel Westwood"
 __contact__   = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
+import logging
 import math
 from itertools import product
 
 import dask.array as da
 import numpy as np
-from arraypartition import (ArrayLike, ArrayPartition, combine_slices,
-                            get_chunk_extent, get_chunk_positions,
-                            get_chunk_shape, get_chunk_space, get_dask_chunks,
-                            normalize_partition_chunks)
+from arraypartition import ArrayLike, ArrayPartition
+from arraypartition.partition import (combine_slices, get_chunk_extent,
+                                      get_chunk_positions, get_chunk_shape,
+                                      get_chunk_space, get_dask_chunks,
+                                      normalize_partition_chunks)
 from dask.array.core import getter
 from dask.array.reductions import numel
 from dask.base import tokenize
 from dask.utils import SerializableLock, is_arraylike
 
-try:
-    from XarrayActive import ActiveOptionsContainer
-except:
-    class ActiveOptionsContainer:
-        pass
-
-import logging
-
 logger = logging.getLogger(__name__)
 
-class CFAOptionsMixin:
+
+class CFAPartition(ArrayPartition):
     """
-    Simple container for CFA options properties.
+    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
+    methods.
     """
+  
+    description = 'Wrapper object for a CFA Partition (Fragment or Chunk)'
 
-    __slots__ = (
-        'chunks',
-        '_chunk_limits',
-        '_substitutions',
-        '_decode_cfa'
-    )
 
-    @property
-    def cfa_options(self):
+    def __init__(self,
+                 filename,
+                 address,
+                 aggregated_units=None,
+                 aggregated_calendar=None,
+                 global_extent=None,
+                 **kwargs
+            ):
+        
         """
-        Relates private option variables to the ``cfa_options`` parameter of the backend.
+        Wrapper object for the 'array' section of a fragment. Contains some metadata 
+        to ensure the correct fragment is selected, but generally just serves the 
+        fragment array to dask when required.
+
+        :param filename:        (str) The path to a Fragment file from which this 
+            partition object will access data from. The partition may represent 
+            all or a subset of the data from the Fragment file.
+
+        :param address:         (str) The address of the data variable within the 
+            Fragment file, may include a group hierarchy structure.
+
+        :param aggregated_units:    (obj) The expected units for the received data.
+            If the units of the received data are not equal to the ``aggregated_units``
+            then the data is 'post-processed' using the cfunits ``conform`` function.
+
+        :param aggregated_calendar:     None
         """
 
+        super().__init__(filename, address, units=aggregated_units, **kwargs)
+        self.aggregated_units    = aggregated_units
+        self.aggregated_calendar = aggregated_calendar
+        self.global_extent = global_extent
+
+    def copy(self, extent=None):
+        """
+        Create a new instance of this class from its own methods and attributes, and 
+        apply a new extent to the copy if required.
+        """
+        
+        kwargs = self.get_kwargs()
+
+        if 'units' in kwargs:
+            if not kwargs['aggregated_units']:
+                kwargs['aggregated_units'] = kwargs['units']
+            kwargs.pop('units')
+
+        if extent:
+            kwargs['extent'] = combine_slices(self.shape, list(self.get_extent()), extent)
+            kwargs['global_extent'] = combine_slices(self.shape, list(self.global_extent), extent)
+
+        new = CFAPartition(
+            self.filename,
+            self.address,
+            **kwargs
+        )
+        return new
+
+    def _post_process_data(self, data):
+        """Correct units/data conversions - if necessary at this stage"""
+
+        if self.units != self.aggregated_units:
+            try:
+                from cfunits import Units
+            except FileNotFoundError:
+                raise ValueError(
+                    'Encountered issue when trying to import the "cfunits" library:'
+                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' library."
+                    ' - Consider setting up a conda environment, and installing '
+                    '`conda install -c conda-forge udunits2`'
+                )
+
+            data = Units.conform(data, self.units, self.aggregated_units)
+        return data
+
+    def get_kwargs(self):
         return {
-            'substitutions': self._substitutions,
-            'decode_cfa': self._decode_cfa,
-            'chunks': self.chunks,
-            'chunk_limits':self._chunk_limits
-        }
+            'aggregated_units': self.aggregated_units,
+            'aggregated_calendar': self.aggregated_calendar
+        } | super().get_kwargs()
 
-    @cfa_options.setter
-    def cfa_options(self, value):
-        self._set_cfa_options(**value)
-
-    def _set_cfa_options(
-            self,
-            substitutions=None,
-            decode_cfa=None,
-            chunks={},
-            chunk_limits=None,
-            use_active=False,
-            **kwargs):
-        """
-        Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
-        Ignores additional kwargs.
-        """
-
-        self._substitutions = substitutions
-        self._decode_cfa    = decode_cfa
-        self._chunk_limits  = chunk_limits
-        self.chunks         = chunks
-        self.use_active     = use_active
-
-class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
+class FragmentArrayWrapper(ArrayLike):
     """
     FragmentArrayWrapper behaves like an Array that can be indexed or referenced to 
     return a Dask-like array object. This class is essentially a constructor for the 
@@ -82,6 +118,8 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
     """
     
     description = 'Wrapper-class for the array of fragment objects'
+
+    partition = CFAPartition
 
     def __init__(
             self, 
@@ -153,54 +191,11 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
 
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
 
-        dtype = self.dtype
-        units = self.units
-
-        calendar = None # Fix later
-
         # Fragment info dict at this point
         fragment_info = self.fragment_info
 
-        # For now expect to deal only with NetCDF Files
-
         # dict of array-like objects to pass to the dask Array constructor.
-        fragments = {}
-
-        for pos in self.fragment_info.keys():
-
-            fragment_shape    = self.fragment_info[pos]['shape']
-            fragment_position = pos
-            global_extent     = self.fragment_info[pos]['global_extent']
-            extent            = self.fragment_info[pos]['extent']
-
-            fragment_format   = 'nc'
-
-            if 'fill_value' in self.fragment_info[pos]:
-                filename = None
-                address = None
-                # Extra handling required for this condition.
-            else:
-                filename   = self.fragment_info[pos]['location']
-                address    = self.fragment_info[pos]['address']
-                
-                # Wrong extent type for both scenarios but keep as a different label for 
-                # dask chunking.
-
-            fragment = CFAPartition(
-                filename,
-                address,
-                dtype=dtype,
-                extent=extent,
-                shape=fragment_shape,
-                position=fragment_position,
-                aggregated_units=units,
-                aggregated_calendar=calendar,
-                format=fragment_format,
-                named_dims=self.named_dims,
-                global_extent=global_extent
-            )
-
-            fragments[pos] = fragment
+        fragments = self._get_fragments()
         
         if not self.chunks:
             dsk = self._assemble_dsk_dict(fragments, array_name)
@@ -224,6 +219,89 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
 
         darr = self._assemble_array(dsk, array_name[0], dask_chunks)
         return darr
+    
+    @property
+    def cfa_options(self):
+        """
+        Relates private option variables to the ``cfa_options`` parameter of the backend.
+        """
+
+        return {
+            'substitutions': self._substitutions,
+            'decode_cfa': self._decode_cfa,
+            'chunks': self.chunks,
+            'chunk_limits':self._chunk_limits
+        }
+
+    @cfa_options.setter
+    def cfa_options(self, value):
+        self._set_cfa_options(**value)
+
+    def _set_cfa_options(
+            self,
+            substitutions=None,
+            decode_cfa=None,
+            chunks={},
+            chunk_limits=None,
+            **kwargs):
+        """
+        Sets the private variables referred by the ``cfa_options`` parameter to the backend. 
+        Ignores additional kwargs.
+        """
+
+        self._substitutions = substitutions
+        self._decode_cfa    = decode_cfa
+        self._chunk_limits  = chunk_limits
+        self.chunks         = chunks
+
+    def _get_fragments(self) -> dict:
+        """
+        Get the set of fragment objects to pass to dask."""
+
+        dtype = self.dtype
+        units = self.units
+
+        calendar = None # Fix later
+
+        fragments = {}
+
+        for pos in self.fragment_info.keys():
+
+            fragment_shape    = self.fragment_info[pos]['shape']
+            fragment_position = pos
+            global_extent     = self.fragment_info[pos]['global_extent']
+            extent            = self.fragment_info[pos]['extent']
+
+            fragment_format   = 'nc'
+
+            if 'fill_value' in self.fragment_info[pos]:
+                filename = None
+                address = None
+                # Extra handling required for this condition.
+            else:
+                filename   = self.fragment_info[pos]['location']
+                address    = self.fragment_info[pos]['address']
+                
+                # Wrong extent type for both scenarios but keep as a different label for 
+                # dask chunking.
+
+            fragment = self.partition(
+                filename,
+                address,
+                dtype=dtype,
+                extent=extent,
+                shape=fragment_shape,
+                position=fragment_position,
+                aggregated_units=units,
+                aggregated_calendar=calendar,
+                format=fragment_format,
+                named_dims=self.named_dims,
+                global_extent=global_extent
+            )
+
+            fragments[pos] = fragment
+        
+        return fragments
 
     def _optimise_chunks(self):
         """
@@ -380,7 +458,7 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
         if not self._substitutions:
             return
 
-        if type(self._substitutions) != list:
+        if not isinstance(self._substitutions, list):
             self._substitutions = [self._substitutions]
 
         for s in self._substitutions:
@@ -402,109 +480,5 @@ class FragmentArrayWrapper(ArrayLike, CFAOptionsMixin, ActiveOptionsContainer):
         """
 
         meta = da.empty(self.shape, dtype=self.dtype)
-        if not hasattr(self, 'use_active'):
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-            return darr
-
-        if not self.use_active:
-            darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-            return darr
-        try:
-            from XarrayActive import DaskActiveArray
-
-            darr = DaskActiveArray(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
-        except ImportError:
-            raise ImportError(
-                '"DaskActiveArray" from XarrayActive failed to import - please ensure '
-                'you have the XarrayActive package installed.'
-            )
+        darr = da.Array(dsk, array_name, chunks=dask_chunks, dtype=self.dtype, meta=meta)
         return darr
-            
-class CFAPartition(ArrayPartition):
-    """
-    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific 
-    methods.
-    """
-  
-    description = 'Wrapper object for a CFA Partition (Fragment or Chunk)'
-
-
-    def __init__(self,
-                 filename,
-                 address,
-                 aggregated_units=None,
-                 aggregated_calendar=None,
-                 global_extent=None,
-                 **kwargs
-            ):
-        
-        """
-        Wrapper object for the 'array' section of a fragment. Contains some metadata 
-        to ensure the correct fragment is selected, but generally just serves the 
-        fragment array to dask when required.
-
-        :param filename:        (str) The path to a Fragment file from which this 
-            partition object will access data from. The partition may represent 
-            all or a subset of the data from the Fragment file.
-
-        :param address:         (str) The address of the data variable within the 
-            Fragment file, may include a group hierarchy structure.
-
-        :param aggregated_units:    (obj) The expected units for the received data.
-            If the units of the received data are not equal to the ``aggregated_units``
-            then the data is 'post-processed' using the cfunits ``conform`` function.
-
-        :param aggregated_calendar:     None
-        """
-
-        super().__init__(filename, address, units=aggregated_units, **kwargs)
-        self.aggregated_units    = aggregated_units
-        self.aggregated_calendar = aggregated_calendar
-        self.global_extent = global_extent
-
-    def copy(self, extent=None):
-        """
-        Create a new instance of this class from its own methods and attributes, and 
-        apply a new extent to the copy if required.
-        """
-        
-        kwargs = self.get_kwargs()
-
-        if 'units' in kwargs:
-            if not kwargs['aggregated_units']:
-                kwargs['aggregated_units'] = kwargs['units']
-            kwargs.pop('units')
-
-        if extent:
-            kwargs['extent'] = combine_slices(self.shape, list(self.get_extent()), extent)
-            kwargs['global_extent'] = combine_slices(self.shape, list(self.global_extent), extent)
-
-        new = CFAPartition(
-            self.filename,
-            self.address,
-            **kwargs
-        )
-        return new
-
-    def _post_process_data(self, data):
-        """Correct units/data conversions - if necessary at this stage"""
-
-        if self.units != self.aggregated_units:
-            try:
-                from cfunits import Units
-            except FileNotFoundError:
-                raise ValueError(
-                    'Encountered issue when trying to import the "cfunits" library:'
-                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' library."
-                    ' - Consider setting up a conda environment, and installing '
-                    '`conda install -c conda-forge udunits2`'
-                )
-
-            data = Units.conform(data, self.units, self.aggregated_units)
-        return data
-
-    def get_kwargs(self):
-        return {
-            'aggregated_units': self.aggregated_units,
-            'aggregated_calendar': self.aggregated_calendar
-        } | super().get_kwargs()

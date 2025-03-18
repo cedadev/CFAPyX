@@ -11,7 +11,12 @@ from xarray.core.dataset import Dataset
 
 from cfapyx.datastore import CFADataStore
 
+from cfapyx.utils import logstream
+
 logger = logging.getLogger(__name__)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 def open_cfa_dataset(
         filename_or_obj,
@@ -22,11 +27,13 @@ def open_cfa_dataset(
         decode_coords=None,
         use_cftime=None,
         decode_timedelta=None,
-        cfa_options: dict=None,
+        cfa_options: dict = None,
         group=None,
         ):
     """
-    Top-level function which opens a CFA dataset using Xarray. Creates a CFA Datastore 
+    Top-level function which opens a CFA dataset using Xarray. 
+    
+    Creates a CFA Datastore 
     from the ``filename_or_obj`` provided, then passes this to a CFA StoreBackendEntrypoint
     to create an Xarray Dataset. Most parameters are not handled by CFA, so only the 
     CFA-relevant ones are described here.
@@ -52,11 +59,7 @@ def open_cfa_dataset(
     store = CFADataStore.open(filename_or_obj, group=group)
 
     # Expands cfa_options into individual kwargs for the store.
-    store.cfa_options    = cfa_options
-
-    use_active = False
-    if hasattr(store, 'use_active'):
-        use_active = store.use_active
+    store.cfa_options = cfa_options
 
     # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
@@ -68,13 +71,13 @@ def open_cfa_dataset(
         decode_coords=decode_coords,
         drop_variables=drop_variables,
         use_cftime=use_cftime,
-        decode_timedelta=decode_timedelta,
-        use_active=use_active
+        decode_timedelta=decode_timedelta
     )
 
     return ds
 
 class CFANetCDFBackendEntrypoint(BackendEntrypoint):
+    """Open CFA-netCDF files (.nca) using 'cfapyx' in Xarray"""
 
     description = 'Open CFA-netCDF files (.nca) using "cfapyx" in Xarray'
     url = "https://cedadev.github.io/CFAPyX/"
@@ -115,6 +118,8 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             group=group)
 
 class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
+    """Open CFA-based Abstract Data Store"""
+    
     description = "Open CFA-based Abstract Data Store"
     url = "https://cedadev.github.io/CFAPyX/"
 
@@ -128,7 +133,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         drop_variables=None,
         use_cftime=None,
         decode_timedelta=None,
-        use_active=False,
     ) -> Dataset:
         """
         Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
@@ -162,18 +166,7 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         )
 
         # Create the xarray.Dataset object here.
-        if use_active:
-            try:
-                from XarrayActive import ActiveDataset
-
-                ds = ActiveDataset(vars, attrs=attrs)
-            except ImportError:
-                raise ImportError(
-                    '"ActiveDataset" from XarrayActive failed to import - please '
-                    'ensure you have the XarrayActive package installed.'
-                )
-        else:
-            ds = Dataset(vars, attrs=attrs)
+        ds = Dataset(vars, attrs=attrs)
             
         ds = ds.set_coords(coord_names.intersection(vars))
         ds.set_close(cfa_xarray_store.close)

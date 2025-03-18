@@ -8,8 +8,3 @@ class TestPath:
     def testpath(self, tests=TESTDIR):
         logger.error(os.getcwd())
         logger.error(tests)
-
-class TestCleanup:
-    def test_cleanup(self, testdir=TESTDIR):
-        os.system(f'rm {testdir}/testrain.nca')
-        print('Integration tests: Cleanup - complete')

@@ -4,8 +4,7 @@ def pytest_collection_modifyitems(items):
     CLASS_ORDER = [
         "TestPath"
         "TestCFAWrite",
-        "TestCFARead",
-        "TestCleanup"
+        "TestCFARead"
     ]
 
     sorted_items = items.copy()

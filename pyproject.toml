@@ -12,8 +12,8 @@ dependencies = [
     "xarray (>=2024,<2025)",
     "numpy (<=2.0.2)",
     "dask (>=2024,<2025)",
-    "arraypartition (>=1.1.1,<2.0.0)",
-    "netcdf4 (<=1.6.5)",
+    "arraypartition (>=1.1.2,<2.0.0)",
+    "netCDF4 (<=1.6.5)",
 ]
 
 [tool.poetry.group.dev.dependencies]

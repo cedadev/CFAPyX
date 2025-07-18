@@ -258,9 +258,12 @@ class CFACreateMixin:
 
             for attr, value in new_info.items():
                 if value != info[id][attr]:
-                    raise ValueError(
-                        f'Info not matching between files for "{id}": "{attr}"'
-                    )
+                    if np.isnan(value) and np.isnan(info[id][attr]):
+                        pass
+                    else:
+                        raise ValueError(
+                            f'Info not matching between files for "{id}": "{attr}"'
+                        )
         else:
             info[id] = new_info
             info[id]['attrs'] = attrs
@@ -586,7 +589,10 @@ class CFAWriteMixin:
             addr[:] = np.array(meta['address'], dtype=str)
             addrs.append(addr)
 
-    def _write_shape_dims(self, f_dims: dict):
+    def _write_shape_dims(
+            self, 
+            f_dims: dict,
+            substitutions: Union[dict,None] = None):
         """
         Construct the shape and location dimensions for each 
         combination of dimensions stored in ``cdim_opts``. This 
@@ -618,6 +624,12 @@ class CFAWriteMixin:
             loc_data = np.reshape(self.location, vshape)
 
             location[(slice(0, None) for i in vopt)] = np.array(loc_data, dtype=str)
+            
+            if substitutions is not None:
+
+                # Transform subs to string array (CF-Compliant)
+
+                location.setncattr('substitutions',substitutions)
 
     def _write_fragment_shapes(self):
         """
@@ -829,12 +841,16 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     def write(
             self, 
-            outfile: str
+            outfile: str,
+            substitutions: Union[dict,None] = None,
         ) -> None:
 
         """
         Use the accumulated dimension/variable info and attributes to 
         construct a CFA-netCDF file."""
+
+        if substitutions is not None:
+            self._apply_substitutions(substitutions)
 
         self.ds = netCDF4.Dataset(outfile, mode='w', format='NETCDF4', maskandcale=True)
         self.ds.Conventions = 'CF-1.12'
@@ -853,7 +869,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
             f_dims['versions'] = self.max_files
 
-        self._write_shape_dims(f_dims)
+        self._write_shape_dims(f_dims, substitutions)
         self._write_fragment_shapes()
         self._write_fragment_addresses()
 
@@ -1019,6 +1035,23 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
             elif meta['adims'] == ():
                 id_vars.append(var)
         return tuple(id_vars)
+
+    def _apply_substitutions(
+            self,
+            substitutions: dict
+        ) -> None:
+        """
+        Apply CF-Compliant substitutions to the location data.
+        
+        Example:
+        '/path/to/file':'${sub_name}'
+        """
+        new_location = {}
+        for coord, loc in self.location.items():
+            for sub, base in substitutions.items():
+                loc = loc.replace(sub, base)
+            new_location[coord] = loc
+        self.location = new_location
 
     def _apply_filters(self, updates, removals, global_attrs, var_info, dim_info):
 

@@ -258,9 +258,12 @@ class CFACreateMixin:
 
             for attr, value in new_info.items():
                 if value != info[id][attr]:
-                    raise ValueError(
-                        f'Info not matching between files for "{id}": "{attr}"'
-                    )
+                    if np.isnan(value) and np.isnan(info[id][attr]):
+                        pass
+                    else:
+                        raise ValueError(
+                            f'Info not matching between files for "{id}": "{attr}"'
+                        )
         else:
             info[id] = new_info
             info[id]['attrs'] = attrs

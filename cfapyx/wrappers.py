@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 import logging
 import math
 from itertools import product
+from typing import Union
 
 import dask.array as da
 import numpy as np
@@ -128,8 +129,8 @@ class FragmentArrayWrapper(ArrayLike):
             shape, 
             units, 
             dtype, 
-            cfa_options={}, 
-            named_dims=None
+            cfa_options: Union[dict,None] = None, 
+            named_dims: Union[list,None] = None,
         ):
         """
         Initialisation method for the FragmentArrayWrapper class
@@ -165,6 +166,10 @@ class FragmentArrayWrapper(ArrayLike):
         self.fragment_info    = fragment_info
         self.fragment_space   = fragment_space
         self.named_dims       = named_dims
+
+        cfa_options = cfa_options or {}
+        if 'storage_options' in cfa_options:
+            self._storage_options = cfa_options.pop('storage_options')
 
         super().__init__(shape, dtype=dtype, units=units)
 
@@ -239,7 +244,7 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _set_cfa_options(
             self,
-            substitutions=None,
+            substitutions: Union[dict,None] = None,
             decode_cfa=None,
             chunks={},
             chunk_limits=None,
@@ -296,7 +301,8 @@ class FragmentArrayWrapper(ArrayLike):
                 aggregated_calendar=calendar,
                 format=fragment_format,
                 named_dims=self.named_dims,
-                global_extent=global_extent
+                global_extent=global_extent,
+                storage_options=self._storage_options
             )
 
             fragments[pos] = fragment
@@ -458,11 +464,7 @@ class FragmentArrayWrapper(ArrayLike):
         if not self._substitutions:
             return
 
-        if not isinstance(self._substitutions, list):
-            self._substitutions = [self._substitutions]
-
-        for s in self._substitutions:
-            base, substitution = s.split(':')
+        for base, substitution in self._substitutions.keys():
             for f in self.fragment_info.keys():
 
                 if isinstance(self.fragment_info[f]['location'], str):

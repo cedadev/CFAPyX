@@ -102,7 +102,11 @@ class CFACreateMixin:
                     ds, d, pure_dimensions, coord_variables, 
                     agg_dims=agg_dims, first_time=first_time)
                 
-                dim_info = self._update_info(ds.dimensions[d], dim_info, new_info)
+                if new_info['type'] == 'coord':
+                    # Only coordinate dimensions can have attributes
+                    dim_info = self._update_info(ds[d], dim_info, new_info)
+                else:
+                    dim_info[d] = new_info
 
                 if arr_components is not None:
                     if first_time:
@@ -137,7 +141,7 @@ class CFACreateMixin:
                     '_FillValue': fill,
                 }
 
-                var_info = self._update_info(ds.variables[v], var_info, new_info)
+                var_info = self._update_info(ds[v], var_info, new_info)
 
             arranged_files[tuple(fcoord)] = file
 
@@ -532,7 +536,7 @@ class CFAWriteMixin:
                 axis_var[:] = di['array']
         
             else:
-                for k, v in di['attrs'].items():
+                for k, v in di.get('attrs',{}).items():
                     real_part.setncattr(k, v)
 
         return f_dims

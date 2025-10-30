@@ -525,10 +525,14 @@ class CFAWriteMixin:
             f_dims[f'f_{dim}'] = f_size
 
             if di['type'] == 'coord':
+                create_kwargs = {}
+                if '_FillValue' in di['attrs']:
+                    create_kwargs['fill_value'] = di['attrs'].pop('_FillValue')
                 axis_var = self.ds.createVariable(
                     dim,
                     di['dtype'],
                     (dim,), # Link to coord dimension
+                    **create_kwargs
                 )
                 for k, v in di['attrs'].items():
                     axis_var.setncattr(k, v)

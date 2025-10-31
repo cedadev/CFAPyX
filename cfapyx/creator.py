@@ -29,7 +29,7 @@ class CFACreateMixin:
         attributes and information on all variables and dimensions into 
         separate python dictionaries. Also collects the set of files arranged
         by aggregated dimension coordinates, to be used later in constructing
-        the CFA ``fragment_location`` properties.
+        the CFA ``fragment_uris`` properties.
         """
 
         logger.info('Performing first pass on the set of files.')
@@ -137,7 +137,7 @@ class CFACreateMixin:
                     'dtype': np.dtype(ds[v].dtype),
                     'dims' : tuple(ds[v].dimensions),
                     'cdims': vdims,
-                    'address': v, # Or match with replacement,
+                    'identifiers': v, # Or match with replacement,
                     '_FillValue': fill,
                 }
 
@@ -353,14 +353,14 @@ class CFACreateMixin:
         ) -> dict:
 
         """
-        Assemble the base CFA ``fragment_location`` from which all the 
+        Assemble the base CFA ``fragment_uris`` from which all the 
         locations for different variables are derived. Locations are defined
         by the number of dimensions, and follow the same pattern for definition
-        as the ``fragment_shapes``. The combinations of dimensions that
-        require their own ``location`` and ``shape`` are recorded in ``cdim_opts``.
+        as the ``fragment_map``. The combinations of dimensions that
+        require their own ``uris`` and ``map`` are recorded in ``cdim_opts``.
         """
 
-        logger.debug('Assembling the location variable')
+        logger.debug('Assembling the uris variable')
 
         # Define the location space
         location_space      = tuple(i for i in self.fragment_space if i > 1)
@@ -434,7 +434,7 @@ class CFACreateMixin:
         """
         Determine the combinations of dimensions from the information
         around each variable. Each combination requires a different 
-        ``location`` and ``shape`` fragment array variable in the final
+        ``uris`` and ``map`` fragment array variable in the final
         CFA-netCDF file.
         """
 
@@ -572,16 +572,16 @@ class CFAWriteMixin:
                     )
 
                 agg_data = ' '.join([
-                    f'location: fragment_location_{num}',
-                    f'address: fragment_address_{var}',
-                    f'shape: fragment_shape_{num}'
+                    f'uris: fragment_uris_{num}',
+                    f'identifiers: fragment_identifiers_{var}',
+                    f'map: fragment_map_{num}'
                 ])
 
                 variable = self._write_aggregated_variable(var, meta, agg_dims, agg_data)
 
     def _write_fragment_addresses(self):
         """
-        Create a ``fragment_address`` variable for each variable
+        Create a ``fragment_identifiers`` variable for each variable
         which is not dimension-less.
         """
 
@@ -590,11 +590,11 @@ class CFAWriteMixin:
             if 'adims' not in meta:
                 continue
             addr = self.ds.createVariable(
-                f'fragment_address_{variable}',
+                f'fragment_identifiers_{variable}',
                 str,
                 (),
             )
-            addr[:] = np.array(meta['address'], dtype=str)
+            addr[:] = np.array(meta['identifiers'], dtype=str)
             addrs.append(addr)
 
     def _write_shape_dims(self, f_dims: dict):
@@ -607,7 +607,7 @@ class CFAWriteMixin:
 
         for x, opt in enumerate(self.cdim_opts):
             ndims = self.ds.createDimension(
-                f'shape_{x}',
+                f'map_{x}',
                 len(opt),
             )
 
@@ -617,7 +617,7 @@ class CFAWriteMixin:
                 vopt = vopt + ('versions',)
 
             location = self.ds.createVariable(
-                f'fragment_location_{x}',
+                f'fragment_uris_{x}',
                 str,
                 vopt,
             )
@@ -632,9 +632,9 @@ class CFAWriteMixin:
 
     def _write_fragment_shapes(self):
         """
-        Construct the ``fragment_shape`` variable part for each 
+        Construct the ``fragment_map`` variable part for each 
         combination of dimensions stored in ``cdim_opts``. This 
-        utilises the ``shape`` dimensions previously created.
+        utilises the ``map`` dimensions previously created.
         """
 
         def fill_empty(array, size):
@@ -661,7 +661,7 @@ class CFAWriteMixin:
 
             # Find the largest of the dimensions
             # Set dim_sizes accordingly
-            shape_name    = f'fragment_shape_{num}'
+            shape_name    = f'fragment_map_{num}'
 
             shapes = []
 
@@ -675,7 +675,7 @@ class CFAWriteMixin:
             shape = self.ds.createVariable(
                 shape_name,
                 int, # Type
-                (f'shape_{num}', i_dim)
+                (f'map_{num}', i_dim)
             )
 
             shapes = np.array(shapes)
@@ -1136,7 +1136,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         """
         Open the file as a netcdf dataset. If there are multiple filenames
         provided, use the first file. Also determine the longest filename
-        to be used to define the ``location`` parameter later.
+        to be used to define the ``uris`` parameter later.
         """
 
         if isinstance(file, tuple):

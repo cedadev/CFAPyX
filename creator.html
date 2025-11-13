@@ -142,7 +142,7 @@
 attributes and information on all variables and dimensions into 
 separate python dictionaries. Also collects the set of files arranged
 by aggregated dimension coordinates, to be used later in constructing
-the CFA <code class="docutils literal notranslate"><span class="pre">fragment_location</span></code> properties.</p>
+the CFA <code class="docutils literal notranslate"><span class="pre">fragment_uris</span></code> properties.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -186,11 +186,11 @@ fragments in each dimension are recorded in the <code class="docutils literal no
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.creator.CFACreateMixin._assemble_location">
 <span class="sig-name descname"><span class="pre">_assemble_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arranged_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._assemble_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._assemble_location" title="Link to this definition"></a></dt>
-<dd><p>Assemble the base CFA <code class="docutils literal notranslate"><span class="pre">fragment_location</span></code> from which all the 
+<dd><p>Assemble the base CFA <code class="docutils literal notranslate"><span class="pre">fragment_uris</span></code> from which all the 
 locations for different variables are derived. Locations are defined
 by the number of dimensions, and follow the same pattern for definition
-as the <code class="docutils literal notranslate"><span class="pre">fragment_shapes</span></code>. The combinations of dimensions that
-require their own <code class="docutils literal notranslate"><span class="pre">location</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> are recorded in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>.</p>
+as the <code class="docutils literal notranslate"><span class="pre">fragment_map</span></code>. The combinations of dimensions that
+require their own <code class="docutils literal notranslate"><span class="pre">uris</span></code> and <code class="docutils literal notranslate"><span class="pre">map</span></code> are recorded in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -207,7 +207,7 @@ to vary across the fragment files, an error will be raised.</p>
 <span class="sig-name descname"><span class="pre">_determine_size_opts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFACreateMixin._determine_size_opts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFACreateMixin._determine_size_opts" title="Link to this definition"></a></dt>
 <dd><p>Determine the combinations of dimensions from the information
 around each variable. Each combination requires a different 
-<code class="docutils literal notranslate"><span class="pre">location</span></code> and <code class="docutils literal notranslate"><span class="pre">shape</span></code> fragment array variable in the final
+<code class="docutils literal notranslate"><span class="pre">uris</span></code> and <code class="docutils literal notranslate"><span class="pre">map</span></code> fragment array variable in the final
 CFA-netCDF file.</p>
 </dd></dl>
 
@@ -253,7 +253,7 @@ which link to the fragment array variables.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_fragment_addresses">
 <span class="sig-name descname"><span class="pre">_write_fragment_addresses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_fragment_addresses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_fragment_addresses" title="Link to this definition"></a></dt>
-<dd><p>Create a <code class="docutils literal notranslate"><span class="pre">fragment_address</span></code> variable for each variable
+<dd><p>Create a <code class="docutils literal notranslate"><span class="pre">fragment_identifiers</span></code> variable for each variable
 which is not dimension-less.</p>
 </dd></dl>
 
@@ -269,9 +269,9 @@ for each coordinate dimension.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="cfapyx.creator.CFAWriteMixin._write_fragment_shapes">
 <span class="sig-name descname"><span class="pre">_write_fragment_shapes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cfapyx/creator.html#CFAWriteMixin._write_fragment_shapes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFAWriteMixin._write_fragment_shapes" title="Link to this definition"></a></dt>
-<dd><p>Construct the <code class="docutils literal notranslate"><span class="pre">fragment_shape</span></code> variable part for each 
+<dd><p>Construct the <code class="docutils literal notranslate"><span class="pre">fragment_map</span></code> variable part for each 
 combination of dimensions stored in <code class="docutils literal notranslate"><span class="pre">cdim_opts</span></code>. This 
-utilises the <code class="docutils literal notranslate"><span class="pre">shape</span></code> dimensions previously created.</p>
+utilises the <code class="docutils literal notranslate"><span class="pre">map</span></code> dimensions previously created.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -404,7 +404,7 @@ numpy string arrays.</p>
 <span class="sig-name descname"><span class="pre">_call_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="_modules/cfapyx/creator.html#CFANetCDF._call_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cfapyx.creator.CFANetCDF._call_file" title="Link to this definition"></a></dt>
 <dd><p>Open the file as a netcdf dataset. If there are multiple filenames
 provided, use the first file. Also determine the longest filename
-to be used to define the <code class="docutils literal notranslate"><span class="pre">location</span></code> parameter later.</p>
+to be used to define the <code class="docutils literal notranslate"><span class="pre">uris</span></code> parameter later.</p>
 </dd></dl>
 
 </dd></dl>

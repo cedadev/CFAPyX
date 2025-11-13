@@ -103,7 +103,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.group</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">logstream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">logstream</span><span class="p">,</span> <span class="n">CONVENTIONS</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -214,17 +214,26 @@
 <span class="sd">        CFA-netCDF file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;address&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;CFA-0.6.2&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
-            <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="s1">&#39;format&#39;</span><span class="p">)</span>
+        <span class="n">internal_convention</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">feature</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s1">&#39;CFA-netCDF file is not compliant with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="si">}</span><span class="s1"> &#39;</span>
-                    <span class="sa">f</span><span class="s1">&#39;Required aggregated data features: &quot;</span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s1">&quot;, &#39;</span>
-                    <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
-                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">convention</span><span class="p">,</span> <span class="n">featureset</span> <span class="ow">in</span> <span class="n">CONVENTIONS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">compliant</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">featureset</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">feature</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
+                    <span class="n">compliant</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">compliant</span><span class="p">:</span>
+                <span class="n">internal_convention</span> <span class="o">=</span> <span class="n">convention</span>
+
+
+
+        <span class="k">if</span> <span class="n">internal_convention</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># Correct error message.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;CFA-netCDF file is not compliant with any known set of conventions. &#39;</span><span class="p">,</span>
+                <span class="s1">&#39;See https://cfconventions.org/cf-conventions/cf-conventions.html#aggregated-dimensions-and-data &#39;</span><span class="p">,</span>
+                <span class="s1">&#39;for details on required features. &#39;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">=</span> <span class="n">internal_convention</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_perform_decoding</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> 
@@ -353,26 +362,22 @@
 
         <span class="n">cformat</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="n">value</span>   <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s1">&#39;CFA-0.6.2&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conventions</span><span class="p">:</span>
-                <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
-                <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]]</span>
-                <span class="n">cformat</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]]</span>
-            <span class="k">else</span><span class="p">:</span> <span class="c1"># Default to CF-1.12</span>
-                <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">]]</span>
-                <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s1">&#39;beta&#39;</span><span class="p">:</span>
+           <span class="c1"># Beta Version (Earliest)</span>
+            <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
+            <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]]</span>
+            <span class="n">cformat</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conventions</span> <span class="o">=</span> <span class="n">CONVENTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span><span class="p">]</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s1">&#39;secondary&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;unique_values&#39;</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
+                <span class="n">address</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
                 <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
                     <span class="n">value</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]]</span>
-
-            <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;address&#39;</span><span class="p">]]</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;One or more aggregated data features specified could not be &#39;</span>
-                <span class="s1">&#39;found in the data: &#39;</span>
-                <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
-                <span class="sa">f</span><span class="s1">&#39; - original error: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s1">&#39;</span>
-            <span class="p">)</span>
-
         <span class="n">subs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s1">&#39;substitutions&#39;</span><span class="p">):</span>
             <span class="n">subs</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">substitutions</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;https://&#39;</span><span class="p">,</span> <span class="s1">&#39;https@//&#39;</span><span class="p">)</span>

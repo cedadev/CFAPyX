@@ -305,6 +305,7 @@ class CFACreateMixin:
             if len(starts) == 1:
                 cdimarr = arrays[0]
                 ndimsizes = (sizes[0],)
+                nstarts = starts[0]
 
             else:
 

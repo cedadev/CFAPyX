@@ -17,7 +17,7 @@ from cfapyx.decoder import get_fragment_extents, get_fragment_positions
 from cfapyx.group import CFAGroupWrapper
 from cfapyx.wrappers import FragmentArrayWrapper
 
-from cfapyx.utils import logstream
+from cfapyx.utils import logstream, CONVENTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -126,17 +126,26 @@ class CFADataStore(NetCDF4DataStore):
         CFA-netCDF file
         """
 
-        required = ('shape', 'location', 'address')
-        if 'CFA-0.6.2' in self.conventions.split(' '):
-            required = ('location', 'file', 'format')
+        internal_convention = None
 
-        for feature in required:
-            if feature not in agg_data:
-                raise ValueError(
-                    f'CFA-netCDF file is not compliant with {self.conventions} '
-                    f'Required aggregated data features: "{required}", '
-                    f'Received "{tuple(agg_data.keys())}"'
-                )
+        for convention, featureset in CONVENTIONS.items():
+            compliant = True
+            for feature in featureset:
+                if feature not in agg_data:
+                    compliant = False
+            if compliant:
+                internal_convention = convention
+
+
+
+        if internal_convention is None: # Correct error message.
+            raise ValueError(
+                'CFA-netCDF file is not compliant with any known set of conventions. ',
+                'See https://cfconventions.org/cf-conventions/cf-conventions.html#aggregated-dimensions-and-data ',
+                'for details on required features. ',
+                f'Received "{tuple(agg_data.keys())}"'
+            )
+        self._internal_convention = internal_convention
 
     def _perform_decoding(
             self, 
@@ -263,26 +272,22 @@ class CFADataStore(NetCDF4DataStore):
 
         cformat = ''
         value   = None
-        try:
-            if 'CFA-0.6.2' in self.conventions:
-                shape        = self.ds.variables[agg_data['location']]
-                location     = self.ds.variables[agg_data['file']]
-                cformat      = self.ds.variables[agg_data['format']]
-            else: # Default to CF-1.12
-                shape        = self.ds.variables[agg_data['shape']]
-                location     = self.ds.variables[agg_data['location']]
+        if self._internal_convention == 'beta':
+           # Beta Version (Earliest)
+            shape        = self.ds.variables[agg_data['location']]
+            location     = self.ds.variables[agg_data['file']]
+            cformat      = self.ds.variables[agg_data['format']]
+        else:
+            conventions = CONVENTIONS[self._internal_convention]
+            shape = self.ds.variables[agg_data[conventions[0]]]
+
+            if self._internal_convention == 'secondary':
+                value = self.ds.variables[agg_data['unique_values']]
+            else:
+                location = self.ds.variables[agg_data[conventions[1]]]
+                address  = self.ds.variables[agg_data[conventions[2]]]
                 if 'value' in agg_data:
                     value    = self.ds.variables[agg_data['value']]
-
-            address = self.ds.variables[agg_data['address']]
-        except Exception as err:
-            raise ValueError(
-                'One or more aggregated data features specified could not be '
-                'found in the data: '
-                f'"{tuple(agg_data.keys())}"'
-                f' - original error: {err}'
-            )
-
         subs = {}
         if hasattr(location, 'substitutions'):
             subs = location.substitutions.replace('https://', 'https@//')

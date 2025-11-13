@@ -27,3 +27,10 @@ def set_verbose(level: int):
     for name in logging.root.manager.loggerDict:
         lg = logging.getLogger(name)
         lg.setLevel(levels[level])
+
+CONVENTIONS = {
+    'primary':   ('map','uris','identifiers'),
+    'secondary': ('map', 'unique_values'),
+    'interim':   ('shape', 'location', 'address'),
+    'beta':      ('location', 'file', 'format')
+}

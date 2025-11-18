@@ -35,7 +35,7 @@ class VariableWrapper:
         to be handled for the two sets of variables.
         """
 
-        if type(item) == int:
+        if isinstance(item, int):
             item = list(self.keys())[item]
 
         if item in self._properties:

@@ -63,6 +63,9 @@ class CFAPartition(ArrayPartition):
         self.aggregated_calendar = aggregated_calendar
         self.global_extent = global_extent
 
+    def reshape(self, *args, **kwargs):
+        print(args, kwargs)
+
     def copy(self, extent=None):
         """
         Create a new instance of this class from its own methods and attributes, and 

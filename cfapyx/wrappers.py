@@ -63,8 +63,10 @@ class CFAPartition(ArrayPartition):
         self.aggregated_calendar = aggregated_calendar
         self.global_extent = global_extent
 
-    def reshape(self, *args, **kwargs):
-        print(args, kwargs)
+    def reshape(self, shape, **kwargs):
+        nparr = np.reshape(self.__array__(), shape)
+        print(nparr.shape, self.address, nparr)
+        return nparr
 
     def copy(self, extent=None):
         """
@@ -183,7 +185,21 @@ class FragmentArrayWrapper(ArrayLike):
         Non-lazy retrieval of the dask array when this object is indexed.
         """
         arr = self.__array__()
-        return arr[tuple(selection)]
+
+        # Enforce correct reshaping - dask array here can sometimes not
+        # auto-drop dimensions so reshaping is enforced.
+        new_shape=[]
+        for aix in range(len(arr.shape)):
+            sdim = selection[aix]
+            if isinstance(sdim, slice):
+                stop  = sdim.stop or arr.shape[aix]
+                start = sdim.start or 0
+                new_shape.append(
+                    stop - start
+                )
+        new_shape = tuple(new_shape)
+        return da.reshape(arr[tuple(selection)], new_shape)
+
     
     def __array__(self):
         """

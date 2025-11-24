@@ -18,6 +18,8 @@ from dask.array.reductions import numel
 from dask.base import tokenize
 from dask.utils import SerializableLock, is_arraylike
 
+from cfapyx.utils import slice_to_shape
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,7 +67,6 @@ class CFAPartition(ArrayPartition):
 
     def reshape(self, shape, **kwargs):
         nparr = np.reshape(self.__array__(), shape)
-        print(nparr.shape, self.address, nparr)
         return nparr
 
     def copy(self, extent=None):
@@ -192,13 +193,12 @@ class FragmentArrayWrapper(ArrayLike):
         for aix in range(len(arr.shape)):
             sdim = selection[aix]
             if isinstance(sdim, slice):
-                stop  = sdim.stop or arr.shape[aix]
-                start = sdim.start or 0
-                new_shape.append(
-                    stop - start
-                )
+                ns = slice_to_shape(sdim, arr.shape[aix])
+                if ns is not None:
+                    new_shape.append(ns)
         new_shape = tuple(new_shape)
-        return da.reshape(arr[tuple(selection)], new_shape)
+        d = da.reshape(arr[tuple(selection)], new_shape)
+        return d
 
     
     def __array__(self):

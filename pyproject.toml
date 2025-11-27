@@ -1,6 +1,6 @@
 [project]
 name = "cfapyx"
-version = "2025.11.18"
+version = "2025.11.27a"
 description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
 authors = [
     {name = "Daniel Westwood",email = "daniel.westwood@stfc.ac.uk"}

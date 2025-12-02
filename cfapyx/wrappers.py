@@ -18,6 +18,8 @@ from dask.array.reductions import numel
 from dask.base import tokenize
 from dask.utils import SerializableLock, is_arraylike
 
+from cfapyx.utils import slice_to_shape
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,6 +64,10 @@ class CFAPartition(ArrayPartition):
         self.aggregated_units    = aggregated_units
         self.aggregated_calendar = aggregated_calendar
         self.global_extent = global_extent
+
+    def reshape(self, shape, **kwargs):
+        nparr = np.reshape(self.__array__(), shape)
+        return nparr
 
     def copy(self, extent=None):
         """
@@ -180,7 +186,20 @@ class FragmentArrayWrapper(ArrayLike):
         Non-lazy retrieval of the dask array when this object is indexed.
         """
         arr = self.__array__()
-        return arr[tuple(selection)]
+
+        # Enforce correct reshaping - dask array here can sometimes not
+        # auto-drop dimensions so reshaping is enforced.
+        new_shape=[]
+        for aix in range(len(arr.shape)):
+            sdim = selection[aix]
+            if isinstance(sdim, slice):
+                ns = slice_to_shape(sdim, arr.shape[aix])
+                if ns is not None:
+                    new_shape.append(ns)
+        new_shape = tuple(new_shape)
+        d = da.reshape(arr[tuple(selection)], new_shape)
+        return d
+
     
     def __array__(self):
         """

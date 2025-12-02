@@ -759,6 +759,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     description = 'The CFAPyX Constructor class, for creating new CFA-netCDF files.'
 
+    convention_version = 'CF-1.12'
+
     def __init__(self, files: list, concat_msg : str = CONCAT_MSG):
 
         """
@@ -849,10 +851,16 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         construct a CFA-netCDF file."""
 
         self.ds = netCDF4.Dataset(outfile, mode='w', format='NETCDF4', maskandcale=True)
-        self.ds.Conventions = 'CF-1.12'
+
+        # Default conventions written for CF aggregations
+        self.ds.Conventions = self.convention_version
 
         # Populate global dimensions
         for attr, value in self.global_attrs.items():
+
+            # Overrides defaults, needs extra handling.
+            if attr == 'Conventions':
+                value = self.handle_conventions(value)
             self.ds.setncattr(attr, value)
 
         f_dims = self._write_dimensions()
@@ -872,6 +880,37 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         self._write_variables()
 
         self.ds.close()
+
+    def handle_conventions(self, value) -> str:
+        """
+        Handle 'conventions' attribute according to CF Convention rules
+        """
+        delim = ','
+        if ',' in value:
+            # Assume comma delimited
+            conventions = value.split(',')
+        elif ' ' in value:
+            conventions = value.split(' ')
+            delim = ' '
+        else:
+            conventions = [value]
+
+        updated_conventions = []
+        for c in conventions:
+            if 'CF' not in c:
+                updated_conventions.append(c)
+                continue
+
+            highest_conv = sorted(
+                [   # Accounts for minor versions
+                    '.'.join(self.convention_version.split('-')[-1].split('.')[1:]), 
+                    '.'.join(c.split('-')[-1].split('.')[1:]), 
+                ]
+            )[0]
+            updated_conventions.append(
+                f'CF-1.{highest_conv}'
+            )
+        return delim.join(updated_conventions)
 
     def display_attrs(self):
         """

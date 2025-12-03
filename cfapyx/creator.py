@@ -18,164 +18,6 @@ logger.propagate = False
 
 CONCAT_MSG = 'See individual datasets for more information.'
 
-class CFACombineMixin:
-    """
-    Methods applying specifically to the combining of aggregated files.
-
-    These methods override the normal create functions for an aggregation file, 
-    as much of the work has been done for us at this point. 
-
-    NOTE: Aggregation will be limited to dimensions that are already aggregated. i.e This 
-    feature will only work on files where aggregation dimensions are consistent (i.e extending dimensions).
-    
-    These functions must:
-    - Identify the dimension(s) that are being extended and identify the affected variables.
-    - Combine scalar dimensions `f_` if those dimensions are already greater than 1.
-    - Identify the affected fragment constructors (map, uris) and combine along the extending dimensions.
-    """
-
-    def combine(self, arranged_files: tuple, global_attrs: dict, var_info: dict, dim_info: dict):
-        """
-        Combine arranged files according to their coordinates.
-        """
-        st_dim_info = {}
-        
-        # Identify Extending dimensions
-        ext_dims = []
-        for d, info in dim_info.items():
-            if not isinstance(info, list):
-                continue
-            if 'f_' not in d:
-                continue
-
-            for fileinst in info:
-                if fileinst['size'] != 1:
-                    ext_dims.append(d)
-                    break
-
-            if d not in ext_dims:
-                # Non extending aggregation dimension
-                rd = d.split('_')[-1]
-                
-                # Skip coordinate dimensions here
-                if not isinstance(dim_info[rd], dict):
-                    if len(set([i['size'] for i in dim_info[rd]])) != 1:
-                        raise ValueError(
-                            f'Non-extending dimension {rd} differs in size between files'
-                        )
-                    st_dim_info[rd] = dim_info[rd][0]
-                else:
-                    st_dim_info[rd] = dim_info[rd]
-                    if len(set(dim_info[rd]['sizes'])) != 1:
-                        raise ValueError(
-                            f'Non-extending dimension {rd} differs in size between files'
-                        )
-                    st_dim_info[rd]['size'] = dim_info[rd]['sizes'][0]
-                st_dim_info[rd]['f_size'] = dim_info[d][0]['size']
-
-        new_dim_sizes = {}
-        for d in ext_dims:
-            real_dim = d.split('_')[-1]
-            new_dim_sizes[d] = sum([i['size'] for i in dim_info.pop(d)])
-
-            # Dim info transformations for writing
-            st_dim_info[real_dim] = dim_info[real_dim]
-            st_dim_info[real_dim]['f_size'] = new_dim_sizes[d]
-            st_dim_info[real_dim]['size']   = sum(dim_info[real_dim]['sizes'])
-
-            # Sort array components using index list
-            sorted_a = [[] for a in dim_info[real_dim]['arrays']]
-            sorted_starts = np.argsort(dim_info[real_dim]['starts'])
-            for x, a in enumerate(dim_info[real_dim]['arrays']):
-
-                sorted_a[sorted_starts[x]] = a
-            
-            # Assumes they have been sorted - not necessarily the case
-            array = np.concatenate(
-                sorted_a,
-                axis=0
-            )
-
-            st_dim_info[real_dim]['arrays'] = array
-        
-        sorted_dim_sizes = sorted([
-            (v, d)  for d, v in new_dim_sizes.items()],
-            key = lambda x: x[0]
-        )
-
-        orders = [np.argsort(dim_info[d.split('_')[-1]]['starts']) for d in ext_dims]
-
-        st_var_info = {
-            v: info for v, info in var_info.items() if 'fragment_' not in v
-        }
-        
-        # Identify the affected fragment components
-        extension_vars = []
-        for v, info in var_info.items():
-            for d in ext_dims:
-                if d in info['dims']:
-                    extension_vars.append(v)
-
-        # Perform ordering/concatenation for fragment components
-        for ev in extension_vars:
-
-            st_var_info[ev] = var_info[ev]
-            # Sort array components using index list
-            sorted_a = [[] for a in var_info[ev]['arr']]
-            for x, a in enumerate(var_info[ev]['arr']):
-
-                for nd in sorted_dim_sizes:
-                    if nd[1] in var_info[ev]['dims']:
-                        dominant_dim = nd[1]
-                        break
-
-                sorted_a[
-                    orders[ext_dims.index(dominant_dim)][x]
-                ] = a
-            
-            # Assumes they have been sorted - not necessarily the case
-            array = np.concatenate(
-                sorted_a,
-                axis=var_info[ev]['dims'].index(dominant_dim)
-            )
-
-            st_var_info[ev]['arr'] = array
-
-        # Writing part done as a second step as before.
-        # Need to perform any transformations to get to that stage.
-
-        # Define the fragment space
-        self.fragment_space = [v['f_size'] for v in dim_info.values() if 'f_size' in v]
-
-        # Assemble the location with correct dimensions
-        location = self._assemble_expanded_location(arranged_files, st_dim_info)
-        for coord, file in arranged_files.items():
-            newcoord = []
-            for x, c in enumerate(coord):
-                dx = orders[x].index(c)
-                newcoord.append(coord)
-            location[tuple(newcoord)] = file
-
-        self.global_attrs = global_attrs
-        self.dim_info   = st_dim_info
-        self.var_info   = st_var_info
-        self.location   = location
-    
-    def _assemble_expanded_location(arranged_files, orders):
-        """
-        Custom function for assembling location for these new file types.
-
-        Won't work like this because we need to reformat location
-        """
-        location = {}
-        for coord, file in arranged_files.items():
-            newcoord = []
-            for x, c in enumerate(coord):
-                dx = orders[x].index(c)
-                newcoord.append(coord)
-            location[tuple(newcoord)] = file
-        return location
-
 class CFACreateMixin:
     """
     Mixin class for ``Create`` methods for a CFA-netCDF dataset.
@@ -280,7 +122,11 @@ class CFACreateMixin:
                     if is_aggregated:
                         if 'sizes' not in dim_info[d]:
                             dim_info[d]['sizes'] = []
-                        dim_info[d]['sizes'].append(arr_components['sizes'])
+                        if 'starts' not in dim_info[d]:
+                            dim_info[d]['starts'] = []
+                        #dim_info[d]['sizes'].append(arr_components['sizes'])
+                        # This is to prevent the line 141 below triggering again.
+                        #dim_info[d]['starts'].append(arr_components['starts'])
                 else:
                     if is_aggregated and (dim_info[d] != {} or isinstance(dim_info[d], list)):
                         if not isinstance(dim_info[d], list):
@@ -305,7 +151,7 @@ class CFACreateMixin:
             for v in variables:
 
                 try:
-                    fill = ds[v].getncattr('_FillValue')
+                    fill = ds[v].get_fill_value()
                 except:
                     fill = None
 
@@ -715,7 +561,7 @@ class CFAWriteMixin:
 
         for dim, di in self.dim_info.items():
 
-            f_size   = di['f_size']
+            f_size   = di.get('f_size', None)
             dim_size = di['size']
 
             real_part = self.ds.createDimension(
@@ -723,10 +569,11 @@ class CFAWriteMixin:
                 dim_size
             )
 
-            frag_part = self.ds.createDimension(
-                f'f_{dim}',
-                f_size,
-            )
+            if f_size is not None:
+                frag_part = self.ds.createDimension(
+                    f'f_{dim}',
+                    f_size,
+                )
 
             f_dims[f'f_{dim}'] = f_size
 
@@ -953,9 +800,12 @@ class CFAWriteMixin:
                 logger.warning(err)
         
         if 'data' in meta:
-            var_arr[:] = meta['data']
+            if meta['dtype'] == str:
+                var_arr[:] = np.array(meta['data'], dtype=meta['dtype'])
+            else:
+                var_arr[:] = meta['data']
 
-class CFANetCDF(CFACreateMixin, CFAWriteMixin, CFACombineMixin):
+class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     """
     CFA-netCDF file constructor class, enables creation and 
@@ -1024,7 +874,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin, CFACombineMixin):
         arranged_files, global_attrs, var_info, dim_info = self._first_pass(agg_dims=agg_dims)
 
         if self.agg_combine:
-            self.combine(
+            self._combine(
                 arranged_files,
                 global_attrs,
                 var_info,
@@ -1089,6 +939,14 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin, CFACombineMixin):
 
             f_dims['versions'] = self.max_files
 
+        if self.agg_combine:
+
+            # Skip writing shapes
+
+            self._write_variables()
+            self.ds.close()
+            return
+
         self._write_shape_dims(f_dims)
         self._write_fragment_shapes()
         self._write_fragment_addresses()
@@ -1127,6 +985,178 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin, CFACombineMixin):
                 f'CF-1.{highest_conv}'
             )
         return delim.join(updated_conventions)
+
+    def _combine(self, arranged_files: tuple, global_attrs: dict, var_info: dict, dim_info: dict):
+        """
+        Combine arranged files according to their coordinates.
+
+        NOTE: Aggregation will be limited to dimensions that are already aggregated. i.e This 
+        feature will only work on files where aggregation dimensions are consistent (i.e extending dimensions).
+        
+        These functions must:
+        - Identify the dimension(s) that are being extended and identify the affected variables.
+        - Combine scalar dimensions `f_` if those dimensions are already greater than 1.
+        - Identify the affected fragment constructors (map, uris) and combine along the extending dimensions.
+        """
+        st_dim_info = {}
+        
+        # Identify Extending dimensions
+        ext_dims = []
+        for d, info in dim_info.items():
+
+            if not isinstance(info, list):
+                # Coordinate variables are not collected into a list
+                # Default value may be overridden by future construction
+
+                #st_dim_info[d] = info
+                #st_dim_info[d]['arrays'] = info['arrays'][0] 
+                continue
+
+            if 'f_' not in d:
+                if d not in st_dim_info:
+
+                    # Default value - reset using f_ numbers if needed
+                    if isinstance(info, list):
+                        if info[0]['size'] != info[-1]['size']:
+                            raise ValueError(
+                                'Aggregation not possible for differing non-aggregated values.'
+                            )
+                        st_dim_info[d] = info[0]
+                    else:
+                        st_dim_info[d] = info
+                    st_dim_info[d]['array'] = st_dim_info[d].get('arrays',None)
+
+                if 'map_' in d:
+                    # Constructor dimension - don't add more f_dims
+                    st_dim_info[d].pop('f_size')
+
+                continue
+
+            for fileinst in info:
+                if fileinst['size'] != 1:
+                    ext_dims.append(d)
+                    break
+
+            if d not in ext_dims:
+                # Non extending aggregation dimension
+                rd = d.split('_')[-1]
+                
+                # Skip coordinate dimensions here
+                if not isinstance(dim_info[rd], dict):
+                    if len(set([i['size'] for i in dim_info[rd]])) != 1:
+                        raise ValueError(
+                            f'Non-extending dimension {rd} differs in size between files'
+                        )
+                    st_dim_info[rd] = dim_info[rd][0]
+                else:
+                    st_dim_info[rd] = dim_info[rd]
+                    st_dim_info[rd]['array'] = st_dim_info[rd]['arrays'][0]
+                    if len(set(dim_info[rd]['sizes'])) != 1:
+                        raise ValueError(
+                            f'Non-extending dimension {rd} differs in size between files'
+                        )
+                    st_dim_info[rd]['size'] = dim_info[rd]['sizes'][0]
+                st_dim_info[rd]['f_size'] = info[0]['size']
+
+        new_dim_sizes = {}
+        for d in ext_dims:
+            real_dim = d.split('_')[-1]
+            new_dim_sizes[d] = sum([i['size'] for i in dim_info[d]])
+
+            # Dim info transformations for writing
+            st_dim_info[real_dim] = dim_info[real_dim]
+            st_dim_info[real_dim]['f_size'] = new_dim_sizes[d]
+            st_dim_info[real_dim]['size']   = sum(dim_info[real_dim]['sizes'])
+
+            # Sort array components using index list
+            sorted_a = [[] for a in dim_info[real_dim]['arrays']]
+            sorted_starts = np.argsort(dim_info[real_dim]['starts'])
+            for x, a in enumerate(dim_info[real_dim]['arrays']):
+
+                sorted_a[sorted_starts[x]] = a
+            
+            array = np.concatenate(
+                sorted_a,
+                axis=0
+            )
+
+            st_dim_info[real_dim]['array'] = array
+
+        
+        sorted_dim_sizes = sorted([
+            (v, d)  for d, v in new_dim_sizes.items()],
+            key = lambda x: x[0]
+        )
+
+        orders = [np.argsort(dim_info[d.split('_')[-1]]['starts']) for d in ext_dims]
+        
+        # Identify the affected fragment components
+        extension_vars = []
+        for v, info in var_info.items():
+            extended = False
+            for d in ext_dims:
+                if d in info['dims']:
+                    extension_vars.append(v)
+
+            if not extended:
+                var_info[v]['data'] = var_info[v]['arr'][0]
+
+        # Perform ordering/concatenation for fragment components
+        for ev in extension_vars:
+
+            # Sort array components using index list
+            sorted_a = [[] for a in var_info[ev]['arr']]
+            for x, a in enumerate(var_info[ev]['arr']):
+
+                for nd in sorted_dim_sizes:
+                    if nd[1] in var_info[ev]['dims']:
+                        dominant_dim = nd[1]
+                        break
+
+                sorted_a[
+                    orders[ext_dims.index(dominant_dim)][x]
+                ] = a
+            
+            # Assumes they have been sorted - not necessarily the case
+            array = np.concatenate(
+                sorted_a,
+                axis=var_info[ev]['dims'].index(dominant_dim)
+            )
+
+            if 'fragment_map_' in ev:
+
+                array = np.ma.masked_values(array, var_info[ev]['_FillValue'])
+                # Smooth paddings
+                for i, row in enumerate(array):
+                    premask = None
+                    gap = False
+                    for j, value in enumerate(row):
+                        if premask is None and not np.ma.is_masked(value):
+                            premask = value
+                        elif np.ma.is_masked(value):
+                            gap = True
+                        elif not np.ma.is_masked(value) and gap:
+                            if value == premask:
+                                array[i][j] = np.ma.masked
+                    
+            var_info[ev]['data'] = array
+
+        # Writing part done as a second step as before.
+        # Need to perform any transformations to get to that stage.
+
+        # Define the fragment space
+        self.fragment_space = [v['f_size'] for v in dim_info.values() if 'f_size' in v]
+
+        self.global_attrs = global_attrs
+        self.dim_info   = st_dim_info
+        self.var_info   = var_info
+
+    def _write_extension(self):
+        """
+        Stremlines writing extended `combined` file where certain arrangements are not needed.
+        """
+
+        pass
 
     def display_attrs(self):
         """

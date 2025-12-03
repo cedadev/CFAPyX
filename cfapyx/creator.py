@@ -52,15 +52,15 @@ class CFACreateMixin:
             all_dims = ds.dimensions.keys()
             all_vars = ds.variables.keys()
 
-            # Determine aggregation combine or fragment combine
+            # Determine if standard aggregation or fragment extension
             for v in all_vars:
                 if hasattr(ds[v],'aggregated_dimensions'):
                     is_aggregated = True
-                    if self.agg_combine is None:
-                        self.agg_combine = True
-                    elif not self.agg_combine:
+                    if self.agg_extend is None:
+                        self.agg_extend = True
+                    elif not self.agg_extend:
                         raise ValueError(
-                            'Mixed file types not allowed. Can only combine'
+                            'Mixed file types not allowed. Can only extend'
                             ' fragment sets or aggregation sets.'
                         )
 
@@ -179,14 +179,14 @@ class CFACreateMixin:
                 var_info = self._update_info(ds[v], var_info, new_info)
 
             # No variables in current file are aggregations
-            if self.agg_combine is None and not is_aggregated:
-                self.agg_combine = is_aggregated
+            if self.agg_extend is None and not is_aggregated:
+                self.agg_extend = is_aggregated
             
             # Any variables in current file are aggregated, while previous 
             # files were not.
-            if self.agg_combine != is_aggregated:
+            if self.agg_extend != is_aggregated:
                 raise ValueError(
-                    'Mixed file types not allowed. Can only combine'
+                    'Mixed file types not allowed. Can only extend'
                     ' fragment sets or aggregation sets.'
                 )
 
@@ -823,7 +823,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         the provided set of files. A custom concat message can also be set
         here if needed."""
 
-        self.agg_combine = None
+        self.agg_extend = None
 
         if isinstance(files, str):
             fileset = glob.glob(files)
@@ -873,8 +873,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         # First pass collect info
         arranged_files, global_attrs, var_info, dim_info = self._first_pass(agg_dims=agg_dims)
 
-        if self.agg_combine:
-            self._combine(
+        if self.agg_extend:
+            self._extend(
                 arranged_files,
                 global_attrs,
                 var_info,
@@ -939,7 +939,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
             f_dims['versions'] = self.max_files
 
-        if self.agg_combine:
+        if self.agg_extend:
 
             # Skip writing shapes
 
@@ -986,17 +986,17 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
             )
         return delim.join(updated_conventions)
 
-    def _combine(self, arranged_files: tuple, global_attrs: dict, var_info: dict, dim_info: dict):
+    def _extend(self, arranged_files: tuple, global_attrs: dict, var_info: dict, dim_info: dict):
         """
-        Combine arranged files according to their coordinates.
+        Extend arranged files according to their coordinates.
 
         NOTE: Aggregation will be limited to dimensions that are already aggregated. i.e This 
         feature will only work on files where aggregation dimensions are consistent (i.e extending dimensions).
         
         These functions must:
         - Identify the dimension(s) that are being extended and identify the affected variables.
-        - Combine scalar dimensions `f_` if those dimensions are already greater than 1.
-        - Identify the affected fragment constructors (map, uris) and combine along the extending dimensions.
+        - Extend scalar dimensions `f_` if those dimensions are already greater than 1.
+        - Identify the affected fragment constructors (map, uris) and extend along the extending dimensions.
         """
         st_dim_info = {}
         
@@ -1150,13 +1150,6 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         self.global_attrs = global_attrs
         self.dim_info   = st_dim_info
         self.var_info   = var_info
-
-    def _write_extension(self):
-        """
-        Stremlines writing extended `combined` file where certain arrangements are not needed.
-        """
-
-        pass
 
     def display_attrs(self):
         """

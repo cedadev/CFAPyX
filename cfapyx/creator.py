@@ -512,6 +512,7 @@ class CFACreateMixin:
         for correct values.
         """
 
+        first_time = False
         if attrs is None:
             first_time = True
             attrs = {}

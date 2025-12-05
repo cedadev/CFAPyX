@@ -538,7 +538,7 @@ class CFACreateMixin:
                     else:
                         attrs[attr] = ncattrs[attr]
                 except ValueError:
-                    # Typically numpy array comparisons.
+                    # Typically numpy array comparisons fail here.
                     attrs[attr] = self.concat_msg
         return attrs
 

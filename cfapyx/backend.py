@@ -21,7 +21,7 @@ logger.propagate = False
 def open_cfa_dataset(
         filename_or_obj,
         drop_variables=None,
-        mask_and_scale=None,
+        mask_and_scale=True,
         decode_times=True,
         concat_characters=None,
         decode_coords=None,
@@ -87,7 +87,7 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
             filename_or_obj,
             *,
             drop_variables=None,
-            mask_and_scale=None,
+            mask_and_scale=True,
             decode_times=True,
             concat_characters=None,
             decode_coords=None,

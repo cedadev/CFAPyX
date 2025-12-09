@@ -532,10 +532,14 @@ class CFACreateMixin:
                     if not np.array_equal(attrs[attr], ncattrs[attr]):
                         attrs[attr] = self.concat_msg
                     continue
-                if attrs[attr] != ncattrs[attr]:
+                try:
+                    if attrs.get(attr) != ncattrs.get(attr):
+                        attrs[attr] = self.concat_msg
+                    else:
+                        attrs[attr] = ncattrs[attr]
+                except ValueError:
+                    # Typically numpy array comparisons fail here.
                     attrs[attr] = self.concat_msg
-                else:
-                    attrs[attr] = ncattrs[attr]
         return attrs
 
 class CFAWriteMixin:

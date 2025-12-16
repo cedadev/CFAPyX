@@ -41,6 +41,14 @@ class TestCFARead:
         assert p_value.shape == ()
         assert abs(p_value.to_numpy() - 0.511954) < 0.01, "Pure Data Invalid"
 
+        p_indexed = ds['p'].isel(time=5,latitude=slice(140,145), longitude=slice(90,100))
+        
+        assert p_indexed.shape == (5,10), "Single Indexing Shape Failed"
+        assert p_indexed.dims == ('latitude','longitude'), "Single Indexing Dims Failed"
+
+        p_data = p_indexed.to_numpy()
+        assert p_data.shape == (5,10), "Single Indexing Data Shape Failed"
+
         print('Integration tests: Read(pure) - complete')
 
 if __name__ == '__main__':

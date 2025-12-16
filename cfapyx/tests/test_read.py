@@ -1,5 +1,7 @@
 # All routines for testing CFA general methods.
 import xarray as xr
+from cfapyx.utils import set_verbose
+set_verbose(2)
 
 TESTDIR = 'cfapyx/tests/test_space'
 

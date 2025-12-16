@@ -60,10 +60,12 @@ class CFAPartition(ArrayPartition):
         :param aggregated_calendar:     None
         """
 
-        super().__init__(filename, address, units=aggregated_units, **kwargs)
+         
         self.aggregated_units    = aggregated_units
         self.aggregated_calendar = aggregated_calendar
         self.global_extent = global_extent
+
+        super().__init__(filename, address, **kwargs)
 
     def reshape(self, shape, **kwargs):
         nparr = np.reshape(self.__array__(), shape)

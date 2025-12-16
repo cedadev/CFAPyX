@@ -59,6 +59,5 @@ def slice_to_shape(slice, dshape):
     logger.debug(f'Resolved: {start}, {stop}, {step}')
     logger.debug(f'Shape: {shape}')
 
-    # Always drop 1-dimensional shape elements
-    if shape != 1:
-        return shape
+    # Stopped drop 1-dimensional shape elements
+    return shape

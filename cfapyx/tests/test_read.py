@@ -9,7 +9,7 @@ class TestCFARead:
 
     def test_cfa_pure(self, testdir=TESTDIR):
 
-        FILE = f'{testdir}/testrain.nca'
+        FILE = f'{testdir}/testrain_1.12.nca'
 
         # Local testing: Add CFAPyX before tests
         try:

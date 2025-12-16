@@ -36,14 +36,14 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "arraypartition"
-version = "1.2.0"
+version = "1.3.0a0"
 description = "Container module for ArrayLike Partition class behaviour"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main"]
 files = [
-    {file = "arraypartition-1.2.0-py3-none-any.whl", hash = "sha256:ab38d83df9e249721b232371ac26c0a98169db0a861fddfd54d7f0bdcabb4826"},
-    {file = "arraypartition-1.2.0.tar.gz", hash = "sha256:d37fd606c274de53fcbaf557395b39f02719969d878d504eeeb32041c4621618"},
+    {file = "arraypartition-1.3.0a0-py3-none-any.whl", hash = "sha256:9144b4ce86475678c5085dbaf7c530314dc4bb58aeeea254c934dbc2fb28fe86"},
+    {file = "arraypartition-1.3.0a0.tar.gz", hash = "sha256:77c24f37b27f04e5308e378fdaf6433700ec454c009e3e29a0b0c8e5ba48a34a"},
 ]
 
 [package.dependencies]
@@ -73,7 +73,7 @@ description = "Backport of CPython tarfile module"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
-markers = "python_version == \"3.11\""
+markers = "python_version < \"3.12\""
 files = [
     {file = "backports.tarfile-1.2.0-py3-none-any.whl", hash = "sha256:77e284d754527b01fb1e6fa8a1afe577858ebe4e9dad8919e34c862cb399bc34"},
     {file = "backports_tarfile-1.2.0.tar.gz", hash = "sha256:d75e02c268746e1b8144c278978b6e98e85de6ad16f8e4b0844a154557eca991"},
@@ -804,7 +804,7 @@ description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
-markers = "python_version == \"3.11\""
+markers = "python_version < \"3.12\""
 files = [
     {file = "importlib_metadata-8.6.1-py3-none-any.whl", hash = "sha256:02a89390c1e15fdfdc0d7c6b25cb3e62650d0494005c97d6f148bf5b9787525e"},
     {file = "importlib_metadata-8.6.1.tar.gz", hash = "sha256:310b41d755445d74569f993ccfc22838295d9fe005425094fad953d7f15c8580"},
@@ -2251,7 +2251,7 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
-markers = "python_version == \"3.11\""
+markers = "python_version < \"3.12\""
 files = [
     {file = "zipp-3.21.0-py3-none-any.whl", hash = "sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931"},
     {file = "zipp-3.21.0.tar.gz", hash = "sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4"},
@@ -2381,4 +2381,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4.0"
-content-hash = "1e5393c39072c374ae070e8e2df8bcc7a67e0e1ac52a316de66bc0338a8da809"
+content-hash = "7f60506c5618706f28134b952d74a67801f03addec082a1f12d1211389d529d7"

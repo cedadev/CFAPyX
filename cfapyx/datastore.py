@@ -298,6 +298,7 @@ class CFADataStore(NetCDF4DataStore):
                     value    = self.ds.variables[agg_data['value']]
         subs = {}
         if hasattr(location, 'substitutions'):
+            # Fix version as to how this should be applied.
             subs = location.substitutions.replace('https://', 'https@//')
             subs = self._decode_feature_data(subs, readd={'https://':'https@//'})
 

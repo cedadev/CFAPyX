@@ -56,8 +56,8 @@ class VariableWrapper:
     def __getattr__(self, attr):
         try:
             return getattr(self._core_props, attr)
-        except:
-            raise AttributeError(f'No such attribute: "{attr}')
+        except Exception as _:
+            raise AttributeError(f'No such attribute: "{attr}"')
 
 
 class CFAGroupWrapper:
@@ -99,7 +99,7 @@ class CFAGroupWrapper:
                     var_sets.append(root.groups[part].variables)
                     ds_sets.append(root.groups[part])
                     root = root.groups[part]
-                except KeyError as e:
+                except KeyError:
                     raise ValueError(f'Group path "{part}" not found in this dataset.')
 
         return cls(var_sets, ds_sets)
@@ -121,7 +121,7 @@ class CFAGroupWrapper:
         for ds in self._ds_sets:
             try:
                 return ds.getncattr(k)
-            except:
+            except Exception:
                 pass
         raise AttributeError(f'Attribute "{k}" not found.')
 
@@ -137,6 +137,6 @@ class CFAGroupWrapper:
         for ds in self._ds_sets:
             try:
                 return getattr(ds, name)
-            except:
+            except Exception as _:
                 pass
         raise AttributeError(f'Attribute "{name}" not found.')

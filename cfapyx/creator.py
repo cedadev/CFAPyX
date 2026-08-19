@@ -4,7 +4,6 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import glob
 import logging
-from collections import OrderedDict
 
 import netCDF4
 import numpy as np
@@ -158,7 +157,8 @@ class CFACreateMixin:
             for v in variables:
                 try:
                     fill = ds[v].get_fill_value()
-                except:
+                except Exception as e:
+                    logger.info(f"Encountered error: {e} - using None for fill value")
                     fill = None
 
                 vdims = []
@@ -563,7 +563,7 @@ class CFAWriteMixin:
             real_part = self.ds.createDimension(dim, dim_size)
 
             if f_size is not None:
-                frag_part = self.ds.createDimension(
+                _ = self.ds.createDimension(
                     f"f_{dim}",
                     f_size,
                 )
@@ -601,7 +601,7 @@ class CFAWriteMixin:
 
         for var, meta in self.var_info.items():
             if "adims" not in meta:
-                variable = self._write_nonagg_variable(var, meta)
+                _ = self._write_nonagg_variable(var, meta)
             else:
                 agg_dims = " ".join(meta["dims"])
 
@@ -621,9 +621,7 @@ class CFAWriteMixin:
                     ]
                 )
 
-                variable = self._write_aggregated_variable(
-                    var, meta, agg_dims, agg_data
-                )
+                _ = self._write_aggregated_variable(var, meta, agg_dims, agg_data)
 
     def _write_fragment_addresses(self):
         """
@@ -643,7 +641,7 @@ class CFAWriteMixin:
             addr[:] = np.array(meta["identifiers"], dtype=str)
             addrs.append(addr)
 
-    def _write_shape_dims(self, f_dims: dict, substitutions: Union[dict, None] = None):
+    def _write_shape_dims(self, f_dims: dict, substitutions: dict | None = None):
         """
         Construct the shape and location dimensions for each
         combination of dimensions stored in ``cdim_opts``. This
@@ -652,7 +650,7 @@ class CFAWriteMixin:
         """
 
         for x, opt in enumerate(self.cdim_opts):
-            ndims = self.ds.createDimension(
+            _ = self.ds.createDimension(
                 f"map_{x}",
                 len(opt),
             )
@@ -797,7 +795,7 @@ class CFAWriteMixin:
                 logger.warning(err)
 
         if "data" in meta:
-            if meta["dtype"] == str:
+            if meta["dtype"] is str:
                 var_arr[:] = np.array(meta["data"], dtype=meta["dtype"])
             else:
                 var_arr[:] = meta["data"]
@@ -906,7 +904,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
     def write(
         self,
         outfile: str,
-        substitutions: Union[dict, None] = None,
+        substitutions: dict | None = None,
     ) -> None:
         """
         Use the accumulated dimension/variable info and attributes to
@@ -930,7 +928,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         f_dims = self._write_dimensions()
 
         if self.max_files > 1:
-            nfiles = self.ds.createDimension(
+            _ = self.ds.createDimension(
                 "versions",
                 self.max_files,
             )

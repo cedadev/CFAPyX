@@ -24,6 +24,7 @@ def get_fragment_positions(fragment_size_per_dim):
     :returns:       A list of tuples representing the positions of all the fragments in index space given by the
                     fragment_size_per_dim.
 
+
     """
     return product(*(range(len(sizes)) for sizes in fragment_size_per_dim))
 

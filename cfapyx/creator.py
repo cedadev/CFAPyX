@@ -100,7 +100,7 @@ class CFACreateMixin:
             ncattrs = {}
             for attr in ds.ncattrs():
                 ncattrs[attr] = ds.getncattr(attr)
-            global_attrs = self._accumulate_attrs(global_attrs, ncattrs)
+            global_attrs,_ = self._accumulate_attrs(global_attrs, ncattrs)
 
             ## Accumulate dimension info
             fcoord = []
@@ -295,7 +295,8 @@ class CFACreateMixin:
         is applied which usually indicates to inspect individual files for
         the correct value.
         """
-        
+        dtype_override = None
+
         id = ncattr_obj.name
         logger.debug(f'Concatenating information for {id}')
 
@@ -305,7 +306,7 @@ class CFACreateMixin:
                 attrs[attr] = ncattr_obj.getncattr(attr)
 
         if info[id] != {}:
-            info[id]['attrs'] = self._accumulate_attrs(info[id]['attrs'], attrs)
+            info[id]['attrs'], dtype_override = self._accumulate_attrs(info[id]['attrs'], attrs)
 
             for attr, value in new_info.items():
 
@@ -323,6 +324,9 @@ class CFACreateMixin:
         else:
             info[id] = new_info
             info[id]['attrs'] = attrs
+
+        if dtype_override is not None:
+            self.dtype_overrides[id] = dtype_override
 
         return info
 
@@ -504,7 +508,7 @@ class CFACreateMixin:
             logger.debug(f' - {tuple(c)}')
         return cdimopts
 
-    def _accumulate_attrs(self, attrs: dict, ncattrs: dict) -> dict:
+    def _accumulate_attrs(self, attrs: dict, ncattrs: dict) -> tuple:
         """
         Accumulate attributes from the new source and the existing set.
         Ignore fill value attributes as these are handled elsewhere. 
@@ -513,6 +517,8 @@ class CFACreateMixin:
         for correct values.
         """
 
+        dtype_override = None
+
         first_time = False
         if attrs is None:
             first_time = True
@@ -520,6 +526,15 @@ class CFACreateMixin:
 
         for attr in ncattrs.keys():
             if attr == '_FillValue':
+                continue
+
+            # Collect dtype for override
+            if attr == 'scale_factor':
+                attrs.pop('scale_factor',None)
+                dtype_override = ncattrs[attr].dtype
+                continue
+            if attr == 'add_offset':
+                attrs.pop('add_offset',None)
                 continue
 
             if attr not in attrs:
@@ -541,7 +556,7 @@ class CFACreateMixin:
                 except ValueError:
                     # Typically numpy array comparisons fail here.
                     attrs[attr] = self.concat_msg
-        return attrs
+        return attrs, dtype_override
 
 class CFAWriteMixin:
     
@@ -764,9 +779,13 @@ class CFAWriteMixin:
         have already been defined for the dataset by this point.
         """
 
+        dtype = meta['dtype']
+        if var in self.dtype_overrides:
+            dtype = self.dtype_overrides[var]
+
         var_arr = self.ds.createVariable(
             var,
-            meta['dtype'],
+            dtype,
             (),
             fill_value = meta.pop('_FillValue', None),
         )
@@ -796,9 +815,13 @@ class CFAWriteMixin:
         If this variable has some attributed data (which it should),
         the data is set for this variable in the new file."""
 
+        dtype = meta['dtype']
+        if var in self.dtype_overrides:
+            dtype = self.dtype_overrides[var]
+
         var_arr = self.ds.createVariable(
             var,
-            meta['dtype'],
+            dtype,
             meta['dims'],
             fill_value = meta.pop('_FillValue', None),
         )
@@ -865,6 +888,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         self.fragment_space = None
         self.location = None
         self.cdim_opts = None
+
+        self.dtype_overrides = {}
 
         self.concat_msg = concat_msg
 

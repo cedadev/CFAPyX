@@ -56,16 +56,20 @@ def open_cfa_dataset(
     cfa_options = cfa_options or {}
 
     # Load the CFA datastore from the provided file (object not supported).
-    store = CFADataStore.open(filename_or_obj, group=group)
+    store = CFADataStore.open(
+        filename_or_obj, 
+        group=group
+    )
 
     # Expands cfa_options into individual kwargs for the store.
     store.cfa_options = cfa_options
+    # Mask/scale decoding now done internally.
+    store.mask_and_scale = mask_and_scale
 
     # Xarray makes use of StoreBackendEntrypoints to provide the Dataset 'ds'
     store_entrypoint = CFAStoreBackendEntrypoint()
     ds = store_entrypoint.open_dataset(
         store,
-        mask_and_scale=mask_and_scale,
         decode_times=decode_times,
         concat_characters=concat_characters,
         decode_coords=decode_coords,
@@ -126,7 +130,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
     def open_dataset(
         self,
         cfa_xarray_store,
-        mask_and_scale=True,
         decode_times=True,
         concat_characters=True,
         decode_coords=True,
@@ -156,7 +159,6 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         vars, attrs, coord_names = conventions.decode_cf_variables(
             vars,
             attrs,
-            mask_and_scale=mask_and_scale,
             decode_times=decode_times,
             concat_characters=concat_characters,
             decode_coords=decode_coords,

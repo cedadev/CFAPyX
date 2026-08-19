@@ -42,6 +42,14 @@ class CFADataStore(NetCDF4DataStore):
     wrapper = FragmentArrayWrapper
 
     @property
+    def mask_and_scale(self):
+        return self._mask_and_scale
+    
+    @mask_and_scale.setter
+    def mask_and_scale(self, mask_and_scale):
+        self._mask_and_scale = mask_and_scale
+
+    @property
     def chunks(self):
         if hasattr(self,'_cfa_chunks'):
             return self._cfa_chunks
@@ -428,6 +436,7 @@ class CFADataStore(NetCDF4DataStore):
                 dtype=var.dtype,
                 cfa_options=self.cfa_options,
                 named_dims=dimensions,
+                mask_and_scale=self.mask_and_scale
             ))
             
         encoding = {}

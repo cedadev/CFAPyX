@@ -4,20 +4,19 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 import math
+
 from itertools import product
 from typing import Union
 
 import dask.array as da
 import numpy as np
 from arraypartition import ArrayLike, ArrayPartition
-from arraypartition.partition import (combine_slices, get_chunk_extent,
-                                      get_chunk_positions, get_chunk_shape,
-                                      get_chunk_space, get_dask_chunks,
+from arraypartition.partition import (combine_slices, get_chunk_positions,
+                                      get_dask_chunks,
                                       normalize_partition_chunks)
 from dask.array.core import getter
-from dask.array.reductions import numel
 from dask.base import tokenize
-from dask.utils import SerializableLock, is_arraylike
+from typing import Union
 
 from cfapyx.utils import slice_to_shape
 
@@ -123,7 +122,7 @@ class CFAPartition(ArrayPartition):
     def __array__(self, *args, **kwargs):
         a = super().__array__(*args, **kwargs)
         logger.debug(f'Partition Shape: {a.shape}')
-        logger.debug(f'Partition Dims: {getattr(a,'dims','Unknown')}')
+        logger.debug(f"Partition Dims: {getattr(a,'dims','Unknown')}")
         return a
 
 class FragmentArrayWrapper(ArrayLike):
@@ -144,8 +143,9 @@ class FragmentArrayWrapper(ArrayLike):
             shape, 
             units, 
             dtype, 
-            cfa_options: Union[dict,None] = None, 
+            cfa_options: dict = None, 
             named_dims: Union[list,None] = None,
+            mask_and_scale: bool = True,
         ):
         """
         Initialisation method for the FragmentArrayWrapper class
@@ -178,6 +178,8 @@ class FragmentArrayWrapper(ArrayLike):
         :returns: None
         """
 
+        cfa_options = cfa_options or {}
+
         self.fragment_info    = fragment_info
         self.fragment_space   = fragment_space
         self.named_dims       = named_dims
@@ -185,6 +187,9 @@ class FragmentArrayWrapper(ArrayLike):
         cfa_options = cfa_options or {}
         if 'storage_options' in cfa_options:
             self._storage_options = cfa_options.pop('storage_options')
+
+        self.mask_and_scale = mask_and_scale
+
 
         super().__init__(shape, dtype=dtype, units=units)
 
@@ -201,7 +206,7 @@ class FragmentArrayWrapper(ArrayLike):
         """
         a = self.__array__()[selection]
         logger.debug(f'Shape: {a.shape}')
-        logger.debug(f'Dims: {getattr(a,'dims','unknown')}')
+        logger.debug(f"Dims: {getattr(a,'dims','unknown')}")
         return a
 
         # Dropped this section
@@ -341,6 +346,7 @@ class FragmentArrayWrapper(ArrayLike):
                 named_dims=self.named_dims,
                 global_extent=global_extent,
                 storage_options=self._storage_options
+                mask_and_scale=self.mask_and_scale
             )
 
             fragments[pos] = fragment

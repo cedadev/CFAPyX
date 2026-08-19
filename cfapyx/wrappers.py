@@ -5,7 +5,6 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 import logging
 import math
 
-from itertools import product
 from typing import Union
 
 import dask.array as da
@@ -19,9 +18,7 @@ from arraypartition.partition import (
 )
 from dask.array.core import getter
 from dask.base import tokenize
-from typing import Union
 
-from cfapyx.utils import slice_to_shape
 
 logger = logging.getLogger(__name__)
 
@@ -213,22 +210,22 @@ class FragmentArrayWrapper(ArrayLike):
         # Dropped this section
         # Enforce correct reshaping - dask array here can sometimes not
         # auto-drop dimensions so reshaping is enforced.
-        new_shape = []
-        for aix in range(len(arr.shape)):
-            sdim = selection[aix]
-            if isinstance(sdim, slice):
-                ns = slice_to_shape(sdim, arr.shape[aix])
-                if ns is not None:
-                    new_shape.append(ns)
-            elif isinstance(sdim, int):
-                # Shape to 1
-                new_shape.append(1)
-            else:
-                # Retain shape
-                new_shape.append(arr.shape[aix])
-        new_shape = tuple(new_shape)
-        d = da.reshape(arr[tuple(selection)], new_shape)
-        return d
+        # new_shape = []
+        # for aix in range(len(arr.shape)):
+        #     sdim = selection[aix]
+        #     if isinstance(sdim, slice):
+        #         ns = slice_to_shape(sdim, arr.shape[aix])
+        #         if ns is not None:
+        #             new_shape.append(ns)
+        #     elif isinstance(sdim, int):
+        #         # Shape to 1
+        #         new_shape.append(1)
+        #     else:
+        #         # Retain shape
+        #         new_shape.append(arr.shape[aix])
+        # new_shape = tuple(new_shape)
+        # d = da.reshape(arr[tuple(selection)], new_shape)
+        # return d
 
     def __array__(self):
         """
@@ -305,7 +302,8 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _get_fragments(self) -> dict:
         """
-        Get the set of fragment objects to pass to dask."""
+        Get the set of fragment objects to pass to dask.
+        """
 
         dtype = self.dtype
         units = self.units
@@ -450,7 +448,7 @@ class FragmentArrayWrapper(ArrayLike):
                 if c < cumulative[0]:
                     cumul = cumulative[0]
                 else:
-                    cumul = max(filter(lambda l: l <= c, cumulative))
+                    cumul = max(filter(lambda iter: iter <= c, cumulative))
 
                 fc = np.where(cumulative == cumul)[0]
                 fragment_coord.append(int(fc.squeeze()))

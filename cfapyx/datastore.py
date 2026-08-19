@@ -15,9 +15,8 @@ from xarray.core.variable import Variable
 
 from cfapyx.decoder import get_fragment_extents, get_fragment_positions
 from cfapyx.group import CFAGroupWrapper
+from cfapyx.utils import CONVENTIONS, logstream
 from cfapyx.wrappers import FragmentArrayWrapper
-
-from cfapyx.utils import logstream, CONVENTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +144,8 @@ class CFADataStore(NetCDF4DataStore):
         if internal_convention is None:  # Correct error message.
             raise ValueError(
                 "CFA-netCDF file is not compliant with any known set of conventions. ",
-                "See https://cfconventions.org/cf-conventions/cf-conventions.html#aggregated-dimensions-and-data ",
+                "See https://cfconventions.org/cf-conventions/cf-conventions.html",
+                "#aggregated-dimensions-and-data ",
                 "for details on required features. ",
                 f'Received "{tuple(agg_data.keys())}"',
             )
@@ -184,7 +184,8 @@ class CFADataStore(NetCDF4DataStore):
         :param cformat:     (str) *Optional* ``format`` argument if provided by the
                             CFA-netCDF or cfa-options parameters. CFA-0.6.2
 
-        :param substitutions:   (dict) Set of substitutions to apply in the form 'base':'sub'
+        :param substitutions:   (dict) Set of substitutions to apply in the form
+            'base':'sub'
 
         :returns:       (fragment_info) A dictionary of fragment metadata where each
                         key is the coordinates of a fragment in index space and the

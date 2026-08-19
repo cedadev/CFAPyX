@@ -17,12 +17,13 @@ def get_fragment_positions(fragment_size_per_dim):
     """
     Get the positions in index space for each fragment.
 
-    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length
-                                        equal to the number of array dimensions, second dimension is a list of the
-                                        fragment sizes for the corresponding array dimension.
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension.
+        first dimension has length equal to the number of array dimensions, second
+        dimension is a list of the fragment sizes for the corresponding array
+        dimension.
 
-    :returns:       A list of tuples representing the positions of all the fragments in index space given by the
-                    fragment_size_per_dim.
+    :returns:       A list of tuples representing the positions of all the fragments in
+        index space given by the fragment_size_per_dim.
 
 
     """
@@ -31,20 +32,24 @@ def get_fragment_positions(fragment_size_per_dim):
 
 def get_fragment_extents(fragment_size_per_dim, array_shape):
     """
-    Return descriptors for every fragment. Copied from cf-python version 3.14.0 onwards.
+    Return descriptors for every fragment. Copied from cf-python version 3.14.0
+    onwards.
 
-    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length
-                                        equal to the number of array dimensions, second dimension is a list of the
-                                        fragment sizes for the corresponding array dimension.
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension.
+        first dimension has length equal to the number of array dimensions, second
+        dimension is a list of the fragment sizes for the corresponding array
+        dimension.
 
-    :param array_shape:             (tuple) The shape of the total array in ``array space``.
+    :param array_shape:             (tuple) The shape of the total array in
+        ``array space``.
 
     :returns:
 
-            global_extents - The array of slice objects for each fragment which define where the fragment
-                             slots into the total array.
+            global_extents - The array of slice objects for each fragment which
+                define where the fragment slots into the total array.
 
-            extents - The extents to be applied to each fragment, usually just the whole fragment array.
+            extents - The extents to be applied to each fragment, usually just the
+                whole fragment array.
 
             shapes - The shape of each fragment in ``array space``.
 

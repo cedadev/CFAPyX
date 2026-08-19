@@ -4,7 +4,6 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 import math
-
 from typing import Union
 
 import dask.array as da
@@ -19,14 +18,13 @@ from arraypartition.partition import (
 from dask.array.core import getter
 from dask.base import tokenize
 
-
 logger = logging.getLogger(__name__)
 
 
 class CFAPartition(ArrayPartition):
     """
-    Wrapper object for a CFA Partition, extends the basic ArrayPartition with CFA-specific
-    methods.
+    Wrapper object for a CFA Partition, extends the basic ArrayPartition with
+    CFA-specific methods.
     """
 
     description = "Wrapper object for a CFA Partition (Fragment or Chunk)"
@@ -53,8 +51,9 @@ class CFAPartition(ArrayPartition):
             Fragment file, may include a group hierarchy structure.
 
         :param aggregated_units:    (obj) The expected units for the received data.
-            If the units of the received data are not equal to the ``aggregated_units``
-            then the data is 'post-processed' using the cfunits ``conform`` function.
+            If the units of the received data are not equal to the
+            ``aggregated_units`` then the data is 'post-processed' using the
+            cfunits ``conform`` function.
 
         :param aggregated_calendar:     None
         """
@@ -103,7 +102,8 @@ class CFAPartition(ArrayPartition):
             except FileNotFoundError:
                 raise ValueError(
                     'Encountered issue when trying to import the "cfunits" library:'
-                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' library."
+                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' "
+                    "library."
                     " - Consider setting up a conda environment, and installing "
                     "`conda install -c conda-forge udunits2`"
                 )
@@ -149,30 +149,35 @@ class FragmentArrayWrapper(ArrayLike):
         """
         Initialisation method for the FragmentArrayWrapper class
 
-        :param fragment_info:   (dict) The information relating to each fragment with the
-            fragment coordinates in ``fragment space`` as the key. Each
-            fragment is described by the following:
+        :param fragment_info:   (dict) The information relating to each fragment
+            with the fragment coordinates in ``fragment space`` as the key.
+            Each fragment is described by the following:
             - ``shape`` - The shape of the fragment in ``array space``.
             - ``location`` - The file from which this fragment originates.
             - ``address`` - The variable and group name relating to this variable.
-            - ``extent`` - The slice object to apply to the fragment on retrieval (usually get
-            the whole array)
-            - ``global_extent`` - The slice object that equates to a particular fragment out
-            of the whole array (in ``array space``).
+            - ``extent`` - The slice object to apply to the fragment on retrieval
+            (usually get the whole array)
+            - ``global_extent`` - The slice object that equates to a particular
+            fragment out of the whole array (in ``array space``).
 
-        :param fragment_space:      (tuple) The coordinate system that refers to individual
-                                    fragments. Each coordinate eg. i, j, k refers to the
-                                    number of fragments in each of the associated dimensions.
+        :param fragment_space:      (tuple) The coordinate system that refers to
+            individual fragments. Each coordinate eg. i, j, k refers to the
+            number of fragments in each of the associated dimensions.
 
-        :param shape:               (tuple) The total shape of the array in ``array space``
+        :param shape:               (tuple) The total shape of the array in
+            ``array space``
 
-        :param units:       (obj) The units of the values represented in this Array-like class.
+        :param units:       (obj) The units of the values represented in this
+            Array-like class.
 
-        :param dtype:       (obj) The datatype of the values represented in this Array-like class.
+        :param dtype:       (obj) The datatype of the values represented in this
+            Array-like class.
 
-        :param cfa_options:     (dict) The set of options defining some specific decoding behaviour.
+        :param cfa_options:     (dict) The set of options defining some specific
+            decoding behaviour.
 
-        :param named_dims:  (list) The set of dimension names that apply to this Array object.
+        :param named_dims:  (list) The set of dimension names that apply to this Array
+            object.
 
         :returns: None
         """
@@ -229,9 +234,10 @@ class FragmentArrayWrapper(ArrayLike):
 
     def __array__(self):
         """
-        Non-lazy array construction, this will occur as soon as the instance is ``indexed``
-        or any other ``array`` behaviour is attempted. Construction of a Dask-like array
-        occurs here based on the decoded fragment info and any other specified settings.
+        Non-lazy array construction, this will occur as soon as the instance is
+        ``indexed`` or any other ``array`` behaviour is attempted. Construction of a
+        Dask-like array occurs here based on the decoded fragment info and any other
+        specified settings.
         """
 
         array_name = (f"{self.__class__.__name__}-{tokenize(self)}",)
@@ -268,7 +274,8 @@ class FragmentArrayWrapper(ArrayLike):
     @property
     def cfa_options(self):
         """
-        Relates private option variables to the ``cfa_options`` parameter of the backend.
+        Relates private option variables to the ``cfa_options`` parameter of the
+        backend.
         """
 
         return {
@@ -291,7 +298,9 @@ class FragmentArrayWrapper(ArrayLike):
         **kwargs,
     ):
         """
-        Sets the private variables referred by the ``cfa_options`` parameter to the backend.
+        Sets the private variables referred by the ``cfa_options`` parameter to the
+        backend.
+
         Ignores additional kwargs.
         """
 
@@ -354,8 +363,8 @@ class FragmentArrayWrapper(ArrayLike):
     def _optimise_chunks(self):
         """
         Replace the keyword ``optimised`` in the provided chunks with a chunk size for
-        the specified dimension that will be most optimised. The optimal chunk sizes are such
-        that the number of chunks is close to a power of 2."""
+        the specified dimension that will be most optimised. The optimal chunk sizes
+        are such that the number of chunks is close to a power of 2."""
 
         auto_chunks = {}
         for c in self.chunks:
@@ -369,8 +378,8 @@ class FragmentArrayWrapper(ArrayLike):
         )
 
         # For each 'optimised' dimension, take the log2 of the number of chunks (len)
-        # and round to the nearest integer. Divide the array length by 2^(this number) and
-        # round again to give the optimised chunk size for that dimension.
+        # and round to the nearest integer. Divide the array length by 2^(this number)
+        # and round again to give the optimised chunk size for that dimension.
 
         for x, nd in enumerate(self.named_dims):
             if nd not in self.chunks:
@@ -387,14 +396,16 @@ class FragmentArrayWrapper(ArrayLike):
     def _create_partitions(self, fragments):
         """
         Creates a partition structure that falls along the existing fragment boundaries.
-        This is done by simply chunking each fragment given the user provided chunks, rather
-        than the whole array, because user provided chunk sizes apply to each fragment equally.
 
-        :param fragments:       (dict) The set of fragment objects (CFAPartitions) in ``fragment space``
-            before any chunking is applied.
+        This is done by simply chunking each fragment given the user provided chunks,
+        rather than the whole array, because user provided chunk sizes apply to each
+        fragment equally.
 
-        :returns:   The set of dask chunks to provide to dask when building the array and the corresponding
-            set of copied fragment objects for each partition.
+        :param fragments:       (dict) The set of fragment objects (CFAPartitions) in
+            ``fragment space`` before any chunking is applied.
+
+        :returns:   The set of dask chunks to provide to dask when building the array
+            and the corresponding set of copied fragment objects for each partition.
         """
         if "optimised" in self.chunks.items():
             # Running on standard dask chunking mode.
@@ -468,8 +479,8 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _assemble_dsk_dict(self, partitions, array_name):
         """
-        Assemble the base ``dsk`` task dependency graph which includes the fragment objects
-        plus the method to index each object (with locking).
+        Assemble the base ``dsk`` task dependency graph which includes the fragment
+        objects plus the method to index each object (with locking).
 
         :param partitions:   (dict) The set of partition objects (CFAPartition) with
             their positions in the relevant ``space``.

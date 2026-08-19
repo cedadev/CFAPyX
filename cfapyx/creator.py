@@ -202,8 +202,8 @@ class CFACreateMixin:
 
     def _second_pass(self, var_info: dict, non_aggregated: list) -> dict:
         """
-        Second pass through a subset of the files (2) to collect non-aggregated variables
-        which will be stored in the CFA file.
+        Second pass through a subset of the files (2) to collect non-aggregated
+        variables which will be stored in the CFA file.
         """
 
         logger.info("Performing a second pass on a subset of files.")
@@ -222,7 +222,8 @@ class CFACreateMixin:
                 else:
                     if not np.array_equal(new_values, var_info[v]["data"]):
                         raise ValueError(
-                            f'Non-aggregated variable "{v}" differs between sample files.'
+                            f'Non-aggregated variable "{v}" differs between sample '
+                            "files."
                         )
         return var_info
 
@@ -985,13 +986,16 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         """
         Extend arranged files according to their coordinates.
 
-        NOTE: Aggregation will be limited to dimensions that are already aggregated. i.e This
-        feature will only work on files where aggregation dimensions are consistent (i.e extending dimensions).
+        NOTE: Aggregation will be limited to dimensions that are already aggregated.
+        i.e This feature will only work on files where aggregation dimensions are
+        consistent (i.e extending dimensions).
 
         These functions must:
-        - Identify the dimension(s) that are being extended and identify the affected variables.
+        - Identify the dimension(s) that are being extended and identify the affected
+        variables.
         - Extend scalar dimensions `f_` if those dimensions are already greater than 1.
-        - Identify the affected fragment constructors (map, uris) and extend along the extending dimensions.
+        - Identify the affected fragment constructors (map, uris) and extend along the
+        extending dimensions.
         """
         st_dim_info = {}
 
@@ -1012,7 +1016,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
                     if isinstance(info, list):
                         if info[0]["size"] != info[-1]["size"]:
                             raise ValueError(
-                                "Aggregation not possible for differing non-aggregated values."
+                                "Aggregation not possible for differing non-aggregated "
+                                "values."
                             )
                         st_dim_info[d] = info[0]
                     else:
@@ -1038,7 +1043,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
                 if not isinstance(dim_info[rd], dict):
                     if len(set([i["size"] for i in dim_info[rd]])) != 1:
                         raise ValueError(
-                            f"Non-extending dimension {rd} differs in size between files"
+                            f"Non-extending dimension {rd} differs in size between "
+                            "files"
                         )
                     st_dim_info[rd] = dim_info[rd][0]
                 else:
@@ -1046,7 +1052,8 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
                     st_dim_info[rd]["array"] = st_dim_info[rd]["arrays"][0]
                     if len(set(dim_info[rd]["sizes"])) != 1:
                         raise ValueError(
-                            f"Non-extending dimension {rd} differs in size between files"
+                            f"Non-extending dimension {rd} differs in size between "
+                            "files"
                         )
                     st_dim_info[rd]["size"] = dim_info[rd]["sizes"][0]
                 st_dim_info[rd]["f_size"] = info[0]["size"]

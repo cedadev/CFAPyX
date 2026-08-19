@@ -10,7 +10,6 @@ from xarray.backends.common import AbstractDataStore
 from xarray.core.dataset import Dataset
 
 from cfapyx.datastore import CFADataStore
-
 from cfapyx.utils import logstream
 
 logger = logging.getLogger(__name__)
@@ -35,23 +34,25 @@ def open_cfa_dataset(
     Top-level function which opens a CFA dataset using Xarray.
 
     Creates a CFA Datastore
-    from the ``filename_or_obj`` provided, then passes this to a CFA StoreBackendEntrypoint
-    to create an Xarray Dataset. Most parameters are not handled by CFA, so only the
-    CFA-relevant ones are described here.
+    from the ``filename_or_obj`` provided, then passes this to a CFA
+    StoreBackendEntrypoint to create an Xarray Dataset. Most parameters are
+    not handled by CFA, so only the CFA-relevant ones are described here.
 
-    :param filename_or_obj:       (str) The path to a CFA-netCDF file to be opened by Xarray
+    :param filename_or_obj:       (str) The path to a CFA-netCDF file to be
+        opened by Xarray
 
-    :param cfa_options:           (dict) A set of kwargs provided to CFA which provide additional
-                                  configurations. Currently implemented are: substitutions (dict),
-                                  decode_cfa (bool)
+    :param cfa_options:           (dict) A set of kwargs provided to CFA which
+        provide additional configurations. Currently implemented are:
+        substitutions (dict), decode_cfa (bool)
 
-    :param group:                 (str) The name or path to a NetCDF group. CFA can handle opening
-                                  from specific groups and will inherit both ``group`` and ``global``
-                                  dimensions/attributes.
+    :param group:                 (str) The name or path to a NetCDF group.
+        CFA can handle opening from specific groups and will inherit both
+        ``group`` and ``global`` dimensions/attributes.
 
-    :returns:       An xarray.Dataset object composed of xarray.DataArray objects representing the different
-                    NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
-                    parameter in ``cfa_options`` is false.
+    :returns:       An xarray.Dataset object composed of xarray.DataArray objects
+        representing the different NetCDF variables and dimensions. CFA aggregated
+        variables are decoded unless the ``decode_cfa`` parameter in ``cfa_options``
+        is false.
     """
 
     cfa_options = cfa_options or {}
@@ -102,8 +103,8 @@ class CFANetCDFBackendEntrypoint(BackendEntrypoint):
         # do not use 'chunks' or 'cache' here
     ):
         """
-        Returns a complete xarray representation of a CFA-netCDF dataset which includes expanding/decoding
-        CFA aggregated variables into proper arrays.
+        Returns a complete xarray representation of a CFA-netCDF dataset which
+        includes expanding/decoding CFA aggregated variables into proper arrays.
         """
 
         cfa_options = cfa_options or {}
@@ -139,15 +140,17 @@ class CFAStoreBackendEntrypoint(StoreBackendEntrypoint):
         decode_timedelta=None,
     ) -> Dataset:
         """
-        Takes cfa_xarray_store of type AbstractDataStore and creates an xarray.Dataset object.
-        Most parameters are not handled by CFA, so only the CFA-relevant ones are described here.
+        Takes cfa_xarray_store of type AbstractDataStore and creates an
+        xarray.Dataset object. Most parameters are not handled by CFA, so only the
+        CFA-relevant ones are described here.
 
-        :param cfa_xarray_store:        (obj) The CFA Datastore object which loads and decodes CFA
-                                        aggregated variables and dimensions.
+        :param cfa_xarray_store:        (obj) The CFA Datastore object which
+            loads and decodes CFA aggregated variables and dimensions.
 
-        :returns:           An xarray.Dataset object composed of xarray.DataArray objects representing the different
-                            NetCDF variables and dimensions. CFA aggregated variables are decoded unless the ``decode_cfa``
-                            parameter in ``cfa_options`` is false.
+        :returns:           An xarray.Dataset object composed of xarray.DataArray
+            objects representing the different NetCDF variables and dimensions.
+            CFA aggregated variables are decoded unless the ``decode_cfa``
+            parameter in ``cfa_options`` is false.
 
         """
         assert isinstance(cfa_xarray_store, AbstractDataStore)

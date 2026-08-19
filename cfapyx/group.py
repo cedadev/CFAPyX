@@ -14,13 +14,14 @@ logger.propagate = False
 
 class VariableWrapper:
     """
-    Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can handle
-    either ``global`` or ``group`` based variables .
+    Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can
+    handle  either ``global`` or ``group`` based variables .
     """
 
     def __init__(self, prop_sets):
 
-        # Note: core_ds refers to either the group, or the global ds if there is no group requested.
+        # Note: core_ds refers to either the group, or the global ds if there is no
+        # group requested.
 
         self._core_props = prop_sets[0]
 
@@ -46,7 +47,8 @@ class VariableWrapper:
 
     def keys(self):
         """
-        Requesting the set of keys should return the set of both keys combined in a ``dict_keys`` object.
+        Requesting the set of keys should return the set of both keys combined in a
+        ``dict_keys`` object.
         """
         return self._properties.keys()
 

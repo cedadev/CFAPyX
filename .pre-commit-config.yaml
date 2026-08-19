@@ -5,8 +5,6 @@ ci:
   autofix_prs: false
 
 exclude: |
-  (?x)
-  .readthedocs.yaml|
   ^.github/|
   ^docs/|
   ^issues/|

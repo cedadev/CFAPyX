@@ -32,8 +32,8 @@ jobs:
           poetry install --with dev
       - name: Run pre-commit with ruff
         run: |
-          pre-commit install
-          pre-commit run -a
+          poetry run pre-commit install
+          poetry run pre-commit run -a
       - name: Run pytest
         run: |
           poetry run pytest

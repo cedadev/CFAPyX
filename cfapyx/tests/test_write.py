@@ -1,7 +1,6 @@
-import logging
+import xarray as xr
 
 from cfapyx import CFANetCDF
-import xarray as xr
 
 TESTDIR = "cfapyx/tests/test_space"
 

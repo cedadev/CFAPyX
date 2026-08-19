@@ -19,6 +19,8 @@ from dask.array.reductions import numel
 from dask.base import tokenize
 from dask.utils import SerializableLock, is_arraylike
 
+from cfapyx.utils import slice_to_shape
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,10 +61,17 @@ class CFAPartition(ArrayPartition):
         :param aggregated_calendar:     None
         """
 
-        super().__init__(filename, address, units=aggregated_units, **kwargs)
+         
         self.aggregated_units    = aggregated_units
         self.aggregated_calendar = aggregated_calendar
         self.global_extent = global_extent
+
+        super().__init__(filename, address, **kwargs)
+
+    def reshape(self, shape, **kwargs):
+        nparr = np.reshape(self.__array__(), shape)
+        logger.debug(f'Reshape: {nparr.shape}')
+        return nparr
 
     def copy(self, extent=None):
         """
@@ -110,6 +119,12 @@ class CFAPartition(ArrayPartition):
             'aggregated_units': self.aggregated_units,
             'aggregated_calendar': self.aggregated_calendar
         } | super().get_kwargs()
+    
+    def __array__(self, *args, **kwargs):
+        a = super().__array__(*args, **kwargs)
+        logger.debug(f'Partition Shape: {a.shape}')
+        logger.debug(f'Partition Dims: {getattr(a,'dims','Unknown')}')
+        return a
 
 class FragmentArrayWrapper(ArrayLike):
     """
@@ -184,8 +199,31 @@ class FragmentArrayWrapper(ArrayLike):
         """
         Non-lazy retrieval of the dask array when this object is indexed.
         """
-        arr = self.__array__()
-        return arr[tuple(selection)]
+        a = self.__array__()[selection]
+        logger.debug(f'Shape: {a.shape}')
+        logger.debug(f'Dims: {getattr(a,'dims','unknown')}')
+        return a
+
+        # Dropped this section
+        # Enforce correct reshaping - dask array here can sometimes not
+        # auto-drop dimensions so reshaping is enforced.
+        new_shape=[]
+        for aix in range(len(arr.shape)):
+            sdim = selection[aix]
+            if isinstance(sdim, slice):
+                ns = slice_to_shape(sdim, arr.shape[aix])
+                if ns is not None:
+                    new_shape.append(ns)
+            elif isinstance(sdim, int):
+                # Shape to 1
+                new_shape.append(1)
+            else:
+                # Retain shape
+                new_shape.append(arr.shape[aix])
+        new_shape = tuple(new_shape)
+        d = da.reshape(arr[tuple(selection)], new_shape)
+        return d
+
     
     def __array__(self):
         """

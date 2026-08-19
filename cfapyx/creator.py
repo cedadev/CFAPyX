@@ -29,7 +29,7 @@ class CFACreateMixin:
         attributes and information on all variables and dimensions into 
         separate python dictionaries. Also collects the set of files arranged
         by aggregated dimension coordinates, to be used later in constructing
-        the CFA ``fragment_location`` properties.
+        the CFA ``fragment_uris`` properties.
         """
 
         logger.info('Performing first pass on the set of files.')
@@ -41,6 +41,7 @@ class CFACreateMixin:
 
         ## First Pass - Determine dimensions
         for x, file in enumerate(self.files):
+            is_aggregated = False
             logger.info(f'First pass: File {x+1}/{len(self.files)}')
 
             ds = self._call_file(file)
@@ -50,6 +51,18 @@ class CFACreateMixin:
             
             all_dims = ds.dimensions.keys()
             all_vars = ds.variables.keys()
+
+            # Determine if standard aggregation or fragment extension
+            for v in all_vars:
+                if hasattr(ds[v],'aggregated_dimensions'):
+                    is_aggregated = True
+                    if self.agg_extend is None:
+                        self.agg_extend = True
+                    elif not self.agg_extend:
+                        raise ValueError(
+                            'Mixed file types not allowed. Can only extend'
+                            ' fragment sets or aggregation sets.'
+                        )
 
             coord_variables = []
             pure_dimensions = []
@@ -71,6 +84,7 @@ class CFACreateMixin:
             if not var_info:
                 var_info = {v: {} for v in variables}
                     
+            # Should be consistent across fragments or aggregation files
             logger.info(f'Coordinate variables: {coord_variables}')
             logger.info(f'Pure dimensions: {pure_dimensions}')
             logger.info(f'Variables: {variables}')
@@ -102,7 +116,24 @@ class CFACreateMixin:
                     ds, d, pure_dimensions, coord_variables, 
                     agg_dims=agg_dims, first_time=first_time)
                 
-                dim_info = self._update_info(ds.dimensions[d], dim_info, new_info)
+                if new_info['type'] == 'coord':
+                    # Only coordinate dimensions can have attributes
+                    dim_info = self._update_info(ds[d], dim_info, new_info)
+                    if is_aggregated:
+                        if 'sizes' not in dim_info[d]:
+                            dim_info[d]['sizes'] = []
+                        if 'starts' not in dim_info[d]:
+                            dim_info[d]['starts'] = []
+                        #dim_info[d]['sizes'].append(arr_components['sizes'])
+                        # This is to prevent the line 141 below triggering again.
+                        #dim_info[d]['starts'].append(arr_components['starts'])
+                else:
+                    if is_aggregated and (dim_info[d] != {} or isinstance(dim_info[d], list)):
+                        if not isinstance(dim_info[d], list):
+                            dim_info[d] = [dim_info[d]]
+                        dim_info[d].append(new_info)
+                    else:
+                        dim_info[d] = new_info
 
                 if arr_components is not None:
                     if first_time:
@@ -120,7 +151,7 @@ class CFACreateMixin:
             for v in variables:
 
                 try:
-                    fill = ds[v].getncattr('_FillValue')
+                    fill = ds[v].get_fill_value()
                 except:
                     fill = None
 
@@ -133,11 +164,31 @@ class CFACreateMixin:
                     'dtype': np.dtype(ds[v].dtype),
                     'dims' : tuple(ds[v].dimensions),
                     'cdims': vdims,
-                    'address': v, # Or match with replacement,
+                    'identifiers': v, # Or match with replacement,
                     '_FillValue': fill,
                 }
 
-                var_info = self._update_info(ds.variables[v], var_info, new_info)
+                if is_aggregated:
+                    # Special handling for extraction of string variables
+                    # Easier to keep numpy arrays separate if they are wrapped in lists
+                    if ds[v].size == 1:
+                        new_info['arr'] = [np.array(ds[v][0], dtype=ds[v].dtype)]
+                    else:
+                        new_info['arr'] = [np.array(list(ds[v]), dtype=ds[v].dtype)]
+
+                var_info = self._update_info(ds[v], var_info, new_info)
+
+            # No variables in current file are aggregations
+            if self.agg_extend is None and not is_aggregated:
+                self.agg_extend = is_aggregated
+            
+            # Any variables in current file are aggregated, while previous 
+            # files were not.
+            if self.agg_extend != is_aggregated:
+                raise ValueError(
+                    'Mixed file types not allowed. Can only extend'
+                    ' fragment sets or aggregation sets.'
+                )
 
             arranged_files[tuple(fcoord)] = file
 
@@ -160,7 +211,7 @@ class CFACreateMixin:
         for x, file in enumerate(second_set):
             logger.info(f'Second pass: File {x+1}/{len(self.files)}')
 
-            ds = self._call_file(file) # Ideally don't want to do this twice.
+            ds = self._call_file(file) # Typically have to do this twice.
 
             for v in non_aggregated:
                 new_values = np.array(ds.variables[v])
@@ -257,7 +308,12 @@ class CFACreateMixin:
             info[id]['attrs'] = self._accumulate_attrs(info[id]['attrs'], attrs)
 
             for attr, value in new_info.items():
-                if value != info[id][attr]:
+
+                if attr == 'arr':
+                    if 'arr' not in info[id]:
+                        info[id]['arr'] = []
+                    info[id]['arr'] += value
+                elif value != info[id][attr]:
                     if np.isnan(value) and np.isnan(info[id][attr]):
                         pass
                     else:
@@ -301,6 +357,7 @@ class CFACreateMixin:
             if len(starts) == 1:
                 cdimarr = arrays[0]
                 ndimsizes = (sizes[0],)
+                nstarts = starts[0]
 
             else:
 
@@ -349,14 +406,14 @@ class CFACreateMixin:
         ) -> dict:
 
         """
-        Assemble the base CFA ``fragment_location`` from which all the 
+        Assemble the base CFA ``fragment_uris`` from which all the 
         locations for different variables are derived. Locations are defined
         by the number of dimensions, and follow the same pattern for definition
-        as the ``fragment_shapes``. The combinations of dimensions that
-        require their own ``location`` and ``shape`` are recorded in ``cdim_opts``.
+        as the ``fragment_map``. The combinations of dimensions that
+        require their own ``uris`` and ``map`` are recorded in ``cdim_opts``.
         """
 
-        logger.debug('Assembling the location variable')
+        logger.debug('Assembling the uris variable')
 
         # Define the location space
         location_space      = tuple(i for i in self.fragment_space if i > 1)
@@ -430,7 +487,7 @@ class CFACreateMixin:
         """
         Determine the combinations of dimensions from the information
         around each variable. Each combination requires a different 
-        ``location`` and ``shape`` fragment array variable in the final
+        ``uris`` and ``map`` fragment array variable in the final
         CFA-netCDF file.
         """
 
@@ -456,6 +513,7 @@ class CFACreateMixin:
         for correct values.
         """
 
+        first_time = False
         if attrs is None:
             first_time = True
             attrs = {}
@@ -475,10 +533,14 @@ class CFACreateMixin:
                     if not np.array_equal(attrs[attr], ncattrs[attr]):
                         attrs[attr] = self.concat_msg
                     continue
-                if attrs[attr] != ncattrs[attr]:
+                try:
+                    if attrs.get(attr) != ncattrs.get(attr):
+                        attrs[attr] = self.concat_msg
+                    else:
+                        attrs[attr] = ncattrs[attr]
+                except ValueError:
+                    # Typically numpy array comparisons fail here.
                     attrs[attr] = self.concat_msg
-                else:
-                    attrs[attr] = ncattrs[attr]
         return attrs
 
 class CFAWriteMixin:
@@ -505,7 +567,7 @@ class CFAWriteMixin:
 
         for dim, di in self.dim_info.items():
 
-            f_size   = di['f_size']
+            f_size   = di.get('f_size', None)
             dim_size = di['size']
 
             real_part = self.ds.createDimension(
@@ -513,18 +575,23 @@ class CFAWriteMixin:
                 dim_size
             )
 
-            frag_part = self.ds.createDimension(
-                f'f_{dim}',
-                f_size,
-            )
+            if f_size is not None:
+                frag_part = self.ds.createDimension(
+                    f'f_{dim}',
+                    f_size,
+                )
 
             f_dims[f'f_{dim}'] = f_size
 
             if di['type'] == 'coord':
+                create_kwargs = {}
+                if '_FillValue' in di['attrs']:
+                    create_kwargs['fill_value'] = di['attrs'].pop('_FillValue')
                 axis_var = self.ds.createVariable(
                     dim,
                     di['dtype'],
                     (dim,), # Link to coord dimension
+                    **create_kwargs
                 )
                 for k, v in di['attrs'].items():
                     axis_var.setncattr(k, v)
@@ -532,7 +599,7 @@ class CFAWriteMixin:
                 axis_var[:] = di['array']
         
             else:
-                for k, v in di['attrs'].items():
+                for k, v in di.get('attrs',{}).items():
                     real_part.setncattr(k, v)
 
         return f_dims
@@ -564,16 +631,16 @@ class CFAWriteMixin:
                     )
 
                 agg_data = ' '.join([
-                    f'location: fragment_location_{num}',
-                    f'address: fragment_address_{var}',
-                    f'shape: fragment_shape_{num}'
+                    f'uris: fragment_uris_{num}',
+                    f'identifiers: fragment_identifiers_{var}',
+                    f'map: fragment_map_{num}'
                 ])
 
                 variable = self._write_aggregated_variable(var, meta, agg_dims, agg_data)
 
     def _write_fragment_addresses(self):
         """
-        Create a ``fragment_address`` variable for each variable
+        Create a ``fragment_identifiers`` variable for each variable
         which is not dimension-less.
         """
 
@@ -582,11 +649,11 @@ class CFAWriteMixin:
             if 'adims' not in meta:
                 continue
             addr = self.ds.createVariable(
-                f'fragment_address_{variable}',
+                f'fragment_identifiers_{variable}',
                 str,
                 (),
             )
-            addr[:] = np.array(meta['address'], dtype=str)
+            addr[:] = np.array(meta['identifiers'], dtype=str)
             addrs.append(addr)
 
     def _write_shape_dims(
@@ -602,7 +669,7 @@ class CFAWriteMixin:
 
         for x, opt in enumerate(self.cdim_opts):
             ndims = self.ds.createDimension(
-                f'shape_{x}',
+                f'map_{x}',
                 len(opt),
             )
 
@@ -612,7 +679,7 @@ class CFAWriteMixin:
                 vopt = vopt + ('versions',)
 
             location = self.ds.createVariable(
-                f'fragment_location_{x}',
+                f'fragment_uris_{x}',
                 str,
                 vopt,
             )
@@ -633,9 +700,9 @@ class CFAWriteMixin:
 
     def _write_fragment_shapes(self):
         """
-        Construct the ``fragment_shape`` variable part for each 
+        Construct the ``fragment_map`` variable part for each 
         combination of dimensions stored in ``cdim_opts``. This 
-        utilises the ``shape`` dimensions previously created.
+        utilises the ``map`` dimensions previously created.
         """
 
         def fill_empty(array, size):
@@ -662,7 +729,7 @@ class CFAWriteMixin:
 
             # Find the largest of the dimensions
             # Set dim_sizes accordingly
-            shape_name    = f'fragment_shape_{num}'
+            shape_name    = f'fragment_map_{num}'
 
             shapes = []
 
@@ -676,7 +743,7 @@ class CFAWriteMixin:
             shape = self.ds.createVariable(
                 shape_name,
                 int, # Type
-                (f'shape_{num}', i_dim)
+                (f'map_{num}', i_dim)
             )
 
             shapes = np.array(shapes)
@@ -748,7 +815,10 @@ class CFAWriteMixin:
                 logger.warning(err)
         
         if 'data' in meta:
-            var_arr[:] = meta['data']
+            if meta['dtype'] == str:
+                var_arr[:] = np.array(meta['data'], dtype=meta['dtype'])
+            else:
+                var_arr[:] = meta['data']
 
 class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
@@ -759,12 +829,16 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
     description = 'The CFAPyX Constructor class, for creating new CFA-netCDF files.'
 
+    convention_version = 'CF-1.12'
+
     def __init__(self, files: list, concat_msg : str = CONCAT_MSG):
 
         """
         Initialise this CFANetCDF instance with some basic values, and filter
         the provided set of files. A custom concat message can also be set
         here if needed."""
+
+        self.agg_extend = None
 
         if isinstance(files, str):
             fileset = glob.glob(files)
@@ -814,6 +888,15 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         # First pass collect info
         arranged_files, global_attrs, var_info, dim_info = self._first_pass(agg_dims=agg_dims)
 
+        if self.agg_extend:
+            self._extend(
+                arranged_files,
+                global_attrs,
+                var_info,
+                dim_info
+            )
+            return
+
         global_attrs, var_info, dim_info = self._apply_filters(updates, removals, global_attrs, var_info, dim_info)
                     
         # Arrange aggregation dimensions
@@ -853,10 +936,16 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
             self._apply_substitutions(substitutions)
 
         self.ds = netCDF4.Dataset(outfile, mode='w', format='NETCDF4', maskandcale=True)
-        self.ds.Conventions = 'CF-1.12'
+
+        # Default conventions written for CF aggregations
+        self.ds.Conventions = self.convention_version
 
         # Populate global dimensions
         for attr, value in self.global_attrs.items():
+
+            # Overrides defaults, needs extra handling.
+            if attr == 'Conventions':
+                value = self.handle_conventions(value)
             self.ds.setncattr(attr, value)
 
         f_dims = self._write_dimensions()
@@ -869,6 +958,15 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
 
             f_dims['versions'] = self.max_files
 
+
+        if self.agg_extend:
+
+            # Skip writing shapes
+
+            self._write_variables()
+            self.ds.close()
+            return
+
         self._write_shape_dims(f_dims, substitutions)
         self._write_fragment_shapes()
         self._write_fragment_addresses()
@@ -876,6 +974,202 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         self._write_variables()
 
         self.ds.close()
+
+    def handle_conventions(self, value) -> str:
+        """
+        Handle 'conventions' attribute according to CF Convention rules
+        """
+        delim = ','
+        if ',' in value:
+            # Assume comma delimited
+            conventions = value.split(',')
+        elif ' ' in value:
+            conventions = value.split(' ')
+            delim = ' '
+        else:
+            conventions = [value]
+
+        updated_conventions = []
+        for c in conventions:
+            if 'CF' not in c:
+                updated_conventions.append(c)
+                continue
+
+            highest_conv = sorted(
+                [   # Accounts for minor versions
+                    '.'.join(self.convention_version.split('-')[-1].split('.')[1:]), 
+                    '.'.join(c.split('-')[-1].split('.')[1:]), 
+                ]
+            )[0]
+            updated_conventions.append(
+                f'CF-1.{highest_conv}'
+            )
+        return delim.join(updated_conventions)
+
+    def _extend(self, arranged_files: tuple, global_attrs: dict, var_info: dict, dim_info: dict):
+        """
+        Extend arranged files according to their coordinates.
+
+        NOTE: Aggregation will be limited to dimensions that are already aggregated. i.e This 
+        feature will only work on files where aggregation dimensions are consistent (i.e extending dimensions).
+        
+        These functions must:
+        - Identify the dimension(s) that are being extended and identify the affected variables.
+        - Extend scalar dimensions `f_` if those dimensions are already greater than 1.
+        - Identify the affected fragment constructors (map, uris) and extend along the extending dimensions.
+        """
+        st_dim_info = {}
+        
+        # Identify Extending dimensions
+        ext_dims = []
+        for d, info in dim_info.items():
+
+            if not isinstance(info, list):
+                # Coordinate variables are not collected into a list
+                # Default value may be overridden by future construction
+
+                #st_dim_info[d] = info
+                #st_dim_info[d]['arrays'] = info['arrays'][0] 
+                continue
+
+            if 'f_' not in d:
+                if d not in st_dim_info:
+
+                    # Default value - reset using f_ numbers if needed
+                    if isinstance(info, list):
+                        if info[0]['size'] != info[-1]['size']:
+                            raise ValueError(
+                                'Aggregation not possible for differing non-aggregated values.'
+                            )
+                        st_dim_info[d] = info[0]
+                    else:
+                        st_dim_info[d] = info
+                    st_dim_info[d]['array'] = st_dim_info[d].get('arrays',None)
+
+                if 'map_' in d:
+                    # Constructor dimension - don't add more f_dims
+                    st_dim_info[d].pop('f_size')
+
+                continue
+
+            for fileinst in info:
+                if fileinst['size'] != 1:
+                    ext_dims.append(d)
+                    break
+
+            if d not in ext_dims:
+                # Non extending aggregation dimension
+                rd = d.split('_')[-1]
+                
+                # Skip coordinate dimensions here
+                if not isinstance(dim_info[rd], dict):
+                    if len(set([i['size'] for i in dim_info[rd]])) != 1:
+                        raise ValueError(
+                            f'Non-extending dimension {rd} differs in size between files'
+                        )
+                    st_dim_info[rd] = dim_info[rd][0]
+                else:
+                    st_dim_info[rd] = dim_info[rd]
+                    st_dim_info[rd]['array'] = st_dim_info[rd]['arrays'][0]
+                    if len(set(dim_info[rd]['sizes'])) != 1:
+                        raise ValueError(
+                            f'Non-extending dimension {rd} differs in size between files'
+                        )
+                    st_dim_info[rd]['size'] = dim_info[rd]['sizes'][0]
+                st_dim_info[rd]['f_size'] = info[0]['size']
+
+        new_dim_sizes = {}
+        for d in ext_dims:
+            real_dim = d.split('_')[-1]
+            new_dim_sizes[d] = sum([i['size'] for i in dim_info[d]])
+
+            # Dim info transformations for writing
+            st_dim_info[real_dim] = dim_info[real_dim]
+            st_dim_info[real_dim]['f_size'] = new_dim_sizes[d]
+            st_dim_info[real_dim]['size']   = sum(dim_info[real_dim]['sizes'])
+
+            # Sort array components using index list
+            sorted_a = [[] for a in dim_info[real_dim]['arrays']]
+            sorted_starts = np.argsort(dim_info[real_dim]['starts'])
+            for x, a in enumerate(dim_info[real_dim]['arrays']):
+
+                sorted_a[sorted_starts[x]] = a
+            
+            array = np.concatenate(
+                sorted_a,
+                axis=0
+            )
+
+            st_dim_info[real_dim]['array'] = array
+
+        
+        sorted_dim_sizes = sorted([
+            (v, d)  for d, v in new_dim_sizes.items()],
+            key = lambda x: x[0]
+        )
+
+        orders = [np.argsort(dim_info[d.split('_')[-1]]['starts']) for d in ext_dims]
+        
+        # Identify the affected fragment components
+        extension_vars = []
+        for v, info in var_info.items():
+            extended = False
+            for d in ext_dims:
+                if d in info['dims']:
+                    extension_vars.append(v)
+
+            if not extended:
+                var_info[v]['data'] = var_info[v]['arr'][0]
+
+        # Perform ordering/concatenation for fragment components
+        for ev in extension_vars:
+
+            # Sort array components using index list
+            sorted_a = [[] for a in var_info[ev]['arr']]
+            for x, a in enumerate(var_info[ev]['arr']):
+
+                for nd in sorted_dim_sizes:
+                    if nd[1] in var_info[ev]['dims']:
+                        dominant_dim = nd[1]
+                        break
+
+                sorted_a[
+                    orders[ext_dims.index(dominant_dim)][x]
+                ] = a
+            
+            # Assumes they have been sorted - not necessarily the case
+            array = np.concatenate(
+                sorted_a,
+                axis=var_info[ev]['dims'].index(dominant_dim)
+            )
+
+            if 'fragment_map_' in ev:
+
+                array = np.ma.masked_values(array, var_info[ev]['_FillValue'])
+                # Smooth paddings
+                for i, row in enumerate(array):
+                    premask = None
+                    gap = False
+                    for j, value in enumerate(row):
+                        if premask is None and not np.ma.is_masked(value):
+                            premask = value
+                        elif np.ma.is_masked(value):
+                            gap = True
+                        elif not np.ma.is_masked(value) and gap:
+                            if value == premask:
+                                array[i][j] = np.ma.masked
+                    
+            var_info[ev]['data'] = array
+
+        # Writing part done as a second step as before.
+        # Need to perform any transformations to get to that stage.
+
+        # Define the fragment space
+        self.fragment_space = [v['f_size'] for v in dim_info.values() if 'f_size' in v]
+
+        self.global_attrs = global_attrs
+        self.dim_info   = st_dim_info
+        self.var_info   = var_info
 
     def display_attrs(self):
         """
@@ -1158,7 +1452,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         """
         Open the file as a netcdf dataset. If there are multiple filenames
         provided, use the first file. Also determine the longest filename
-        to be used to define the ``location`` parameter later.
+        to be used to define the ``uris`` parameter later.
         """
 
         if isinstance(file, tuple):

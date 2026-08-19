@@ -8,15 +8,17 @@ from typing import Union
 
 import dask.array as da
 import numpy as np
-from arraypartition import ArrayLike, ArrayPartition
-from arraypartition.partition import (
+from dask.array.core import getter
+from dask.base import tokenize
+
+from cfapyx.partition import (
+    ArrayLike,
+    ArrayPartition,
     combine_slices,
     get_chunk_positions,
     get_dask_chunks,
     normalize_partition_chunks,
 )
-from dask.array.core import getter
-from dask.base import tokenize
 
 logger = logging.getLogger(__name__)
 
@@ -189,8 +191,8 @@ class FragmentArrayWrapper(ArrayLike):
         self.named_dims = named_dims
 
         cfa_options = cfa_options or {}
-        if "storage_options" in cfa_options:
-            self._storage_options = cfa_options.pop("storage_options")
+
+        self._storage_options = cfa_options.pop("storage_options", None)
 
         self.mask_and_scale = mask_and_scale
 
@@ -352,7 +354,6 @@ class FragmentArrayWrapper(ArrayLike):
                 format=fragment_format,
                 named_dims=self.named_dims,
                 global_extent=global_extent,
-                storage_options=self._storage_options,
                 mask_and_scale=self.mask_and_scale,
             )
 

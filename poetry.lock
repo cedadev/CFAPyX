@@ -32,23 +32,6 @@ typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 trio = ["trio (>=0.31.0) ; python_version < \"3.10\"", "trio (>=0.32.0) ; python_version >= \"3.10\""]
 
 [[package]]
-name = "arraypartition"
-version = "1.3.0rc0"
-description = "Container module for ArrayLike Partition class behaviour"
-optional = false
-python-versions = "<4.0,>=3.11"
-groups = ["main"]
-files = [
-    {file = "arraypartition-1.3.0rc0-py3-none-any.whl", hash = "sha256:e10442cc947129ab3fa0f2b82f573f20c8c8c90e97901ca4d14313fe29f8c873"},
-    {file = "arraypartition-1.3.0rc0.tar.gz", hash = "sha256:c1a09b5a4cbffa7d338aea0339cdc305d855c55e5a4a08da971097aff62383ae"},
-]
-
-[package.dependencies]
-dask = ">=2025.3.0"
-netcdf4 = ">=1.7.2"
-numpy = ">=2.0.0"
-
-[[package]]
 name = "babel"
 version = "2.17.0"
 description = "Internationalization utilities"
@@ -2520,4 +2503,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4.0"
-content-hash = "1e1715389ca3cdf906f85f5d9bf0309194812b536e1735cff419b0063aa31590"
+content-hash = "4416c10a29ba784dec824d986c6a147e964c26e8cc2197af0c59a00a60a6ad3b"

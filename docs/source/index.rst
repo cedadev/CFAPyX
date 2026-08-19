@@ -25,6 +25,7 @@ Current support is limited to local netCDF4 formatted files, but future addition
    Fragments, Partitions and Chunks <fragments>
    cfapyx Usage and Options <options>
    CFA Creator Usage <creator_use>
+   Release Notes <releases>
 
 .. toctree::
    :maxdepth: 1

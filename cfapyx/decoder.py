@@ -1,5 +1,5 @@
-__author__    = "Daniel Westwood"
-__contact__   = "daniel.westwood@stfc.ac.uk"
+__author__ = "Daniel Westwood"
+__contact__ = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
@@ -12,11 +12,12 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logstream)
 logger.propagate = False
 
+
 def get_fragment_positions(fragment_size_per_dim):
     """
     Get the positions in index space for each fragment.
 
-    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length 
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length
                                         equal to the number of array dimensions, second dimension is a list of the
                                         fragment sizes for the corresponding array dimension.
 
@@ -26,11 +27,12 @@ def get_fragment_positions(fragment_size_per_dim):
     """
     return product(*(range(len(sizes)) for sizes in fragment_size_per_dim))
 
+
 def get_fragment_extents(fragment_size_per_dim, array_shape):
     """
     Return descriptors for every fragment. Copied from cf-python version 3.14.0 onwards.
 
-    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length 
+    :param fragment_size_per_dim:       (list) The set of fragment sizes per dimension. first dimension has length
                                         equal to the number of array dimensions, second dimension is a list of the
                                         fragment sizes for the corresponding array dimension.
 
@@ -50,15 +52,18 @@ def get_fragment_extents(fragment_size_per_dim, array_shape):
     ndim = len(fragment_size_per_dim)
 
     initial = [0 for i in range(ndim)]
-    final   = [len(i) for i in fragment_size_per_dim]
+    final = [len(i) for i in fragment_size_per_dim]
 
-    fragmented_dims = [i for i in range(len(fragment_size_per_dim)) if len(fragment_size_per_dim[i]) != 1]
+    fragmented_dims = [
+        i
+        for i in range(len(fragment_size_per_dim))
+        if len(fragment_size_per_dim[i]) != 1
+    ]
 
-    dim_shapes  = []
+    dim_shapes = []
     dim_indices = []
     f_locations = []
     for dim, fs in enumerate(fragment_size_per_dim):
-
         # (num_fragments) for each dimension
         dim_shapes.append(fs)
 
@@ -69,7 +74,7 @@ def get_fragment_extents(fragment_size_per_dim, array_shape):
             f_locations.append(tuple(range(len(fs))))
         else:
             # No fragmentation along this dimension
-            # (0, 0, 0, 0 ...) in each non-fragmented dimension.
+            # (0, 0, 0, 0 ...) in each non-fragmented dimension.
             f_locations.append((0,) * len(fs))
 
         # List of slices a to a+1 for every item in the new fs.
@@ -77,17 +82,15 @@ def get_fragment_extents(fragment_size_per_dim, array_shape):
 
     # Transform f_locations to get a dict of positions with a slice and shape for each.
     positions = [
-        coord for coord in product(
-            *[range(r[0], r[1]) for r in zip(initial, final)]
-        )
+        coord for coord in product(*[range(r[0], r[1]) for r in zip(initial, final)])
     ]
 
     f_indices = []
     for dim, u in enumerate(dim_indices):
         if dim in fragmented_dims:
-            f_indices.append( (slice(None),) * len(u))
+            f_indices.append((slice(None),) * len(u))
         else:
-            f_indices.append( u )
+            f_indices.append(u)
 
     f_shapes = [
         dim_shape if dim in fragmented_dims else (size,) * len(dim_shape)
@@ -103,14 +106,8 @@ def get_fragment_extents(fragment_size_per_dim, array_shape):
         global_extents[frag_pos] = []
         shapes[frag_pos] = []
         for a, i in enumerate(frag_pos):
-            extents[frag_pos].append(
-                f_indices[a][i]
-            )
-            global_extents[frag_pos].append(
-                dim_indices[a][i]
-            )
-            shapes[frag_pos].append(
-                f_shapes[a][i]
-            )
-            
+            extents[frag_pos].append(f_indices[a][i])
+            global_extents[frag_pos].append(dim_indices[a][i])
+            shapes[frag_pos].append(f_shapes[a][i])
+
     return global_extents, extents, shapes

@@ -2,7 +2,8 @@ import logging
 import os
 
 logger = logging.getLogger(__name__)
-TESTDIR = 'cfapyx/tests/test_space'
+TESTDIR = "cfapyx/tests/test_space"
+
 
 class TestPath:
     def testpath(self, tests=TESTDIR):

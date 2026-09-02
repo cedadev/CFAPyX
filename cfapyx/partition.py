@@ -7,7 +7,6 @@ from itertools import product
 from typing import Union
 
 import fsspec
-import netCDF4
 import numpy as np
 import pyfive
 from dask.array.core import normalize_chunks
@@ -205,6 +204,7 @@ class ArrayPartition(SuperLazyArrayLike):
         position: Union[tuple, None] = None,
         extent: Union[tuple, None] = None,
         format: Union[str, None] = None,
+        mask_and_scale: bool = False,
         **kwargs,
     ):
         """
@@ -248,13 +248,14 @@ class ArrayPartition(SuperLazyArrayLike):
             ``CFAPartition``.
         """
 
-        self.__array_function__ = self.__array__
+        # self.__array_function__ = self.__array__
 
         self.filename = filename
         self.address = address
-
         self.format = format
         self.position = position
+
+        self.mask_and_scale = mask_and_scale
 
         if shape is None:
             # Identify shape
@@ -268,7 +269,7 @@ class ArrayPartition(SuperLazyArrayLike):
             # Apply a specific extent if given by the initiator
             self.set_extent(extent)
 
-    def __array__(self, *args, **kwargs):
+    def __array__(self, *args, **kwargs) -> np.ndarray:
         """
         Retrieves the array of data for this variable chunk, casted into a Numpy
         array. Use of this method breaks the ``Active chain`` by retrieving all
@@ -284,16 +285,26 @@ class ArrayPartition(SuperLazyArrayLike):
 
         array = self._get_array(*args)
 
-        if hasattr(array, "units"):
-            self.units = array.units
+        if self.units != array.attrs["units"]:
+            raise ValueError(
+                "Units do not match from CFA representation to fragment file."
+            )
 
         if len(array.shape) != len(self._extent):
-            self._correct_slice(array.dimensions)
+            # Extract named dims from pyfive variable
+            dims = [dim[0].name.split("/")[-1] for dim in array.dims]
+
+            self._correct_slice(dims)
 
         try:
             # Still allowed to request a specific dtype
             # Otherwise dtype casting prevented
             var = np.array(array[tuple(self._extent)], dtype=dtype)
+
+            # Disable auto mask/scaling - implemented by Xarray
+            if self.format == "nc" and self.mask_and_scale:
+                var = self._perform_mask_and_scale(var)
+
         except IndexError:
             raise ValueError(
                 f"Unable to select required 'extent' of {self.extent} "
@@ -302,7 +313,7 @@ class ArrayPartition(SuperLazyArrayLike):
 
         return self._post_process_data(var)
 
-    def _get_array(self, *args):
+    def _get_array(self, *args) -> pyfive.high_level.Dataset:
         """
         Base private function to get the data array object.
 
@@ -320,26 +331,36 @@ class ArrayPartition(SuperLazyArrayLike):
             # variable.
 
             addr = self.address.split("/")
-            group = "/".join(addr[1:-1])
-            varname = addr[-1]
-
-            ds = ds.groups[group]
+            for g in addr[1:-1]:
+                ds = ds[g]
 
         else:
             varname = self.address
 
         try:
-            array = ds.variables[varname]
-            # Disable auto mask/scaling - implemented by Xarray
-            if self.format == "nc":
-                array.set_auto_maskandscale(False)
-                # only added in netCDF4-python v1.2.8
+            array = ds[varname]
+
         except KeyError:
             raise ValueError(
                 f"Dask Chunk at '{self.position}' does not contain "
                 f"the variable '{varname}'."
             )
         return array
+
+    def _perform_mask_and_scale(self, array: np.ndarray) -> np.ndarray:
+        """
+        Mask and scaling applied to the array selection.
+        """
+
+        scale = array.attrs.get("scale_factor")
+        offset = array.attrs.get("offset")
+
+        if scale and offset:
+            return array * scale + offset
+
+        raise ValueError(
+            f'Unable to mask and scale with "scale_factor:{scale}" "offset:{offset}"'
+        )
 
     def _correct_slice(self, array_dims: tuple):
         """
@@ -370,7 +391,7 @@ class ArrayPartition(SuperLazyArrayLike):
                 )
         self._extent = extent
 
-    def _post_process_data(self, data: np.array):
+    def _post_process_data(self, data: np.ndarray):
         """
         Perform any post-processing steps on the data here.
 
@@ -404,10 +425,10 @@ class ArrayPartition(SuperLazyArrayLike):
 
     def _open_netcdf(self, filename: str, remote: bool = False):
         """
-        Open a NetCDF file using the netCDF4 python package."""
+        Open a NetCDF file using the pyfive python package."""
 
         if not remote:
-            return netCDF4.Dataset(filename, mode="r")
+            return pyfive.File(filename)
 
         # Basic installation
         fs = fsspec.filesystem("http")

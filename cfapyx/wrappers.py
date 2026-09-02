@@ -209,7 +209,9 @@ class FragmentArrayWrapper(ArrayLike):
         """
         Non-lazy retrieval of the dask array when this object is indexed.
         """
-        a = self.__array__()[selection]
+        # Compute the fragment array dask object.
+        # Alternatively get rid of the indexing.LazilyIndexedArray in datastore?
+        a = self.__array__()[selection].compute()
         logger.debug(f"Shape: {a.shape}")
         logger.debug(f"Dims: {getattr(a, 'dims', 'unknown')}")
         return a
@@ -500,7 +502,7 @@ class FragmentArrayWrapper(ArrayLike):
                 getter,
                 p_identifier,
                 part.get_extent(),
-                False,
+                True,
                 getattr(part, "_lock", False),  # Check version cf-python
             )
         return dsk
@@ -512,7 +514,7 @@ class FragmentArrayWrapper(ArrayLike):
         if not self._substitutions:
             return
 
-        for base, substitution in self._substitutions.keys():
+        for base, substitution in self._substitutions.items():
             for f in self.fragment_info.keys():
                 if isinstance(self.fragment_info[f]["location"], str):
                     self.fragment_info[f]["location"] = self.fragment_info[f][

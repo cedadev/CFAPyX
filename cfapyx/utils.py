@@ -4,6 +4,8 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 
+import numpy as np
+
 logging.basicConfig(level=logging.WARN)
 logstream = logging.StreamHandler()
 
@@ -11,6 +13,58 @@ formatter = logging.Formatter("%(levelname)s [%(name)s]: %(message)s")
 logstream.setFormatter(formatter)
 
 logger = logging.getLogger(__name__)
+
+
+def supported_by_cftime(unit: str, calendar: str = "standard"):
+    try:
+        import cftime
+
+        cftime.num2date(0, unit, calendar=calendar)
+        return True
+    except ImportError:
+        logger.error(
+            '"cftime" package not installed, unable to conform temporal units.'
+        )
+        return False
+    except Exception:
+        return False
+
+
+def supported_by_pint(unit: str):
+    try:
+        from pint import UnitRegistry
+
+        ureg = UnitRegistry()
+
+        ureg.Unit(unit)
+        return True
+    except ImportError:
+        logger.error('"pint" package not installed, unable to conform standard units.')
+        return False
+    except Exception:
+        return False
+
+
+def conform_data_to_units(data: np.ndarray, units: str, prime_units: str):
+
+    if supported_by_cftime(units) and supported_by_cftime(prime_units):
+        import cftime
+
+        return cftime.date2num(cftime.num2date(data, units=units), units=prime_units)
+
+    elif supported_by_pint(units) and supported_by_pint(prime_units):
+        from pint import UnitRegistry
+
+        ureg = UnitRegistry()
+        # Data dtype does not change, units means some conversion should take place
+        # but this should not impact the dtype.
+        return np.array((data * ureg(units)).to(prime_units), dtype=data.dtype)
+    else:
+        raise ValueError(
+            f'Unit conversion is required from "{units}" to "{prime_units}"'
+            ' - no suitable method available. Install "cftime" and/or "pint"'
+            "to enable unit conversion."
+        )
 
 
 def set_verbose(level: int):

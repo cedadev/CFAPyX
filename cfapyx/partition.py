@@ -2,15 +2,25 @@ __author__ = "Daniel Westwood"
 __contact__ = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
+import logging
 import math
 from itertools import product
 from typing import Union
 
 import fsspec
+import netCDF4
 import numpy as np
 import pyfive
 from dask.array.core import normalize_chunks
 from dask.utils import SerializableLock
+
+from cfapyx.filehandlers import ArrayFileObjectHandler
+from cfapyx.utils import logstream
+
+logger = logging.getLogger(__name__)
+
+logger.addHandler(logstream)
+logger.propagate = False
 
 
 class ArrayLike:
@@ -283,23 +293,22 @@ class ArrayPartition(SuperLazyArrayLike):
         if args:
             dtype = args[0]
 
-        array = self._get_array(*args)
+        arrayf = self._get_array(*args)
 
-        if self.units != array.attrs["units"]:
-            raise ValueError(
-                "Units do not match from CFA representation to fragment file."
+        if self.units != arrayf.units:
+            logger.info(
+                "Units do not match from CFA representation to fragment file"
+                " - will be handled by Unit conversion"
             )
 
-        if len(array.shape) != len(self._extent):
+        if len(arrayf.shape) != len(self._extent):
             # Extract named dims from pyfive variable
-            dims = [dim[0].name.split("/")[-1] for dim in array.dims]
 
-            self._correct_slice(dims)
+            self._correct_slice(arrayf.dimensions)
 
         try:
-            # Still allowed to request a specific dtype
-            # Otherwise dtype casting prevented
-            var = np.array(array[tuple(self._extent)], dtype=dtype)
+            # Apply extent to array object.
+            var = np.array(arrayf.get_array()[tuple(self._extent)], dtype=dtype)
 
             # Disable auto mask/scaling - implemented by Xarray
             if self.format == "nc" and self.mask_and_scale:
@@ -308,12 +317,12 @@ class ArrayPartition(SuperLazyArrayLike):
         except IndexError:
             raise ValueError(
                 f"Unable to select required 'extent' of {self.extent} "
-                f"from fragment {self.position} with shape {array.shape}"
+                f"from fragment {self.position} with shape {arrayf.shape}"
             )
 
         return self._post_process_data(var)
 
-    def _get_array(self, *args) -> pyfive.high_level.Dataset:
+    def _get_array(self, *args) -> ArrayFileObjectHandler:
         """
         Base private function to get the data array object.
 
@@ -326,26 +335,24 @@ class ArrayPartition(SuperLazyArrayLike):
 
         ds = self.open()
 
+        varname = ds.apply_group(self.address)
+
         if "/" in self.address:
             # Assume we're dealing with groups but we just need the data for this
             # variable.
-
-            addr = self.address.split("/")
-            for g in addr[1:-1]:
-                ds = ds[g]
-
+            varname = ds.apply_group(self.address)
         else:
             varname = self.address
 
         try:
-            array = ds[varname]
+            ds.apply_variable(varname)
 
         except KeyError:
             raise ValueError(
                 f"Dask Chunk at '{self.position}' does not contain "
                 f"the variable '{varname}'."
             )
-        return array
+        return ds
 
     def _perform_mask_and_scale(self, array: np.ndarray) -> np.ndarray:
         """
@@ -400,7 +407,9 @@ class ArrayPartition(SuperLazyArrayLike):
         """
         return data
 
-    def _try_openers(self, filename: str, remote: bool = False):
+    def _try_openers(
+        self, filename: str, remote: bool = False
+    ) -> ArrayFileObjectHandler:
         """
         Attempt to open the dataset using all possible methods.
 
@@ -423,17 +432,30 @@ class ArrayPartition(SuperLazyArrayLike):
     def _open_um(self, filename: str, remote: bool = False):
         raise NotImplementedError
 
-    def _open_netcdf(self, filename: str, remote: bool = False):
+    def _open_netcdf(
+        self, filename: str, remote: bool = False
+    ) -> ArrayFileObjectHandler:
         """
         Open a NetCDF file using the pyfive python package."""
 
         if not remote:
-            return pyfive.File(filename)
+            ds = netCDF4.Dataset(filename)
+            mode = "netcdf4"
+        else:
+            logger.info("Using pyfive for remote HDF5 file (NetCDF3 not supported)")
+            # Basic installation
+            fs = fsspec.filesystem("http")
+            fh = fs.open(filename, "rb")
+            try:
+                ds = pyfive.File(fh)
+            except pyfive.core.InvalidHDF5File:
+                raise ValueError(
+                    "Remote access unavailable for non-HDF5 files. "
+                    "(NetCDF3 not supported)"
+                )
+            mode = "pyfive"
 
-        # Basic installation
-        fs = fsspec.filesystem("http")
-        fh = fs.open(filename, "rb")
-        return pyfive.File(fh)
+        return ArrayFileObjectHandler(ds, mode)
 
     def get_kwargs(self):
         """
@@ -470,7 +492,7 @@ class ArrayPartition(SuperLazyArrayLike):
         )
         return new_instance
 
-    def open(self):
+    def open(self) -> ArrayFileObjectHandler:
         """
         Open the source file for this chunk to extract data.
 
@@ -496,6 +518,7 @@ class ArrayPartition(SuperLazyArrayLike):
         # Prioritise relative then remote options first if any are present.
         filenames = relative + remote + local
 
+        err = False
         for filename in filenames:
             is_remote = "http" in filename
             try:
@@ -507,10 +530,12 @@ class ArrayPartition(SuperLazyArrayLike):
                     return self._open_netcdf(filename, is_remote)
                 else:
                     raise ValueError(f"Unrecognised format '{self.format}'")
-            except ValueError as err:
-                raise err
-            except Exception as _:
-                pass
+            except ValueError:
+                raise
+            except Exception as e:
+                err = e
+        if err:
+            raise err
 
         raise FileNotFoundError(
             f'None of the location options for chunk "{self.position}" could be '

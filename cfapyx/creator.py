@@ -8,7 +8,7 @@ import logging
 import netCDF4
 import numpy as np
 
-from cfapyx.utils import logstream
+from cfapyx.utils import conform_data_to_units, logstream
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,8 @@ class CFACreateMixin:
         var_info = None
         dim_info = None
         global_attrs = None
+
+        prime_units = {}
 
         ## First Pass - Determine dimensions
         for x, file in enumerate(self.files):
@@ -111,6 +113,7 @@ class CFACreateMixin:
                         f'Files contain differing numbers of dimensions. "{d}"'
                         "appears to not be present in all files."
                     )
+
                 new_info, arr_components = self._collect_dim_info(
                     ds,
                     d,
@@ -118,6 +121,7 @@ class CFACreateMixin:
                     coord_variables,
                     agg_dims=agg_dims,
                     first_time=first_time,
+                    prime_units=prime_units.get(d, None),
                 )
 
                 if new_info["type"] == "coord":
@@ -143,6 +147,7 @@ class CFACreateMixin:
 
                 if arr_components is not None:
                     if first_time:
+                        prime_units[d] = ds[d].units
                         for attr in arr_components.keys():
                             dim_info[d][attr] = [arr_components[attr]]
                     else:
@@ -198,6 +203,11 @@ class CFACreateMixin:
 
             arranged_files[tuple(fcoord)] = file
 
+        for d, units in prime_units.items():
+            if "attrs" not in dim_info[d]:
+                dim_info[d]["attrs"] = {}
+            dim_info[d]["attrs"].update({"units": units})
+
         return arranged_files, global_attrs, var_info, dim_info
 
     def _second_pass(self, var_info: dict, non_aggregated: list) -> dict:
@@ -235,6 +245,7 @@ class CFACreateMixin:
         coord_variables: list,
         agg_dims: list = None,
         first_time: bool = False,
+        prime_units: str | None = None,
     ):
         """
         Collect new info about each dimension. The collected attributes
@@ -252,39 +263,45 @@ class CFACreateMixin:
             if agg_dims is None or agg_dims == []:
                 agg_dims = coord_variables
 
+        # Basic pure dimension information
         if d in pure_dimensions:
             new_info = {
                 "size": ds.dimensions[d].size,
                 "type": "pure",
                 "f_size": 1,
             }
-        else:
-            new_info = {
-                "size": None,
-                "type": "coord",
-                "dtype": ds[d].dtype,
-                "f_size": None,
-            }
+            return new_info, arr_components
 
-            if d in agg_dims:
-                array = np.array(list(ds[d]), dtype=ds[d].dtype)
-                start = array[0]
-                size = len(array)
+        # Basic non-pure dimension information
+        new_info = {
+            "size": None,
+            "type": "coord",
+            "dtype": ds[d].dtype,
+            "f_size": None,
+        }
 
-                arr_components = {
-                    "sizes": size,
-                    "starts": start,
-                    "arrays": array,
-                }
+        if d not in agg_dims:
+            return new_info, arr_components
+
+        # Aggregated dimension information (starts/ends)
+        array = np.array(list(ds[d]), dtype=ds[d].dtype)
+
+        if prime_units is not None and ds[d].units != prime_units:
+            logger.debug(f'Conforming units from "{ds[d].units}" to "{prime_units}"')
+            array = conform_data_to_units(array, ds[d].units, prime_units)
+
+        start = array[0]
+        size = len(array)
+
+        arr_components = {
+            "sizes": size,
+            "starts": start,
+            "arrays": array,
+        }
 
         return new_info, arr_components
 
-    def _update_info(
-        self,
-        ncattr_obj,
-        info: dict,
-        new_info: dict,
-    ) -> dict:
+    def _update_info(self, ncattr_obj, info: dict, new_info: dict) -> dict:
         """
         Update the information for a variable/dimension based on the
         current dataset. Certain properties are collected in lists while

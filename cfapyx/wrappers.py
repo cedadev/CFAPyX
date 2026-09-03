@@ -19,6 +19,7 @@ from cfapyx.partition import (
     get_dask_chunks,
     normalize_partition_chunks,
 )
+from cfapyx.utils import conform_data_to_units
 
 logger = logging.getLogger(__name__)
 
@@ -99,18 +100,7 @@ class CFAPartition(ArrayPartition):
         """Correct units/data conversions - if necessary at this stage"""
 
         if self.units != self.aggregated_units:
-            try:
-                from cfunits import Units
-            except FileNotFoundError:
-                raise ValueError(
-                    'Encountered issue when trying to import the "cfunits" library:'
-                    "cfunits requires UNIDATA UDUNITS-2. Can't find the 'udunits2' "
-                    "library."
-                    " - Consider setting up a conda environment, and installing "
-                    "`conda install -c conda-forge udunits2`"
-                )
-
-            data = Units.conform(data, self.units, self.aggregated_units)
+            return conform_data_to_units(data, self.units, self.aggregated_units)
         return data
 
     def get_kwargs(self):

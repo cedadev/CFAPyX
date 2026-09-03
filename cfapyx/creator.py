@@ -147,7 +147,11 @@ class CFACreateMixin:
 
                 if arr_components is not None:
                     if first_time:
-                        prime_units[d] = ds[d].units
+                        if hasattr(ds[d], "units"):
+                            prime_units[d] = ds[d].units
+                        else:
+                            prime_units[d] = None
+
                         for attr in arr_components.keys():
                             dim_info[d][attr] = [arr_components[attr]]
                     else:
@@ -206,7 +210,9 @@ class CFACreateMixin:
         for d, units in prime_units.items():
             if "attrs" not in dim_info[d]:
                 dim_info[d]["attrs"] = {}
-            dim_info[d]["attrs"].update({"units": units})
+
+            if units is not None:
+                dim_info[d]["attrs"].update({"units": units})
 
         return arranged_files, global_attrs, var_info, dim_info
 

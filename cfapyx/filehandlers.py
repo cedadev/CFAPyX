@@ -14,7 +14,7 @@ class ArrayFileObjectHandler:
 
         match self.mode:
             case "pyfive":
-                return self.fh.attrs.get("units")
+                return self.fh.attrs.get("units", None)
             case "netcdf4":
                 if hasattr(self.fh, "units"):
                     return self.fh.units

@@ -40,8 +40,8 @@ class ArrayLike:
 
         # Standard parameters to store for array-like behaviour
         self.shape = shape
-        self.units = units
         self.dtype = dtype
+        self.units = units
 
         if not source_shape:
             # First time instantiation - all other copies will not use this.
@@ -294,6 +294,10 @@ class ArrayPartition(SuperLazyArrayLike):
             dtype = args[0]
 
         arrayf = self._get_array(*args)
+
+        if self.units is None:
+            # Partition Inherits array units
+            self.units = arrayf.units
 
         if self.units != arrayf.units:
             logger.info(

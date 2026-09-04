@@ -2,10 +2,17 @@
 Release History
 ===============
 
-2026 (DRAFT)
-------------
-Accompanies the 2026 first release of ``ArrayPartition`` (DRAFT)
+Release Notes Version 1.0.0
+---------------------------
+- The segmentation fault issue with netCDF4 filehandlers has been resolved using a global lock on NetCDF4 data access.
+- NetCDF4 and Pyfive are both supported, with pyfive used for remote file access. This has a limitation on NetCDF3 files which are not compatible with pyfive.
+- Unit conversions are now automatic when reading/writing CFA files, this is no longer a fatal error when creating the dataset. This is also accounted for when extending an existing aggregation by adding more files, although prepending files before the current aggregation is not supported.
+- Various xarray/dask computation anomalies have been fixed, where it was sometimes required to run .compute() multiple times to receive data.
+- ArrayPartition module is no longer a dependency as the partition module has been migrated to this package.
 
+
+2026 Pre-Production Release
+---------------------------
 - Revised handling of ``scale_factor`` and ``add_offset`` properties. These are now handled by individual fragments,
 but the scaling/offsetting can still be deactivated via the xarray dataset instantiation, this now filters all the way down to the partition-level.
 - Fixed bugs relating to single-indexes. Single-valued slices like ``slice(0,1)`` and single-indexes like ``0`` are now distinctly handled internally,

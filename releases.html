@@ -53,7 +53,8 @@
 <li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#draft">2026 (DRAFT)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-notes-version-1-0-0">Release Notes Version 1.0.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-production-release">2026 Pre-Production Release</a></li>
 </ul>
 </li>
 </ul>
@@ -92,9 +93,18 @@
              
   <section id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Link to this heading"></a></h1>
-<section id="draft">
-<h2>2026 (DRAFT)<a class="headerlink" href="#draft" title="Link to this heading"></a></h2>
-<p>Accompanies the 2026 first release of <code class="docutils literal notranslate"><span class="pre">ArrayPartition</span></code> (DRAFT)</p>
+<section id="release-notes-version-1-0-0">
+<h2>Release Notes Version 1.0.0<a class="headerlink" href="#release-notes-version-1-0-0" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The segmentation fault issue with netCDF4 filehandlers has been resolved using a global lock on NetCDF4 data access.</p></li>
+<li><p>NetCDF4 and Pyfive are both supported, with pyfive used for remote file access. This has a limitation on NetCDF3 files which are not compatible with pyfive.</p></li>
+<li><p>Unit conversions are now automatic when reading/writing CFA files, this is no longer a fatal error when creating the dataset. This is also accounted for when extending an existing aggregation by adding more files, although prepending files before the current aggregation is not supported.</p></li>
+<li><p>Various xarray/dask computation anomalies have been fixed, where it was sometimes required to run .compute() multiple times to receive data.</p></li>
+<li><p>ArrayPartition module is no longer a dependency as the partition module has been migrated to this package.</p></li>
+</ul>
+</section>
+<section id="pre-production-release">
+<h2>2026 Pre-Production Release<a class="headerlink" href="#pre-production-release" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Revised handling of <code class="docutils literal notranslate"><span class="pre">scale_factor</span></code> and <code class="docutils literal notranslate"><span class="pre">add_offset</span></code> properties. These are now handled by individual fragments,</p></li>
 </ul>

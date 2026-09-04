@@ -1,5 +1,5 @@
-__author__    = "Daniel Westwood"
-__contact__   = "daniel.westwood@stfc.ac.uk"
+__author__ = "Daniel Westwood"
+__contact__ = "daniel.westwood@stfc.ac.uk"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
@@ -11,15 +11,17 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logstream)
 logger.propagate = False
 
+
 class VariableWrapper:
     """
-    Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can handle
-    either ``global`` or ``group`` based variables .
+    Wrapper object for the ``ds.variables`` and ``ds.attributes`` objects which can
+    handle  either ``global`` or ``group`` based variables .
     """
 
     def __init__(self, prop_sets):
 
-        # Note: core_ds refers to either the group, or the global ds if there is no group requested.
+        # Note: core_ds refers to either the group, or the global ds if there is no
+        # group requested.
 
         self._core_props = prop_sets[0]
 
@@ -41,32 +43,31 @@ class VariableWrapper:
         if item in self._properties:
             return self._properties[item]
         else:
-            raise ValueError(
-                f'"{item}" not present in Dataset.'
-            )
-        
+            raise ValueError(f'"{item}" not present in Dataset.')
+
     def keys(self):
         """
-        Requesting the set of keys should return the set of both keys combined in a ``dict_keys`` object.
+        Requesting the set of keys should return the set of both keys combined in a
+        ``dict_keys`` object.
         """
         return self._properties.keys()
-    
+
     def items(self):
         return self._properties.items()
 
     def __getattr__(self, attr):
         try:
             return getattr(self._core_props, attr)
-        except:
-            raise AttributeError(
-                f'No such attribute: "{attr}'
-            )
-        
+        except Exception as _:
+            raise AttributeError(f'No such attribute: "{attr}"')
+
+
 class CFAGroupWrapper:
     """
     Wrapper object for the CFADataStore ``ds`` parameter, required to bypass the issue
     with groups in Xarray, where all variables outside the group are ignored.
     """
+
     def __init__(self, var_sets, ds_sets):
 
         self.variables = VariableWrapper(
@@ -75,8 +76,8 @@ class CFAGroupWrapper:
 
         self._ds_sets = ds_sets
 
-        self.Conventions = ''
-        if hasattr(ds_sets[0],'Conventions'):
+        self.Conventions = ""
+        if hasattr(ds_sets[0], "Conventions"):
             self.Conventions = ds_sets[0].Conventions
 
     @classmethod
@@ -89,7 +90,7 @@ class CFAGroupWrapper:
             # make sure it's a string
             if not isinstance(group, str):
                 raise ValueError("group must be a string or None")
-            
+
             # support path-like syntax
             path = group.strip("/").split("/")
             var_sets = [root.variables]
@@ -100,10 +101,8 @@ class CFAGroupWrapper:
                     var_sets.append(root.groups[part].variables)
                     ds_sets.append(root.groups[part])
                     root = root.groups[part]
-                except KeyError as e:
-                    raise ValueError(
-                        f'Group path "{part}" not found in this dataset.'
-                    )
+                except KeyError:
+                    raise ValueError(f'Group path "{part}" not found in this dataset.')
 
         return cls(var_sets, ds_sets)
 
@@ -117,23 +116,21 @@ class CFAGroupWrapper:
     def ncattrs(self):
         attrs = []
         for ds in self._ds_sets:
-            attrs += list(ds.ncattrs()) # Determine return type
+            attrs += list(ds.ncattrs())  # Determine return type
         return attrs
 
     def getncattr(self, k):
         for ds in self._ds_sets:
             try:
                 return ds.getncattr(k)
-            except:
+            except Exception:
                 pass
-        raise AttributeError(
-            f'Attribute "{k}" not found.'
-        )
+        raise AttributeError(f'Attribute "{k}" not found.')
 
     @property
     def variables(self):
         return self._variables
-    
+
     @variables.setter
     def variables(self, value):
         self._variables = value
@@ -142,8 +139,6 @@ class CFAGroupWrapper:
         for ds in self._ds_sets:
             try:
                 return getattr(ds, name)
-            except:
+            except Exception as _:
                 pass
-        raise AttributeError(
-            f'Attribute "{name}" not found.'
-        )
+        raise AttributeError(f'Attribute "{name}" not found.')

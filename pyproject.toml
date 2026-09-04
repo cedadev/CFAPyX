@@ -1,6 +1,6 @@
 [project]
 name = "cfapyx"
-version = "2025.12.9"
+version = "1.0.0"
 description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
 authors = [
     {name = "Daniel Westwood",email = "daniel.westwood@stfc.ac.uk"}
@@ -12,15 +12,35 @@ dependencies = [
     "xarray (>=2025.11.0)",
     "numpy (>=2.0.0)",
     "dask (>=2025.3.0)",
-    "arraypartition (>=1.2.0)",
     "netCDF4 (>=1.7.2)",
+    "pyfive (>=1.1.2,<2.0.0)",
+    "cftime (>=1.6.5,<2.0.0)",
+    "pint (>=0.25.3,<0.26.0)",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7"
 poetry = "^2"
 sphinx = "^7.1.2"
 sphinx-rtd-theme = "^3.0.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7"
+ruff = "^0.16.3"
+pre-commit = "^4.6.2"
 
 [tool.poetry.plugins."xarray.backends"]
 CFA = "cfapyx.backend:CFANetCDFBackendEntrypoint"
@@ -28,3 +48,6 @@ CFA = "cfapyx.backend:CFANetCDFBackendEntrypoint"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

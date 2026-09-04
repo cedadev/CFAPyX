@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11","3.12"]
+        python-version: ["3.11","3.12", "3.13", "3.14"]
 
     #Define steps
     steps:
@@ -25,15 +25,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       # Install dependencies
-      - name: Install Python dependencies
+      - name: Install CFAPyX Dev Mode
         run: |
-          python3 -m pip install --upgrade pip
-          pip3 install poetry
-          poetry install
-      #- name: Run isort
-      #  run: |
-      #    poetry run isort --check --diff cfapyx
-      # Test with pytest
+          python3 -m pip install --upgrade pip &&
+          pip3 install poetry &&
+          poetry install --with dev
+      - name: Run pre-commit with ruff
+        run: |
+          poetry run pre-commit install
+          poetry run pre-commit run -a
       - name: Run pytest
         run: |
           poetry run pytest

@@ -1,3 +1,3 @@
-from .backend import CFANetCDFBackendEntrypoint
-from .creator import CFANetCDF
-from .utils import set_verbose
+from .backend import CFANetCDFBackendEntrypoint as CFANetCDFBackendEntrypoint
+from .creator import CFANetCDF as CFANetCDF
+from .utils import set_verbose as set_verbose

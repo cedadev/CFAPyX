@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 1.0.1
+-------------------
+- Fixed an issue handling the multiple file openers where only the last error is raised. Now all errors are listed and a general error is raised.
+
 Release Notes Version 1.0.0
 ---------------------------
 - The segmentation fault issue with netCDF4 filehandlers has been resolved using a global lock on NetCDF4 data access.

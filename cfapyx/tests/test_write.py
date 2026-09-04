@@ -1,6 +1,8 @@
 import xarray as xr
 
-from cfapyx import CFANetCDF
+from cfapyx import CFANetCDF, set_verbose
+
+set_verbose(2)
 
 TESTDIR = "cfapyx/tests/test_space"
 

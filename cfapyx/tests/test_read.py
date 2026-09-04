@@ -11,7 +11,7 @@ TESTDIR = "cfapyx/tests/test_space"
 class TestCFARead:
     def test_cfa_pure(self, testdir=TESTDIR):
 
-        FILE = f"{testdir}/testrain_1.12.nca"
+        FILE = f"{testdir}/testrain.nca"
 
         # Local testing: Add CFAPyX before tests
         try:

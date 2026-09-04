@@ -19,9 +19,11 @@ from cfapyx.partition import (
     get_dask_chunks,
     normalize_partition_chunks,
 )
-from cfapyx.utils import conform_data_to_units
+from cfapyx.utils import conform_data_to_units, logstream
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logstream)
+logger.propagate = False
 
 
 class CFAPartition(ArrayPartition):
@@ -112,7 +114,6 @@ class CFAPartition(ArrayPartition):
     def __array__(self, *args, **kwargs):
         a = super().__array__(*args, **kwargs)
         logger.debug(f"Partition Shape: {a.shape}")
-        logger.debug(f"Partition Dims: {getattr(a, 'dims', 'Unknown')}")
         return a
 
 
@@ -203,7 +204,6 @@ class FragmentArrayWrapper(ArrayLike):
         # Alternatively get rid of the indexing.LazilyIndexedArray in datastore?
         a = self.__array__()[selection].compute()
         logger.debug(f"Shape: {a.shape}")
-        logger.debug(f"Dims: {getattr(a, 'dims', 'unknown')}")
         return a
 
     def __array__(self):

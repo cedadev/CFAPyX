@@ -7,14 +7,10 @@ import math
 from itertools import product
 from typing import Union
 
-import fsspec
-import netCDF4
 import numpy as np
-import pyfive
 from dask.array.core import normalize_chunks
-from dask.utils import SerializableLock
 
-from cfapyx.filehandlers import ArrayFileObjectHandler
+from cfapyx.filehandlers import NumpyDatasetHandler
 from cfapyx.utils import logstream
 
 logger = logging.getLogger(__name__)
@@ -271,8 +267,6 @@ class ArrayPartition(SuperLazyArrayLike):
             # Identify shape
             shape = tuple(self._get_array().shape)
 
-        self._lock = SerializableLock()
-
         super().__init__(shape, **kwargs)
 
         if extent:
@@ -289,11 +283,8 @@ class ArrayPartition(SuperLazyArrayLike):
             correctly applied selections defined by the ``extent`` parameter.
         """
 
-        dtype = None
-        if args:
-            dtype = args[0]
-
-        arrayf = self._get_array(*args)
+        # Gets a numpy array handler object - no longer passing hdf filehandlers around
+        arrayf = self.open()
 
         if self.units is None:
             # Partition Inherits array units
@@ -305,14 +296,9 @@ class ArrayPartition(SuperLazyArrayLike):
                 " - will be handled by Unit conversion"
             )
 
-        if len(arrayf.shape) != len(self._extent):
-            # Extract named dims from pyfive variable
-
-            self._correct_slice(arrayf.dimensions)
-
         try:
             # Apply extent to array object.
-            var = np.array(arrayf.get_array()[tuple(self._extent)], dtype=dtype)
+            var = np.array(arrayf)
 
             # Disable auto mask/scaling - implemented by Xarray
             if self.format == "nc" and self.mask_and_scale:
@@ -320,43 +306,11 @@ class ArrayPartition(SuperLazyArrayLike):
 
         except IndexError:
             raise ValueError(
-                f"Unable to select required 'extent' of {self.extent} "
+                f"Unable to select required 'extent' of {arrayf.extent} "
                 f"from fragment {self.position} with shape {arrayf.shape}"
             )
 
         return self._post_process_data(var)
-
-    def _get_array(self, *args) -> ArrayFileObjectHandler:
-        """
-        Base private function to get the data array object.
-
-        Can be used to extract the shape and dtype if not known.
-        """
-        # Unexplained xarray behaviour:
-        # If using xarray indexing, __array__ should not have a positional 'dtype'
-        # option. If casting DataArray to numpy, __array__ requires a positional
-        # 'dtype' option.
-
-        ds = self.open()
-
-        varname = ds.apply_group(self.address)
-
-        if "/" in self.address:
-            # Assume we're dealing with groups but we just need the data for this
-            # variable.
-            varname = ds.apply_group(self.address)
-        else:
-            varname = self.address
-
-        try:
-            ds.apply_variable(varname)
-
-        except KeyError:
-            raise ValueError(
-                f"Dask Chunk at '{self.position}' does not contain "
-                f"the variable '{varname}'."
-            )
-        return ds
 
     def _perform_mask_and_scale(self, array: np.ndarray) -> np.ndarray:
         """
@@ -373,35 +327,6 @@ class ArrayPartition(SuperLazyArrayLike):
             f'Unable to mask and scale with "scale_factor:{scale}" "offset:{offset}"'
         )
 
-    def _correct_slice(self, array_dims: tuple):
-        """
-        Drop size-1 dimensions from the set of slices if there is an issue.
-
-        :param array_dims:      (tuple) The set of named dimensions present in
-            the source file. If there are fewer array_dims than the expected
-            set in ``named_dims`` then this function is used to remove extra
-            dimensions from the ``extent`` if possible.
-        """
-        extent = []
-        for dim in range(len(self.named_dims)):
-            named_dim = self.named_dims[dim]
-            if named_dim in array_dims:
-                extent.append(self._extent[dim])
-
-            # named dim not present
-            ext = self._extent[dim]
-
-            start = ext.start or 0
-            stop = ext.stop or self.shape[dim]
-            step = ext.step or 1
-
-            if int(stop - start) / step > 1:
-                raise ValueError(
-                    f'Attempted to slice dimension "{named_dim}" using slice "{ext}" '
-                    "but the requested dimension is not present"
-                )
-        self._extent = extent
-
     def _post_process_data(self, data: np.ndarray):
         """
         Perform any post-processing steps on the data here.
@@ -411,9 +336,7 @@ class ArrayPartition(SuperLazyArrayLike):
         """
         return data
 
-    def _try_openers(
-        self, filename: str, remote: bool = False
-    ) -> ArrayFileObjectHandler:
+    def _try_openers(self, filename: str, remote: bool = False) -> NumpyDatasetHandler:
         """
         Attempt to open the dataset using all possible methods.
 
@@ -436,30 +359,18 @@ class ArrayPartition(SuperLazyArrayLike):
     def _open_um(self, filename: str, remote: bool = False):
         raise NotImplementedError
 
-    def _open_netcdf(
-        self, filename: str, remote: bool = False
-    ) -> ArrayFileObjectHandler:
+    def _open_netcdf(self, filename: str, remote: bool = False) -> NumpyDatasetHandler:
         """
-        Open a NetCDF file using the pyfive python package."""
+        Open a NetCDF file using the pyfive/netCDF4 python packages."""
 
-        if not remote:
-            ds = netCDF4.Dataset(filename)
-            mode = "netcdf4"
-        else:
-            logger.info("Using pyfive for remote HDF5 file (NetCDF3 not supported)")
-            # Basic installation
-            fs = fsspec.filesystem("http")
-            fh = fs.open(filename, "rb")
-            try:
-                ds = pyfive.File(fh)
-            except pyfive.core.InvalidHDF5File:
-                raise ValueError(
-                    "Remote access unavailable for non-HDF5 files. "
-                    "(NetCDF3 not supported)"
-                )
-            mode = "pyfive"
-
-        return ArrayFileObjectHandler(ds, mode)
+        return NumpyDatasetHandler(
+            filename,
+            self.address,
+            dtype=self.dtype,
+            named_dims=self.named_dims,
+            extent=self._extent,
+            remote=remote,
+        )
 
     def get_kwargs(self):
         """
@@ -496,7 +407,7 @@ class ArrayPartition(SuperLazyArrayLike):
         )
         return new_instance
 
-    def open(self) -> ArrayFileObjectHandler:
+    def open(self) -> NumpyDatasetHandler:
         """
         Open the source file for this chunk to extract data.
 

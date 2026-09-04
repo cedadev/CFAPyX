@@ -15,6 +15,36 @@ logstream.setFormatter(formatter)
 logger = logging.getLogger(__name__)
 
 
+def correct_slice(extent: tuple, shape: tuple, named_dims: tuple, array_dims: tuple):
+    """
+    Drop size-1 dimensions from the set of slices if there is an issue.
+
+    :param array_dims:      (tuple) The set of named dimensions present in
+        the source file. If there are fewer array_dims than the expected
+        set in ``named_dims`` then this function is used to remove extra
+        dimensions from the ``extent`` if possible.
+    """
+    extent = []
+    for dim in range(len(named_dims)):
+        named_dim = named_dims[dim]
+        if named_dim in array_dims:
+            extent.append(extent[dim])
+
+        # named dim not present
+        ext = extent[dim]
+
+        start = ext.start or 0
+        stop = ext.stop or shape[dim]
+        step = ext.step or 1
+
+        if int(stop - start) / step > 1:
+            raise ValueError(
+                f'Attempted to slice dimension "{named_dim}" using slice "{ext}" '
+                "but the requested dimension is not present"
+            )
+    return extent
+
+
 def supported_by_cftime(unit: str, calendar: str = "standard"):
     try:
         import cftime

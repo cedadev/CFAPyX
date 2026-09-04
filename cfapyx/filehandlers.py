@@ -1,73 +1,123 @@
-class ArrayFileObjectHandler:
-    """
-    Wrapper class for netcdf-like methods when dealing with any file type.
-    """
+import logging
 
-    def __init__(self, fh: object, mode: str):
+import fsspec
+import netCDF4
+import numpy as np
+import pyfive
+from dask.utils import SerializableLock
 
-        self.fh = fh
-        self.mode = mode
+from cfapyx.utils import correct_slice, logstream
 
-    @property
-    def units(self) -> str:
-        """Return the units via standard class method"""
+logger = logging.getLogger(__name__)
 
-        match self.mode:
-            case "pyfive":
-                return self.fh.attrs.get("units", None)
-            case "netcdf4":
-                if hasattr(self.fh, "units"):
-                    return self.fh.units
-                return None
-            case _:
-                raise ValueError(f"Mode {self.mode} unknown")
+logger.addHandler(logstream)
+logger.propagate = False
 
-    @property
-    def shape(self) -> tuple:
-        """Return the shape via standard class method"""
-        return self.fh.shape
+GLOBAL_LOCK = SerializableLock()
 
-    @property
-    def dimensions(self) -> tuple:
-        """Return the dimensions via standard class method"""
 
-        if hasattr(self.fh, "dimensions"):
-            return tuple(self.fh.dimensions)
-
-        match self.mode:
-            case "pyfive":
-                return tuple([dim[0].name.split("/")[-1] for dim in self.fh.dims])
-            case _:
-                raise ValueError(f"Mode {self.mode} unknown")
-
-    def get_array(self) -> object:
+class NumpyDatasetHandler:
+    def __init__(
+        self,
+        filename: str,
+        address: str,
+        dtype: object,
+        named_dims: tuple,
+        extent: tuple | None = None,
+        remote: bool = False,
+    ):
         """
-        Return array object from this wrapper."""
-        return self.fh
+        Wrapper method for opening
+        """
 
-    def apply_group(self, address: str) -> str:
-        """Apply group internally."""
+        self.filename = filename
+        self.address = address
+        self.dtype = dtype
+        self.extent = extent
 
-        if "/" not in address:
-            return address
+        self.named_dims = named_dims
 
-        match self.mode:
-            case "pyfive":
-                addr = address.split("/")
-                for g in addr[1:-1]:
-                    self.fh = self.fh[g]
-                varname = addr[-1]
+        self.units = None
+        self._array = None
 
-            case "netcdf4":
-                addr = address.split("/")
-                group = "/".join(addr[1:-1])
-                varname = addr[-1]
+        if not remote:
+            import threading
 
-                self.fh = self.fh.groups[group]
-            case _:
-                raise ValueError("Mode unknown")
-        return varname
+            logger.debug("ENTER" + threading.current_thread().name + filename)
 
-    def apply_variable(self, var) -> None:
-        """Apply variable to internal array handler."""
-        self.fh = self.fh[var]
+            with GLOBAL_LOCK:
+                self.open_netcdf4()
+
+            logger.debug("EXIT" + threading.current_thread().name + filename)
+
+            # NetCDF4 library requires dask single thread scheduling
+
+        else:
+            logger.info("Using pyfive for remote HDF5 file (NetCDF3 not supported)")
+            self.open_pyfive()
+
+    def __array__(self):
+        """Extract numpy array already held"""
+        return self._array
+
+    def open_netcdf4(self):
+
+        ds = netCDF4.Dataset(self.filename)
+
+        # Apply variable
+        if "/" in self.address:
+            addr = self.address.split("/")
+            group = "/".join(addr[1:-1])
+            varname = addr[-1]
+
+            array = ds.groups[group][varname]
+        else:
+            array = ds[self.address]
+
+        if hasattr(array, "units"):
+            self.units = array.units
+
+        # Apply extent
+        if len(array.shape) != len(self.extent):
+            # Extract named dims from pyfive variable
+
+            self.extent = correct_slice(
+                self.extent, array.shape, self.named_dims, array.dimensions
+            )
+
+        var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+        ds.close()
+
+        self._array = var
+
+    def open_pyfive(self):
+
+        fs = fsspec.filesystem("http")
+        fh = fs.open(self.filename, "rb")
+        try:
+            ds = pyfive.File(fh)
+        except pyfive.core.InvalidHDF5File:
+            raise ValueError(
+                "Remote access unavailable for non-HDF5 files. (NetCDF3 not supported)"
+            )
+
+        # Apply variable
+        if "/" in self.address:
+            addr = self.address.split("/")
+            array = ds[addr[1]]
+            for g in addr[2:]:
+                array = array[g]
+        else:
+            array = ds[self.address]
+
+        # Apply extent
+        if len(array.shape) != len(self.extent):
+            # Extract named dims from pyfive variable
+            dims = tuple([dim[0].name.split("/")[-1] for dim in array.dims])
+
+            self.extent = correct_slice(self.extent, array.shape, self.named_dims, dims)
+
+        var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+        ds.close()
+
+        return var

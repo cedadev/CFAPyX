@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 1.0.2
+-------------------
+- Fixed an bug with the pyfive data extractor returning data instead of setting to the correct private variable.
+
 Release Notes 1.0.1
 -------------------
 - Fixed an issue handling the multiple file openers where only the last error is raised. Now all errors are listed and a general error is raised.

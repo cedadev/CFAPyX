@@ -119,4 +119,4 @@ class NumpyDatasetHandler:
         var = np.array(array[tuple(self.extent)], dtype=self.dtype)
         ds.close()
 
-        return var
+        self._array = var

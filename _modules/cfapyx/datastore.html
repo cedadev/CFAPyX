@@ -49,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../fragments.html">Fragments, Partitions and Chunks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../options.html">cfapyx Usage and Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../creator_use.html">CFA Creator Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releases.html">Release Notes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -84,8 +85,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cfapyx.datastore</h1><div class="highlight"><pre>
-<span></span><span class="n">__author__</span>    <span class="o">=</span> <span class="s2">&quot;Daniel Westwood&quot;</span>
-<span class="n">__contact__</span>   <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
+<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Daniel Westwood&quot;</span>
+<span class="n">__contact__</span> <span class="o">=</span> <span class="s2">&quot;daniel.westwood@stfc.ac.uk&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -101,9 +102,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fragment_extents</span><span class="p">,</span> <span class="n">get_fragment_positions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.group</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFAGroupWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONVENTIONS</span><span class="p">,</span> <span class="n">logstream</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">logstream</span><span class="p">,</span> <span class="n">CONVENTIONS</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -111,30 +111,36 @@
 <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<span class="n">xarray_subs</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;file:///&#39;</span><span class="p">:</span><span class="s1">&#39;/&#39;</span>
-<span class="p">}</span>
+<span class="n">xarray_subs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;file:///&quot;</span><span class="p">:</span> <span class="s2">&quot;/&quot;</span><span class="p">}</span>
+
 
 <div class="viewcode-block" id="CFADataStore">
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CFADataStore</span><span class="p">(</span><span class="n">NetCDF4DataStore</span><span class="p">):</span>
-
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines </span>
+<span class="sd">    DataStore container for the CFA-netCDF loaded file. Contains all unpacking routines</span>
 <span class="sd">    directly related to the specific variables and attributes. The ``NetCDF4Datastore``</span>
-<span class="sd">    Xarray class from which this class inherits, has an ``__init__`` method which </span>
-<span class="sd">    cannot easily be overriden, so properties are used instead for specific variables </span>
+<span class="sd">    Xarray class from which this class inherits, has an ``__init__`` method which</span>
+<span class="sd">    cannot easily be overriden, so properties are used instead for specific variables</span>
 <span class="sd">    that may be un-set at time of use.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">wrapper</span> <span class="o">=</span> <span class="n">FragmentArrayWrapper</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mask_and_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_and_scale</span>
+
+    <span class="nd">@mask_and_scale</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mask_and_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_and_scale</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_and_scale</span> <span class="o">=</span> <span class="n">mask_and_scale</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;_cfa_chunks&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_cfa_chunks&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span>
         <span class="k">return</span> <span class="kc">None</span>
-    
+
     <span class="nd">@chunks</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfa_chunks</span> <span class="o">=</span> <span class="n">value</span>
@@ -142,15 +148,15 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cfa_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Property of the datastore that relates private option variables to the standard </span>
+<span class="sd">        Property of the datastore that relates private option variables to the standard</span>
 <span class="sd">        ``cfa_options`` parameter.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s1">&#39;substitutions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
-            <span class="s1">&#39;decode_cfa&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">,</span>
-            <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
-            <span class="s1">&#39;chunk_limits&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>
+            <span class="s2">&quot;substitutions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span><span class="p">,</span>
+            <span class="s2">&quot;decode_cfa&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span><span class="p">,</span>
+            <span class="s2">&quot;chunks&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span><span class="p">,</span>
+            <span class="s2">&quot;chunk_limits&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="nd">@cfa_options</span><span class="o">.</span><span class="n">setter</span>
@@ -158,19 +164,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_cfa_options</span><span class="p">(</span><span class="o">**</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> 
-            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-            <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">chunks</span><span class="o">=</span><span class="p">{},</span>
-            <span class="n">chunk_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">chunks</span><span class="o">=</span><span class="p">{},</span>
+        <span class="n">chunk_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to set cfa options.</span>
 
-<span class="sd">        :param substitutions:   (dict) Set of provided substitutions to Xarray, </span>
+<span class="sd">        :param substitutions:   (dict) Set of provided substitutions to Xarray,</span>
 <span class="sd">                                following the CFA conventions on substitutions.</span>
 
-<span class="sd">        :param decode_cfa:      (bool) Optional setting to disable CFA decoding </span>
+<span class="sd">        :param decode_cfa:      (bool) Optional setting to disable CFA decoding</span>
 <span class="sd">                                in some cases, default is True.</span>
 
 <span class="sd">        :param chunks:          (dict) Not implemented in 2024.9.0</span>
@@ -180,8 +186,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span>    <span class="o">=</span> <span class="n">decode_cfa</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span>  <span class="o">=</span> <span class="n">chunk_limits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span> <span class="o">=</span> <span class="n">decode_cfa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span> <span class="o">=</span> <span class="n">chunk_limits</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_acquire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">needs_lock</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -196,15 +202,15 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_decode_feature_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_data</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Decode the value of an object which is expected to be of the form of a </span>
+<span class="sd">        Decode the value of an object which is expected to be of the form of a</span>
 <span class="sd">        ``feature: variable`` blank-separated element list.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: | &#39;</span><span class="p">,</span><span class="n">feature_data</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;: | &quot;</span><span class="p">,</span> <span class="n">feature_data</span><span class="p">)</span>
 
         <span class="c1"># Anything that uses a &#39;:&#39; needs to be readded after the previous step.</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">readd</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
-                <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])}</span>
 
@@ -224,72 +230,72 @@
             <span class="k">if</span> <span class="n">compliant</span><span class="p">:</span>
                 <span class="n">internal_convention</span> <span class="o">=</span> <span class="n">convention</span>
 
-
-
-        <span class="k">if</span> <span class="n">internal_convention</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># Correct error message.</span>
+        <span class="k">if</span> <span class="n">internal_convention</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Correct error message.</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;CFA-netCDF file is not compliant with any known set of conventions. &#39;</span><span class="p">,</span>
-                <span class="s1">&#39;See https://cfconventions.org/cf-conventions/cf-conventions.html#aggregated-dimensions-and-data &#39;</span><span class="p">,</span>
-                <span class="s1">&#39;for details on required features. &#39;</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+                <span class="s2">&quot;CFA-netCDF file is not compliant with any known set of conventions. &quot;</span><span class="p">,</span>
+                <span class="s2">&quot;See https://cfconventions.org/cf-conventions/cf-conventions.html&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#aggregated-dimensions-and-data &quot;</span><span class="p">,</span>
+                <span class="s2">&quot;for details on required features. &quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;Received &quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">agg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">=</span> <span class="n">internal_convention</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_perform_decoding</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> 
-            <span class="n">shape</span><span class="p">,</span> 
-            <span class="n">address</span><span class="p">,</span> 
-            <span class="n">location</span><span class="p">,</span> 
-            <span class="n">array_shape</span><span class="p">,</span>
-            <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-            <span class="n">cformat</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> 
-            <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">shape</span><span class="p">,</span>
+        <span class="n">address</span><span class="p">,</span>
+        <span class="n">location</span><span class="p">,</span>
+        <span class="n">array_shape</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cformat</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Private method for performing the decoding of the standard ``fragment array </span>
-<span class="sd">        variables``. Any convention version-specific adjustments should be made prior </span>
+<span class="sd">        Private method for performing the decoding of the standard ``fragment array</span>
+<span class="sd">        variables``. Any convention version-specific adjustments should be made prior</span>
 <span class="sd">        to decoding with this function, namely in the public method of the same name.</span>
 
-<span class="sd">        :param shape:       (obj) The integer-valued ``shape`` fragment array variable </span>
-<span class="sd">                            defines the shape of each fragment&#39;s data in its canonical </span>
+<span class="sd">        :param shape:       (obj) The integer-valued ``shape`` fragment array variable</span>
+<span class="sd">                            defines the shape of each fragment&#39;s data in its canonical</span>
 <span class="sd">                            form. CF-1.12 section 2.8.1</span>
 
-<span class="sd">        :param address:     (obj) The ``address`` fragment array variable, that may </span>
-<span class="sd">                            have any data type, defines how to find each fragment </span>
+<span class="sd">        :param address:     (obj) The ``address`` fragment array variable, that may</span>
+<span class="sd">                            have any data type, defines how to find each fragment</span>
 <span class="sd">                            within its fragment dataset. CF-1.12 section 2.8.1</span>
 
-<span class="sd">        :param location:    (obj) The string-valued ``location`` fragment array </span>
-<span class="sd">                            variable defines the locations of fragment datasets using </span>
+<span class="sd">        :param location:    (obj) The string-valued ``location`` fragment array</span>
+<span class="sd">                            variable defines the locations of fragment datasets using</span>
 <span class="sd">                            Uniform Resource Identifiers (URIs). CF-1.12 section 2.8.1</span>
 
-<span class="sd">        :param value:       (obj) *Optional* unique data value to fill a fragment array </span>
+<span class="sd">        :param value:       (obj) *Optional* unique data value to fill a fragment array</span>
 <span class="sd">                            where the data values within the fragment are all the same.</span>
 
-<span class="sd">        :param cformat:     (str) *Optional* ``format`` argument if provided by the </span>
+<span class="sd">        :param cformat:     (str) *Optional* ``format`` argument if provided by the</span>
 <span class="sd">                            CFA-netCDF or cfa-options parameters. CFA-0.6.2</span>
 
-<span class="sd">        :param substitutions:   (dict) Set of substitutions to apply in the form &#39;base&#39;:&#39;sub&#39;</span>
+<span class="sd">        :param substitutions:   (dict) Set of substitutions to apply in the form</span>
+<span class="sd">            &#39;base&#39;:&#39;sub&#39;</span>
 
-<span class="sd">        :returns:       (fragment_info) A dictionary of fragment metadata where each </span>
-<span class="sd">                        key is the coordinates of a fragment in index space and the </span>
-<span class="sd">                        value is a dictionary of the attributes specific to that </span>
+<span class="sd">        :returns:       (fragment_info) A dictionary of fragment metadata where each</span>
+<span class="sd">                        key is the coordinates of a fragment in index space and the</span>
+<span class="sd">                        value is a dictionary of the attributes specific to that</span>
 <span class="sd">                        fragment.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="n">fragment_info</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Extract non-padded fragment sizes per dimension.</span>
         <span class="n">fragment_size_per_dim</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">compressed</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
 
         <span class="c1"># Derive the total shape of the fragment array in all fragmented dimensions.</span>
-        <span class="n">fragment_space</span>    <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">fsize</span><span class="p">)</span> <span class="k">for</span> <span class="n">fsize</span> <span class="ow">in</span> <span class="n">fragment_size_per_dim</span><span class="p">]</span>
+        <span class="n">fragment_space</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">fsize</span><span class="p">)</span> <span class="k">for</span> <span class="n">fsize</span> <span class="ow">in</span> <span class="n">fragment_size_per_dim</span><span class="p">]</span>
 
         <span class="c1"># Obtain the positions of each fragment in index space.</span>
         <span class="n">fragment_positions</span> <span class="o">=</span> <span class="n">get_fragment_positions</span><span class="p">(</span><span class="n">fragment_size_per_dim</span><span class="p">)</span>
 
         <span class="n">global_extent</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">shapes</span> <span class="o">=</span> <span class="n">get_fragment_extents</span><span class="p">(</span>
-            <span class="n">fragment_size_per_dim</span><span class="p">,</span> 
-            <span class="n">array_shape</span>
+            <span class="n">fragment_size_per_dim</span><span class="p">,</span> <span class="n">array_shape</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -311,34 +317,33 @@
 
             <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span> <span class="c1"># Scalar address</span>
-            <span class="n">addr</span>    <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">getValue</span><span class="p">()</span>
-            <span class="n">adtype</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">address</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>  <span class="c1"># Scalar address</span>
+            <span class="n">addr</span> <span class="o">=</span> <span class="n">address</span><span class="o">.</span><span class="n">getValue</span><span class="p">()</span>
+            <span class="n">adtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
             <span class="n">address</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">fragment_space</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">adtype</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">cformat</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cformat</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">cformat</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
                 <span class="n">cft</span> <span class="o">=</span> <span class="n">cformat</span><span class="o">.</span><span class="n">getValue</span><span class="p">()</span>
                 <span class="n">npdtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cft</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
                 <span class="n">cformat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">fragment_space</span><span class="p">,</span> <span class="n">cft</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">npdtype</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">frag_pos</span> <span class="ow">in</span> <span class="n">fragment_positions</span><span class="p">:</span>
-
             <span class="n">fragment_info</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;shape&quot;</span>    <span class="p">:</span> <span class="n">shapes</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
-                <span class="s2">&quot;location&quot;</span> <span class="p">:</span> <span class="n">location</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
-                <span class="s2">&quot;address&quot;</span>  <span class="p">:</span> <span class="n">address</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
-                <span class="s2">&quot;extent&quot;</span>   <span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
-                <span class="s2">&quot;global_extent&quot;</span><span class="p">:</span> <span class="n">global_extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shapes</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="n">location</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">address</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;extent&quot;</span><span class="p">:</span> <span class="n">extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
+                <span class="s2">&quot;global_extent&quot;</span><span class="p">:</span> <span class="n">global_extent</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">],</span>
             <span class="p">}</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cformat</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cformat</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
                 <span class="n">fragment_info</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cformat</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span>
 
         <span class="c1"># Apply string substitutions to the fragment filenames</span>
         <span class="k">if</span> <span class="n">substitutions</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fragment_info</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
                         <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]:</span>
@@ -346,46 +351,53 @@
 
         <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
 
-    <span class="c1"># Public class methods</span>
+    <span class="c1"># Public class methods</span>
 
 <div class="viewcode-block" id="CFADataStore.perform_decoding">
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.perform_decoding">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">perform_decoding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Public method ``perform_decoding`` involves extracting the aggregated </span>
-<span class="sd">        information parameters and assembling the required information for actual </span>
+<span class="sd">        Public method ``perform_decoding`` involves extracting the aggregated</span>
+<span class="sd">        information parameters and assembling the required information for actual</span>
 <span class="sd">        decoding.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># If not raised an error in checking, we can continue.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_applied_conventions</span><span class="p">(</span><span class="n">agg_data</span><span class="p">)</span>
 
-        <span class="n">cformat</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="n">value</span>   <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s1">&#39;beta&#39;</span><span class="p">:</span>
-           <span class="c1"># Beta Version (Earliest)</span>
-            <span class="n">shape</span>        <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">]]</span>
-            <span class="n">location</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]]</span>
-            <span class="n">cformat</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]]</span>
+        <span class="n">cformat</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s2">&quot;beta&quot;</span><span class="p">:</span>
+            <span class="c1"># Beta Version (Earliest)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]]</span>
+            <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]]</span>
+            <span class="n">cformat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s2">&quot;format&quot;</span><span class="p">]]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">conventions</span> <span class="o">=</span> <span class="n">CONVENTIONS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span><span class="p">]</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s1">&#39;secondary&#39;</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;unique_values&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_internal_convention</span> <span class="o">==</span> <span class="s2">&quot;secondary&quot;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s2">&quot;unique_values&quot;</span><span class="p">]]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
-                <span class="n">address</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
-                <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
-                    <span class="n">value</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]]</span>
+                <span class="n">address</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="n">conventions</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
+                <span class="k">if</span> <span class="s2">&quot;value&quot;</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">agg_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]]</span>
         <span class="n">subs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s1">&#39;substitutions&#39;</span><span class="p">):</span>
-            <span class="n">subs</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">substitutions</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;https://&#39;</span><span class="p">,</span> <span class="s1">&#39;https@//&#39;</span><span class="p">)</span>
-            <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">subs</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;https://&#39;</span><span class="p">:</span><span class="s1">&#39;https@//&#39;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="s2">&quot;substitutions&quot;</span><span class="p">):</span>
+            <span class="c1"># Fix version as to how this should be applied.</span>
+            <span class="n">subs</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">substitutions</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;https://&quot;</span><span class="p">,</span> <span class="s2">&quot;https@//&quot;</span><span class="p">)</span>
+            <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">subs</span><span class="p">,</span> <span class="n">readd</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;https://&quot;</span><span class="p">:</span> <span class="s2">&quot;https@//&quot;</span><span class="p">})</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_decoding</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">array_shape</span><span class="p">,</span>
-                                      <span class="n">cformat</span><span class="o">=</span><span class="n">cformat</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> 
-                                      <span class="n">substitutions</span> <span class="o">=</span> <span class="n">xarray_subs</span> <span class="o">|</span> <span class="n">subs</span><span class="p">)</span> </div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perform_decoding</span><span class="p">(</span>
+            <span class="n">shape</span><span class="p">,</span>
+            <span class="n">address</span><span class="p">,</span>
+            <span class="n">location</span><span class="p">,</span>
+            <span class="n">array_shape</span><span class="p">,</span>
+            <span class="n">cformat</span><span class="o">=</span><span class="n">cformat</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">substitutions</span><span class="o">=</span><span class="n">xarray_subs</span> <span class="o">|</span> <span class="n">subs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
         <span class="c1"># Combine substitutions with known defaults for using in xarray.</span>
 
@@ -393,15 +405,15 @@
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_variables">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetch the netCDF4.Dataset variables and perform some CFA decoding if </span>
+<span class="sd">        Fetch the netCDF4.Dataset variables and perform some CFA decoding if</span>
 <span class="sd">        necessary.</span>
 
-<span class="sd">        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which </span>
-<span class="sd">        has flattened the group structure and allows fetching of variables and </span>
+<span class="sd">        ``ds`` is now a ``GroupedDatasetWrapper`` object from ``CFAPyX.group`` which</span>
+<span class="sd">        has flattened the group structure and allows fetching of variables and</span>
 <span class="sd">        attributes from the whole group tree from which a specific group may inherit.</span>
 
-<span class="sd">        :returns:       A ``FrozenDict`` Xarray object of the names of all variables, </span>
-<span class="sd">                        and methods to fetch those variables, depending on if those </span>
+<span class="sd">        :returns:       A ``FrozenDict`` Xarray object of the names of all variables,</span>
+<span class="sd">                        and methods to fetch those variables, depending on if those</span>
 <span class="sd">                        variables are standard NetCDF4 or CFA Aggregated variables.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -419,14 +431,14 @@
         <span class="k">for</span> <span class="n">avar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">cfa</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="c1">## CF-Compliant method of identifying aggregated variables.</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">],</span> <span class="s1">&#39;aggregated_dimensions&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">],</span> <span class="s2">&quot;aggregated_dimensions&quot;</span><span class="p">):</span>
                 <span class="n">cfa</span> <span class="o">=</span> <span class="kc">True</span>
 
-                <span class="n">agg_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">]</span><span class="o">.</span><span class="n">aggregated_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                <span class="n">agg_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">]</span><span class="o">.</span><span class="n">aggregated_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
 
                 <span class="k">for</span> <span class="n">vname</span> <span class="ow">in</span> <span class="n">agg_data</span><span class="p">:</span>
-                    <span class="n">fragment_array_vars</span> <span class="o">+=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;: | &#39;</span><span class="p">,</span><span class="n">vname</span><span class="p">)</span>
-                
+                    <span class="n">fragment_array_vars</span> <span class="o">+=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;: | &quot;</span><span class="p">,</span> <span class="n">vname</span><span class="p">)</span>
+
             <span class="n">all_vars</span><span class="p">[</span><span class="n">avar</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">avar</span><span class="p">],</span> <span class="n">cfa</span><span class="p">)</span>
 
         <span class="c1"># Ignore fragment array variables at this stage of decoding.</span>
@@ -434,17 +446,14 @@
             <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fragment_array_vars</span><span class="p">:</span>
                 <span class="n">real_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
 
-
-        <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">real_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_variable</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">real_vars</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
 
 
 <div class="viewcode-block" id="CFADataStore.get_attrs">
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.get_attrs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or </span>
+<span class="sd">        Produce the FrozenDict of attributes from the ``NetCDF4.Dataset`` or</span>
 <span class="sd">        ``CFAGroupWrapper`` in the case of using a group or nested group tree.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">FrozenDict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">())</span></div>
@@ -454,16 +463,16 @@
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_variable">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">open_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable </span>
+<span class="sd">        Open a CFA-netCDF variable as either a standard NetCDF4 Datastore variable</span>
 <span class="sd">        or as a CFA aggregated variable which requires additional decoding.</span>
 
 <span class="sd">        :param name:    (str) A named NetCDF4 variable.</span>
 
-<span class="sd">        :param var:     (obj) The NetCDF4.Variable object or a tuple with the contents </span>
-<span class="sd">                        ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that </span>
+<span class="sd">        :param var:     (obj) The NetCDF4.Variable object or a tuple with the contents</span>
+<span class="sd">                        ``(NetCDF4.Variable, cfa)`` where ``cfa`` is a bool that</span>
 <span class="sd">                        determines if the variable is a CFA or standard variable.</span>
 
-<span class="sd">        :returns:       The variable object opened as either a standard store variable </span>
+<span class="sd">        :returns:       The variable object opened as either a standard store variable</span>
 <span class="sd">                        or CFA aggregated variable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -480,46 +489,46 @@
 <a class="viewcode-back" href="../../datastore.html#cfapyx.datastore.CFADataStore.open_cfa_variable">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">open_cfa_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Open a CFA Aggregated variable with the correct parameters to create an </span>
+<span class="sd">        Open a CFA Aggregated variable with the correct parameters to create an</span>
 <span class="sd">        Xarray ``Variable`` instance.</span>
 
 <span class="sd">        :param name:        (str) A named NetCDF4 variable.</span>
 
-<span class="sd">        :param var:         (obj) The NetCDF4.Variable object or a tuple with the </span>
-<span class="sd">                            contents ``(NetCDF4.Variable, cfa)`` where ``cfa`` is </span>
-<span class="sd">                            a bool that determines if the variable is a CFA or </span>
+<span class="sd">        :param var:         (obj) The NetCDF4.Variable object or a tuple with the</span>
+<span class="sd">                            contents ``(NetCDF4.Variable, cfa)`` where ``cfa`` is</span>
+<span class="sd">                            a bool that determines if the variable is a CFA or</span>
 <span class="sd">                            standard variable.</span>
 
-<span class="sd">        :returns:           An xarray ``Variable`` instance constructed from the </span>
-<span class="sd">                            attributes provided here, and data provided by a </span>
-<span class="sd">                            ``FragmentArrayWrapper`` which is indexed by Xarray&#39;s </span>
+<span class="sd">        :returns:           An xarray ``Variable`` instance constructed from the</span>
+<span class="sd">                            attributes provided here, and data provided by a</span>
+<span class="sd">                            ``FragmentArrayWrapper`` which is indexed by Xarray&#39;s</span>
 <span class="sd">                            ``LazilyIndexedArray`` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">real_dims</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">d</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">aggregated_dimensions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="n">d</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ds</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">aggregated_dimensions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
         <span class="p">}</span>
-        <span class="n">agg_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">aggregated_data</span><span class="p">)</span>
+        <span class="n">agg_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_feature_data</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">aggregated_data</span><span class="p">)</span>
 
         <span class="c1">## Array Metadata</span>
-        <span class="n">dimensions</span>  <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">real_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">real_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="n">array_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">real_dims</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
         <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perform_decoding</span><span class="p">(</span><span class="n">array_shape</span><span class="p">,</span> <span class="n">agg_data</span><span class="p">)</span>
 
-        <span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">):</span>
-            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;aggregated_units&#39;</span><span class="p">):</span>
-            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s1">&#39;aggregated_units&#39;</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">):</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">&quot;aggregated_units&quot;</span><span class="p">):</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">&quot;aggregated_units&quot;</span><span class="p">)</span>
 
         <span class="c1">## Get non-aggregated attributes.</span>
         <span class="n">attributes</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s1">&#39;aggregated&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
-                <span class="n">attributes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> 
+            <span class="k">if</span> <span class="s2">&quot;aggregated&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                <span class="n">attributes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
-        <span class="c1">## Array-like object </span>
+        <span class="c1">## Array-like object</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">indexing</span><span class="o">.</span><span class="n">LazilyIndexedArray</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">wrapper</span><span class="p">(</span>
                 <span class="n">fragment_info</span><span class="p">,</span>
@@ -529,8 +538,10 @@
                 <span class="n">dtype</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
                 <span class="n">cfa_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfa_options</span><span class="p">,</span>
                 <span class="n">named_dims</span><span class="o">=</span><span class="n">dimensions</span><span class="p">,</span>
-            <span class="p">))</span>
-            
+                <span class="n">mask_and_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_and_scale</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
         <span class="n">encoding</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">datatype</span><span class="p">,</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">EnumType</span><span class="p">):</span>
             <span class="n">encoding</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span>
@@ -570,7 +581,6 @@
         <span class="k">return</span> <span class="n">v</span></div>
 </div>
 
-    
 </pre></div>
 
            </div>

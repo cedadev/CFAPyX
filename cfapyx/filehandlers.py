@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import fsspec
 import netCDF4
@@ -41,8 +42,6 @@ class NumpyDatasetHandler:
         self._array = None
 
         if not remote:
-            import threading
-
             logger.debug("ENTER" + threading.current_thread().name + filename)
 
             with GLOBAL_LOCK:

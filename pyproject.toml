@@ -1,6 +1,6 @@
 [project]
 name = "cfapyx"
-version = "1.0.0"
+version = "1.0.1"
 description = "The pure-Python implementation of the CF Aggregation conventions, including the Xarray engine to enable reading CFA-netCDF files."
 authors = [
     {name = "Daniel Westwood",email = "daniel.westwood@stfc.ac.uk"}
@@ -16,6 +16,8 @@ dependencies = [
     "pyfive (>=1.1.2,<2.0.0)",
     "cftime (>=1.6.5,<2.0.0)",
     "pint (>=0.25.3,<0.26.0)",
+    "requests (>=2.34.2,<3.0.0)",
+    "aiohttp (>=3.14.3,<4.0.0)",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",

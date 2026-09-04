@@ -425,15 +425,13 @@ class ArrayPartition(SuperLazyArrayLike):
         local = [loc for loc in filenames if "://" not in loc]
         remote = [rem for rem in filenames if "://" in rem]
         relative = [
-            rel
-            for rel in filenames
-            if any([prefix in rel for prefix in ("https", "s3://", "file:")])
+            rel for rel in filenames if not rel.startswith("/") and rel not in remote
         ]
 
         # Prioritise relative then remote options first if any are present.
         filenames = relative + remote + local
 
-        err = False
+        errs = []
         for filename in filenames:
             is_remote = "http" in filename
             try:
@@ -448,9 +446,10 @@ class ArrayPartition(SuperLazyArrayLike):
             except ValueError:
                 raise
             except Exception as e:
-                err = e
-        if err:
-            raise err
+                errs.append(e)
+        if errs:
+            for e in errs:
+                logger.error(e)
 
         raise FileNotFoundError(
             f'None of the location options for chunk "{self.position}" could be '

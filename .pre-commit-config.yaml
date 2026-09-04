@@ -5,16 +5,18 @@ ci:
   autofix_prs: false
 
 exclude: |
-  ^.github/|
-  ^docs/|
-  ^issues/|
-  ^local/|
-  ^dist/|
-  ^.vscode/|
-  ^.venv/|
-  ^testing/|
-  .pytest_cache/|
-  ^LICENSE
+  (?x)^(
+      \.github/|
+      docs/|
+      issues/|
+      local/|
+      dist/|
+      \.vscode/|
+      \.venv/|
+      testing/|
+      \.pytest_cache/|
+      LICENSE$
+  )
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

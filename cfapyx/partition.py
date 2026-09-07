@@ -443,8 +443,6 @@ class ArrayPartition(SuperLazyArrayLike):
                     return self._open_netcdf(filename, is_remote)
                 else:
                     raise ValueError(f"Unrecognised format '{self.format}'")
-            except ValueError:
-                raise
             except Exception as e:
                 errs.append(f"{filename}: {e}")
         if errs:

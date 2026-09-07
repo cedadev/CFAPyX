@@ -112,8 +112,9 @@ def set_verbose(level: int):
         level = len(levels) - 1
 
     for name in logging.root.manager.loggerDict:
-        lg = logging.getLogger(name)
-        lg.setLevel(levels[level])
+        if "cfapyx" in name:
+            lg = logging.getLogger(name)
+            lg.setLevel(levels[level])
 
 
 CONVENTIONS = {

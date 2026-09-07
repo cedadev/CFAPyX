@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 1.0.3
+-------------------
+- Fixed another bug in pyfive with unit extraction.
+
 Release Notes 1.0.2
 -------------------
 - Fixed an bug with the pyfive data extractor returning data instead of setting to the correct private variable.

@@ -446,7 +446,7 @@ class ArrayPartition(SuperLazyArrayLike):
             except ValueError:
                 raise
             except Exception as e:
-                errs.append(e)
+                errs.append(f"{filename}: {e}")
         if errs:
             for e in errs:
                 logger.error(e)

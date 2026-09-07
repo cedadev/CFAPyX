@@ -42,6 +42,7 @@ class NumpyDatasetHandler:
         self._array = None
 
         if not remote:
+            raise ValueError("Not using local")
             logger.debug("ENTER" + threading.current_thread().name + filename)
 
             with GLOBAL_LOCK:
@@ -116,8 +117,10 @@ class NumpyDatasetHandler:
 
             self.extent = correct_slice(self.extent, array.shape, self.named_dims, dims)
 
-        if "units" in array.attrs.get("units"):
-            self.units = str(np.array(ds["ps"].attrs.get("units"), dtype=str))
+        # Correct handling of units
+        if hasattr(array, "attrs"):
+            if "units" in array.attrs:
+                self.units = str(np.array(ds["ps"].attrs.get("units"), dtype=str))
 
         var = np.array(array[tuple(self.extent)], dtype=self.dtype)
         ds.close()

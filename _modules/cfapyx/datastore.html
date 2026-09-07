@@ -96,7 +96,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">NetCDF4DataStore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">pop_to</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">indexing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrozenDict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
 
@@ -529,18 +528,18 @@
                 <span class="n">attributes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
         <span class="c1">## Array-like object</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">indexing</span><span class="o">.</span><span class="n">LazilyIndexedArray</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">wrapper</span><span class="p">(</span>
-                <span class="n">fragment_info</span><span class="p">,</span>
-                <span class="n">fragment_space</span><span class="p">,</span>
-                <span class="n">shape</span><span class="o">=</span><span class="n">array_shape</span><span class="p">,</span>
-                <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="n">cfa_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfa_options</span><span class="p">,</span>
-                <span class="n">named_dims</span><span class="o">=</span><span class="n">dimensions</span><span class="p">,</span>
-                <span class="n">mask_and_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_and_scale</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapper</span><span class="p">(</span>
+            <span class="n">fragment_info</span><span class="p">,</span>
+            <span class="n">fragment_space</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">array_shape</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">cfa_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cfa_options</span><span class="p">,</span>
+            <span class="n">named_dims</span><span class="o">=</span><span class="n">dimensions</span><span class="p">,</span>
+            <span class="n">mask_and_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_and_scale</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">__array__</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
         <span class="n">encoding</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">datatype</span><span class="p">,</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">EnumType</span><span class="p">):</span>

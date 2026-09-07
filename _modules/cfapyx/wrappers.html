@@ -303,19 +303,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__array_function__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span></div>
 
 
-<div class="viewcode-block" id="FragmentArrayWrapper.__getitem__">
-<a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__getitem__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Non-lazy retrieval of the dask array when this object is indexed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Compute the fragment array dask object.</span>
-        <span class="c1"># Alternatively get rid of the indexing.LazilyIndexedArray in datastore?</span>
-        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array__</span><span class="p">()[</span><span class="n">selection</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shape: </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">a</span></div>
-
-
 <div class="viewcode-block" id="FragmentArrayWrapper.__array__">
 <a class="viewcode-back" href="../../wrapper.html#cfapyx.wrappers.FragmentArrayWrapper.__array__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

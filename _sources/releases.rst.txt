@@ -2,6 +2,11 @@
 Release History
 ===============
 
+Release Notes 2026.9.7
+----------------------
+- Reverted back to old date-based versioning (issues with pypi listing order)
+- Fixed client connections issues with using pyfive and opening too many sessions.
+
 Release Notes 1.0.3
 -------------------
 - Fixed another bug in pyfive with unit extraction.

@@ -436,8 +436,6 @@ class CFADataStore(NetCDF4DataStore):
             mask_and_scale=self.mask_and_scale,
         ).__array__()
 
-        print(type(data))
-
         encoding = {}
         if isinstance(var.datatype, netCDF4.EnumType):
             encoding["dtype"] = np.dtype(

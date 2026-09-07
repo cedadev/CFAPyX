@@ -196,16 +196,6 @@ class FragmentArrayWrapper(ArrayLike):
 
         self.__array_function__ = self.__array__
 
-    def __getitem__(self, selection):
-        """
-        Non-lazy retrieval of the dask array when this object is indexed.
-        """
-        # Compute the fragment array dask object.
-        # Alternatively get rid of the indexing.LazilyIndexedArray in datastore?
-        a = self.__array__()[selection].compute()
-        logger.debug(f"Shape: {a.shape}")
-        return a
-
     def __array__(self):
         """
         Non-lazy array construction, this will occur as soon as the instance is

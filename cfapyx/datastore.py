@@ -9,7 +9,6 @@ import netCDF4
 import numpy as np
 from xarray.backends import NetCDF4DataStore
 from xarray.coding.variables import pop_to
-from xarray.core import indexing
 from xarray.core.utils import FrozenDict
 from xarray.core.variable import Variable
 
@@ -426,18 +425,18 @@ class CFADataStore(NetCDF4DataStore):
                 attributes[k] = var.getncattr(k)
 
         ## Array-like object
-        data = indexing.LazilyIndexedArray(
-            self.wrapper(
-                fragment_info,
-                fragment_space,
-                shape=array_shape,
-                units=units,
-                dtype=var.dtype,
-                cfa_options=self.cfa_options,
-                named_dims=dimensions,
-                mask_and_scale=self.mask_and_scale,
-            )
-        )
+        data = self.wrapper(
+            fragment_info,
+            fragment_space,
+            shape=array_shape,
+            units=units,
+            dtype=var.dtype,
+            cfa_options=self.cfa_options,
+            named_dims=dimensions,
+            mask_and_scale=self.mask_and_scale,
+        ).__array__()
+
+        print(type(data))
 
         encoding = {}
         if isinstance(var.datatype, netCDF4.EnumType):

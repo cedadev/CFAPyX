@@ -411,6 +411,10 @@ class ArrayPartition(SuperLazyArrayLike):
         """
         Open the source file for this chunk to extract data.
 
+        Note: Multiple file locations is deprecated in CF-1.13 but may remain here
+        in case it is reimplemented in the future. This does not impact any other
+        part of the conventions or make this package non-compliant.
+
         Multiple file locations may be provided for this object, in which case there
         is a priority for 'remote' sources first, followed by 'local' sources -
         otherwise the order is as given in the fragment array variable ``location``.

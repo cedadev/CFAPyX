@@ -826,12 +826,7 @@
 
             <span class="n">loc_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">vshape</span><span class="p">)</span>
 
-            <span class="n">location</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vopt</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">substitutions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Transform subs to string array (CF-Compliant)</span>
-
-                <span class="n">location</span><span class="o">.</span><span class="n">setncattr</span><span class="p">(</span><span class="s2">&quot;substitutions&quot;</span><span class="p">,</span> <span class="n">substitutions</span><span class="p">)</span></div>
+            <span class="n">location</span><span class="p">[(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vopt</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">loc_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CFAWriteMixin._write_fragment_shapes">
@@ -1501,7 +1496,7 @@
 <span class="sd">        Apply CF-Compliant substitutions to the location data.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">        &#39;/path/to/file&#39;:&#39;${sub_name}&#39;</span>
+<span class="sd">        &#39;/badc/cmip6&#39;:&#39;https://esgf.ceda.ac.uk/badc/cmip6&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_location</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">coord</span><span class="p">,</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>

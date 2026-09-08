@@ -2,6 +2,11 @@
 Release History
 ===============
 
+Release Notes 2026.9.9
+----------------------
+- Fixed syntax issue with units handling that bypassed test suite.
+- Removed substitutions attribute when using creator - this is now handled as a one-off change for the file locations.
+
 Release Notes 2026.9.8
 ----------------------
 - Added deprecation warning for using multiple file versions when creating CFA-NetCDF files as these have been removed from the official conventions.

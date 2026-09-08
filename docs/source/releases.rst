@@ -2,6 +2,11 @@
 Release History
 ===============
 
+Release Notes 2026.9.8
+----------------------
+- Added deprecation warning for using multiple file versions when creating CFA-NetCDF files as these have been removed from the official conventions.
+- Added remote CFA-NetCDF fetch when opening the top-level manifest files. CFA reading can now be done entirely remotely.
+
 Release Notes 2026.9.7
 ----------------------
 - Reverted back to old date-based versioning (issues with pypi listing order)

@@ -130,7 +130,7 @@ class NumpyDatasetHandler:
             # Correct handling of units
             if hasattr(array, "attrs"):
                 if "units" in array.attrs:
-                    self.units = str(np.array(ds["ps"].attrs.get("units"), dtype=str))
+                    self.units = str(np.array(array.attrs.get("units"), dtype=str))
 
             var = np.array(array[tuple(self.extent)], dtype=self.dtype)
             ds.close()

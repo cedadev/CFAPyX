@@ -698,11 +698,6 @@ class CFAWriteMixin:
 
             location[(slice(0, None) for i in vopt)] = np.array(loc_data, dtype=str)
 
-            if substitutions is not None:
-                # Transform subs to string array (CF-Compliant)
-
-                location.setncattr("substitutions", substitutions)
-
     def _write_fragment_shapes(self):
         """
         Construct the ``fragment_map`` variable part for each
@@ -1326,7 +1321,7 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         Apply CF-Compliant substitutions to the location data.
 
         Example:
-        '/path/to/file':'${sub_name}'
+        '/badc/cmip6':'https://esgf.ceda.ac.uk/badc/cmip6'
         """
         new_location = {}
         for coord, loc in self.location.items():

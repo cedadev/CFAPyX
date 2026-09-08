@@ -118,7 +118,7 @@ class CFADataStore(NetCDF4DataStore):
         parts = re.split(": | ", feature_data)
 
         # Anything that uses a ':' needs to be readded after the previous step.
-        for k, v in readd:
+        for k, v in readd.items():
             for p in parts:
                 p.replace(k, v)
 
@@ -292,10 +292,6 @@ class CFADataStore(NetCDF4DataStore):
                 if "value" in agg_data:
                     value = self.ds.variables[agg_data["value"]]
         subs = {}
-        if hasattr(location, "substitutions"):
-            # Fix version as to how this should be applied.
-            subs = location.substitutions.replace("https://", "https@//")
-            subs = self._decode_feature_data(subs, readd={"https://": "https@//"})
 
         return self._perform_decoding(
             shape,

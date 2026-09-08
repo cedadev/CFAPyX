@@ -1498,12 +1498,9 @@
 <span class="sd">        Example:</span>
 <span class="sd">        &#39;/badc/cmip6&#39;:&#39;https://esgf.ceda.ac.uk/badc/cmip6&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_location</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">coord</span><span class="p">,</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sub</span><span class="p">,</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
-            <span class="n">new_location</span><span class="p">[</span><span class="n">coord</span><span class="p">]</span> <span class="o">=</span> <span class="n">loc</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_location</span><span class="p">)</span></div>
+                <span class="n">loc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>

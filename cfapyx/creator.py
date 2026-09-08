@@ -1323,12 +1323,12 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         Example:
         '/badc/cmip6':'https://esgf.ceda.ac.uk/badc/cmip6'
         """
-        new_location = {}
-        for coord, loc in self.location.items():
+        new_location = []
+        for coord, loc in self.location:
             for sub, base in substitutions.items():
                 loc = loc.replace(sub, base)
             new_location[coord] = loc
-        self.location = new_location
+        self.location = np.array(new_location)
 
     def _apply_filters(self, updates, removals, global_attrs, var_info, dim_info):
 

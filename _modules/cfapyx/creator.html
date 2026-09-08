@@ -1602,6 +1602,17 @@
                 <span class="k">if</span> <span class="n">max_files</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
                     <span class="n">max_files</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">trailing_file</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Deprecation Warning: Uris with multiple file options were &quot;</span>
+                <span class="s2">&quot;deprecated in the official CF-1.13 release. This feature is &quot;</span>
+                <span class="s2">&quot;allowed in the xarray reader CFAPyX only and will be removed &quot;</span>
+                <span class="s2">&quot;as an option in the creation mode in future versions.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">proceed</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Do you wish to continue? (Y/N)&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">proceed</span> <span class="o">!=</span> <span class="s2">&quot;Y&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
+
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">trailing_file</span><span class="p">:</span>
                 <span class="n">fileopts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_files</span>

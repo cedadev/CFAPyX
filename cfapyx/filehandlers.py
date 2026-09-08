@@ -42,7 +42,6 @@ class NumpyDatasetHandler:
         self._array = None
 
         if not remote:
-            raise ValueError("Not using local")
             logger.debug("ENTER" + threading.current_thread().name + filename)
 
             with GLOBAL_LOCK:

@@ -1424,6 +1424,17 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
                 if max_files < len(f):
                     max_files = len(f)
 
+        if trailing_file:
+            logger.error(
+                "Deprecation Warning: Uris with multiple file options were "
+                "deprecated in the official CF-1.13 release. This feature is "
+                "allowed in the xarray reader CFAPyX only and will be removed "
+                "as an option in the creation mode in future versions."
+            )
+            proceed = input("Do you wish to continue? (Y/N)")
+            if proceed != "Y":
+                raise KeyboardInterrupt
+
         for f in files:
             if trailing_file:
                 fileopts = [""] * max_files

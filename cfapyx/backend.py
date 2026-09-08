@@ -4,6 +4,7 @@ __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
 
 import logging
 
+import requests
 from xarray import conventions
 from xarray.backends import BackendEntrypoint, StoreBackendEntrypoint
 from xarray.backends.common import AbstractDataStore
@@ -16,6 +17,15 @@ logger = logging.getLogger(__name__)
 
 logger.addHandler(logstream)
 logger.propagate = False
+
+
+def fetch_remote_as_bytes(remote_url: str) -> bytes:
+
+    response = requests.get(remote_url)
+    response.raise_for_status()
+
+    # Fetch bytes content of remote CFA file
+    return response.content
 
 
 def open_cfa_dataset(
@@ -56,6 +66,11 @@ def open_cfa_dataset(
     """
 
     cfa_options = cfa_options or {}
+
+    # Add loading CFA file from remote location
+    if isinstance(filename_or_obj, str):
+        if "https://" in filename_or_obj or "s3://" in filename_or_obj:
+            filename_or_obj = fetch_remote_as_bytes(filename_or_obj)
 
     # Load the CFA datastore from the provided file (object not supported).
     store = CFADataStore.open(filename_or_obj, group=group)

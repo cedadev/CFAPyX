@@ -255,10 +255,10 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _set_cfa_options(
         self,
-        substitutions: Union[dict, None] = None,
-        decode_cfa=None,
-        chunks={},
-        chunk_limits=None,
+        substitutions: dict | None = None,
+        decode_cfa: bool = False,
+        chunks: dict | None = None,
+        chunk_limits: bool = False,
         **kwargs,
     ):
         """
@@ -271,7 +271,7 @@ class FragmentArrayWrapper(ArrayLike):
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
-        self.chunks = chunks
+        self.chunks = chunks or {}
 
     def _get_fragments(self) -> dict:
         """

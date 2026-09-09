@@ -75,7 +75,7 @@ class CFADataStore(NetCDF4DataStore):
 
     def _set_cfa_options(
         self,
-        substitutions: dict = None,
+        substitutions: dict | None = None,
         decode_cfa: bool = True,
         chunks: dict | None = None,
         chunk_limits: bool = True,

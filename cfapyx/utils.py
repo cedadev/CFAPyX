@@ -42,7 +42,7 @@ def correct_slice(extent: tuple, shape: tuple, named_dims: tuple, array_dims: tu
                 f'Attempted to slice dimension "{named_dim}" using slice "{ext}" '
                 "but the requested dimension is not present"
             )
-    return extent
+    return new_extent
 
 
 def supported_by_cftime(unit: str, calendar: str = "standard"):

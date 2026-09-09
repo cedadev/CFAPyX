@@ -2,7 +2,7 @@
 Release History
 ===============
 
-Release Notes 2026.9.9
+Release Notes 2026.9.10
 ----------------------
 Github Copilot sanity checks identified specific bugs in the package:
 - Correct_slice function had incorrect usage of extent - this was introduced when this transitioned from a method to a function.

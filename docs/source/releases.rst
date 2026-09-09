@@ -2,6 +2,13 @@
 Release History
 ===============
 
+Release Notes 2026.9.10
+----------------------
+Github Copilot sanity checks identified specific bugs in the package:
+- Correct_slice function had incorrect usage of extent - this was introduced when this transitioned from a method to a function.
+- fixed an issue where DS could be undefined in opening a fragment if all options failed.
+- Fixed default mutable arguments to functions in a few specific places.
+
 Release Notes 2026.9.9
 ----------------------
 - Fixed syntax issue with units handling that bypassed test suite.

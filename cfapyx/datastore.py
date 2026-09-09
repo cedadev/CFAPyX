@@ -75,10 +75,10 @@ class CFADataStore(NetCDF4DataStore):
 
     def _set_cfa_options(
         self,
-        substitutions=None,
-        decode_cfa=True,
-        chunks={},
-        chunk_limits=True,
+        substitutions: dict | None = None,
+        decode_cfa: bool = True,
+        chunks: dict | None = None,
+        chunk_limits: bool = True,
     ):
         """
         Method to set cfa options.
@@ -94,7 +94,7 @@ class CFADataStore(NetCDF4DataStore):
         :param chunk_limits:    (dict) Not implemented in 2024.9.0
         """
 
-        self.chunks = chunks
+        self.chunks = chunks or {}
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
@@ -250,14 +250,17 @@ class CFADataStore(NetCDF4DataStore):
                 fragment_info[frag_pos]["format"] = cformat[frag_pos]
 
         # Apply string substitutions to the fragment filenames
-        if substitutions:
-            for value in fragment_info.values():
-                for base, sub in substitutions.items():
-                    if isinstance(value["location"], str):
-                        value["location"] = value["location"].replace(base, sub)
-                    else:
-                        for v in value["location"]:
-                            v = v.replace(base, sub)
+        if not substitutions:
+            return fragment_info, fragment_space
+
+        for value in fragment_info.values():
+            for base, sub in substitutions.items():
+                if isinstance(value["location"], str):
+                    value["location"] = value["location"].replace(base, sub)
+                else:
+                    value["location"] = [
+                        loc.replace(base, sub) for loc in value["location"]
+                    ]
 
         return fragment_info, fragment_space
 

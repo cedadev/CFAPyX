@@ -75,10 +75,10 @@ class CFADataStore(NetCDF4DataStore):
 
     def _set_cfa_options(
         self,
-        substitutions=None,
-        decode_cfa=True,
-        chunks={},
-        chunk_limits=True,
+        substitutions: dict = None,
+        decode_cfa: bool = True,
+        chunks: dict | None = None,
+        chunk_limits: bool = True,
     ):
         """
         Method to set cfa options.
@@ -94,7 +94,7 @@ class CFADataStore(NetCDF4DataStore):
         :param chunk_limits:    (dict) Not implemented in 2024.9.0
         """
 
-        self.chunks = chunks
+        self.chunks = chunks or {}
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits

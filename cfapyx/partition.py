@@ -342,12 +342,13 @@ class ArrayPartition(SuperLazyArrayLike):
 
         Currently only NetCDF is supported.
         """
+        ds = None
         for open in [self._open_netcdf, self._open_pp, self._open_um]:
             try:
                 ds = open(filename, remote=remote)
             except Exception:
                 pass
-        if not ds:
+        if ds is None:
             raise FileNotFoundError(
                 "No file type provided and opening failed with all known types."
             )

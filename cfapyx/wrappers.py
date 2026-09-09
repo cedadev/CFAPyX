@@ -481,8 +481,12 @@ class FragmentArrayWrapper(ArrayLike):
                         "location"
                     ].replace(base, substitution)
                 else:
-                    for finfo in self.fragment_info[f]["location"]:
-                        finfo = finfo.replace(base, substitution)
+                    for idx, finfo in enumerate(self.fragment_info[f]["location"]):
+                        # Replace the in-place location value with the
+                        # substitution-applied value.
+                        self.fragment_info[f]["location"][idx] = finfo.replace(
+                            base, substitution
+                        )
 
     def _assemble_array(self, dsk, array_name, dask_chunks):
         """

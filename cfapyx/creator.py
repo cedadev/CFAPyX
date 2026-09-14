@@ -572,6 +572,7 @@ class CFACreateMixin:
                 attrs.pop("add_offset", None)
                 continue
 
+            concat = False
             if attr not in attrs:
                 if first_time:
                     attrs[attr] = ncattrs[attr]

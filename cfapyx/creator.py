@@ -362,6 +362,7 @@ class CFACreateMixin:
 
         if info[id] != {}:
             concats = info["id"].get("concats")
+
             info[id]["attrs"], dtype_override, concats = self._accumulate_attrs(
                 info[id]["attrs"], attrs, concats
             )
@@ -387,7 +388,7 @@ class CFACreateMixin:
         if dtype_override is not None:
             self.dtype_overrides[id] = dtype_override
 
-        return info, concats
+        return info
 
     def _arrange_dimensions(self, dim_info: dict, agg_dims: list = None) -> dict:
         """

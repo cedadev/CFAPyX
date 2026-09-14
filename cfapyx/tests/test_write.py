@@ -41,7 +41,7 @@ class TestCFAWrite:
             return
 
         assert hasattr(ds, "attrs")
-        assert ds.dattrs["test_name"] == "alpha"
+        assert ds.attrs["test_name"] == "alpha"
         assert "test_remove" not in ds.attrs
 
         ## Test global dataset

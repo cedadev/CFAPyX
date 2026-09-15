@@ -40,6 +40,10 @@ class TestCFAWrite:
             print("Integration tests: Read(pure) - skipped")
             return
 
+        assert hasattr(ds, "attrs")
+        assert ds.attrs["test_name"] == "alpha"
+        assert "test_remove" not in ds.attrs
+
         ## Test global dataset
         assert not hasattr(ds, "address")
         assert not hasattr(ds, "shape")

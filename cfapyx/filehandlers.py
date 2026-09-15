@@ -59,9 +59,9 @@ class NumpyDatasetHandler:
             with GLOBAL_LOCK:
                 self.open_pyfive()
 
-    def __array__(self):
+    def __array__(self, *args, **kwargs):
         """Extract numpy array already held"""
-        return self._array
+        return self._array.__array__(*args, **kwargs)
 
     def open_netcdf4(self):
 

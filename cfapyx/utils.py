@@ -24,11 +24,11 @@ def correct_slice(extent: tuple, shape: tuple, named_dims: tuple, array_dims: tu
         set in ``named_dims`` then this function is used to remove extra
         dimensions from the ``extent`` if possible.
     """
-    extent = []
+    new_extent = []
     for dim in range(len(named_dims)):
         named_dim = named_dims[dim]
         if named_dim in array_dims:
-            extent.append(extent[dim])
+            new_extent.append(extent[dim])
 
         # named dim not present
         ext = extent[dim]
@@ -42,7 +42,7 @@ def correct_slice(extent: tuple, shape: tuple, named_dims: tuple, array_dims: tu
                 f'Attempted to slice dimension "{named_dim}" using slice "{ext}" '
                 "but the requested dimension is not present"
             )
-    return extent
+    return new_extent
 
 
 def supported_by_cftime(unit: str, calendar: str = "standard"):

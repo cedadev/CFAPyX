@@ -255,10 +255,10 @@ class FragmentArrayWrapper(ArrayLike):
 
     def _set_cfa_options(
         self,
-        substitutions: Union[dict, None] = None,
-        decode_cfa=None,
-        chunks={},
-        chunk_limits=None,
+        substitutions: dict | None = None,
+        decode_cfa: bool = False,
+        chunks: dict | None = None,
+        chunk_limits: bool = False,
         **kwargs,
     ):
         """
@@ -271,7 +271,7 @@ class FragmentArrayWrapper(ArrayLike):
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
-        self.chunks = chunks
+        self.chunks = chunks or {}
 
     def _get_fragments(self) -> dict:
         """
@@ -481,8 +481,12 @@ class FragmentArrayWrapper(ArrayLike):
                         "location"
                     ].replace(base, substitution)
                 else:
-                    for finfo in self.fragment_info[f]["location"]:
-                        finfo = finfo.replace(base, substitution)
+                    for idx, finfo in enumerate(self.fragment_info[f]["location"]):
+                        # Replace the in-place location value with the
+                        # substitution-applied value.
+                        self.fragment_info[f]["location"][idx] = finfo.replace(
+                            base, substitution
+                        )
 
     def _assemble_array(self, dsk, array_name, dask_chunks):
         """

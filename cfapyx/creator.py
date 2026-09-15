@@ -23,7 +23,9 @@ class CFACreateMixin:
     Mixin class for ``Create`` methods for a CFA-netCDF dataset.
     """
 
-    def _first_pass(self, agg_dims: list = None) -> tuple:
+    def _first_pass(
+        self, agg_dims: list = None, concat_attributes: list = None
+    ) -> tuple:
         """
         Perform a first pass across all provided files. Extracts the global
         attributes and information on all variables and dimensions into
@@ -34,12 +36,16 @@ class CFACreateMixin:
 
         logger.info("Performing first pass on the set of files.")
 
+        concat_attributes = concat_attributes or []
+
         arranged_files = {}
         var_info = None
         dim_info = None
         global_attrs = None
 
         prime_units = {}
+
+        global_concats = {}
 
         ## First Pass - Determine dimensions
         for x, file in enumerate(self.files):
@@ -102,7 +108,9 @@ class CFACreateMixin:
             ncattrs = {}
             for attr in ds.ncattrs():
                 ncattrs[attr] = ds.getncattr(attr)
-            global_attrs, _ = self._accumulate_attrs(global_attrs, ncattrs)
+            global_attrs, _, global_concats = self._accumulate_attrs(
+                global_attrs, ncattrs, global_concats
+            )
 
             ## Accumulate dimension info
             fcoord = []
@@ -213,6 +221,32 @@ class CFACreateMixin:
 
             if units is not None:
                 dim_info[d]["attrs"].update({"units": units})
+
+        for concat_a in concat_attributes:
+            if "." in concat_a:
+                concat_src, concat_attr = concat_a.split(".")
+            else:
+                concat_src = "global"
+                concat_attr = concat_a
+
+            if concat_src == "global":
+                if concat_attr in global_attrs:
+                    global_attrs[concat_attr] = CONCAT_MSG
+                continue
+
+            if concat_src in dim_info:
+                if "concat" not in dim_info[concat_src]:
+                    continue
+                if concat_attr not in dim_info[concat_src]["concat"]:
+                    continue
+                dim_info[concat_src]["attrs"][concat_attr] = CONCAT_MSG
+
+            if concat_src in var_info:
+                if "concat" not in var_info[concat_src]:
+                    continue
+                if concat_attr not in var_info[concat_src]["concat"]:
+                    continue
+                var_info[concat_src]["attrs"][concat_attr] = CONCAT_MSG
 
         return arranged_files, global_attrs, var_info, dim_info
 
@@ -327,9 +361,13 @@ class CFACreateMixin:
                 attrs[attr] = ncattr_obj.getncattr(attr)
 
         if info[id] != {}:
-            info[id]["attrs"], dtype_override = self._accumulate_attrs(
-                info[id]["attrs"], attrs
+            concats = info[id].get("concats")
+
+            info[id]["attrs"], dtype_override, concats = self._accumulate_attrs(
+                info[id]["attrs"], attrs, concats
             )
+            if concats:
+                info[id]["concats"] = concats
 
             for attr, value in new_info.items():
                 if attr == "arr":
@@ -506,7 +544,7 @@ class CFACreateMixin:
             logger.debug(f" - {tuple(c)}")
         return cdimopts
 
-    def _accumulate_attrs(self, attrs: dict, ncattrs: dict) -> tuple:
+    def _accumulate_attrs(self, attrs: dict, ncattrs: dict, concats: dict) -> tuple:
         """
         Accumulate attributes from the new source and the existing set.
         Ignore fill value attributes as these are handled elsewhere.
@@ -535,6 +573,7 @@ class CFACreateMixin:
                 attrs.pop("add_offset", None)
                 continue
 
+            concat = False
             if attr not in attrs:
                 if first_time:
                     attrs[attr] = ncattrs[attr]
@@ -542,21 +581,30 @@ class CFACreateMixin:
                     logger.warning(
                         f'AttributeWarning: Attribute "{attr}" not present in all files'
                     )
-                    attrs[attr] = self.concat_msg
+                    concat = True
             else:
+                concat = False
                 if isinstance(ncattrs[attr], (np.ndarray, np.generic)):
                     if not np.array_equal(attrs[attr], ncattrs[attr]):
-                        attrs[attr] = self.concat_msg
-                    continue
-                try:
-                    if attrs.get(attr) != ncattrs.get(attr):
-                        attrs[attr] = self.concat_msg
-                    else:
-                        attrs[attr] = ncattrs[attr]
-                except ValueError:
+                        concat = True
+                else:
+                    try:
+                        if attrs.get(attr) != ncattrs.get(attr):
+                            concat = True
+                        else:
+                            attrs[attr] = ncattrs[attr]
+                    except ValueError:
+                        concat = True
                     # Typically numpy array comparisons fail here.
-                    attrs[attr] = self.concat_msg
-        return attrs, dtype_override
+
+            if concat:
+                concats[attr] = True
+                if not isinstance(attrs[attr], list):
+                    attrs[attr] = [attrs[attr]]
+                # Combine all in a list to concatenate later.
+                attrs[attr].append(ncattrs[attr])
+
+        return attrs, dtype_override, concats
 
 
 class CFAWriteMixin:
@@ -875,18 +923,22 @@ class CFANetCDF(CFACreateMixin, CFAWriteMixin):
         updates: dict = None,
         removals: list = None,
         agg_dims: list = None,
+        concat_attributes: list = None,
     ) -> None:
         """
         Perform the operations and passes needed to accumulate the set of
         variable/dimension info and attributes to then construct a CFA-netCDF
-        file."""
+        file.
+
+        Now able to specify attributes to concatenate rather than just collate to
+        a list of values."""
 
         updates = updates or {}
         removals = removals or []
 
         # First pass collect info
         arranged_files, global_attrs, var_info, dim_info = self._first_pass(
-            agg_dims=agg_dims
+            agg_dims=agg_dims, concat_attributes=concat_attributes
         )
 
         if self.agg_extend:

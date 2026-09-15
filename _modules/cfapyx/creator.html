@@ -114,7 +114,9 @@
 
 <div class="viewcode-block" id="CFACreateMixin._first_pass">
 <a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._first_pass">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_first_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_first_pass</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">concat_attributes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform a first pass across all provided files. Extracts the global</span>
 <span class="sd">        attributes and information on all variables and dimensions into</span>
@@ -125,12 +127,16 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Performing first pass on the set of files.&quot;</span><span class="p">)</span>
 
+        <span class="n">concat_attributes</span> <span class="o">=</span> <span class="n">concat_attributes</span> <span class="ow">or</span> <span class="p">[]</span>
+
         <span class="n">arranged_files</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">var_info</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">dim_info</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">global_attrs</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">prime_units</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">global_concats</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1">## First Pass - Determine dimensions</span>
         <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">):</span>
@@ -193,7 +199,9 @@
             <span class="n">ncattrs</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
                 <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-            <span class="n">global_attrs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_attrs</span><span class="p">(</span><span class="n">global_attrs</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">)</span>
+            <span class="n">global_attrs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">global_concats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_attrs</span><span class="p">(</span>
+                <span class="n">global_attrs</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">,</span> <span class="n">global_concats</span>
+            <span class="p">)</span>
 
             <span class="c1">## Accumulate dimension info</span>
             <span class="n">fcoord</span> <span class="o">=</span> <span class="p">[]</span>
@@ -304,6 +312,32 @@
 
             <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="n">units</span><span class="p">})</span>
+
+        <span class="k">for</span> <span class="n">concat_a</span> <span class="ow">in</span> <span class="n">concat_attributes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">concat_a</span><span class="p">:</span>
+                <span class="n">concat_src</span><span class="p">,</span> <span class="n">concat_attr</span> <span class="o">=</span> <span class="n">concat_a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">concat_src</span> <span class="o">=</span> <span class="s2">&quot;global&quot;</span>
+                <span class="n">concat_attr</span> <span class="o">=</span> <span class="n">concat_a</span>
+
+            <span class="k">if</span> <span class="n">concat_src</span> <span class="o">==</span> <span class="s2">&quot;global&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">concat_attr</span> <span class="ow">in</span> <span class="n">global_attrs</span><span class="p">:</span>
+                    <span class="n">global_attrs</span><span class="p">[</span><span class="n">concat_attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">CONCAT_MSG</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">concat_src</span> <span class="ow">in</span> <span class="n">dim_info</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;concat&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dim_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">concat_attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dim_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">][</span><span class="s2">&quot;concat&quot;</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="n">dim_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">][</span><span class="n">concat_attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">CONCAT_MSG</span>
+
+            <span class="k">if</span> <span class="n">concat_src</span> <span class="ow">in</span> <span class="n">var_info</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;concat&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">concat_attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">][</span><span class="s2">&quot;concat&quot;</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="n">var_info</span><span class="p">[</span><span class="n">concat_src</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">][</span><span class="n">concat_attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">CONCAT_MSG</span>
 
         <span class="k">return</span> <span class="n">arranged_files</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span></div>
 
@@ -427,9 +461,13 @@
                 <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncattr_obj</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="o">!=</span> <span class="p">{}:</span>
-            <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">],</span> <span class="n">dtype_override</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_attrs</span><span class="p">(</span>
-                <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">],</span> <span class="n">attrs</span>
+            <span class="n">concats</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;concats&quot;</span><span class="p">)</span>
+
+            <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">],</span> <span class="n">dtype_override</span><span class="p">,</span> <span class="n">concats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_attrs</span><span class="p">(</span>
+                <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">],</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">concats</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">concats</span><span class="p">:</span>
+                <span class="n">info</span><span class="p">[</span><span class="nb">id</span><span class="p">][</span><span class="s2">&quot;concats&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">concats</span>
 
             <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s2">&quot;arr&quot;</span><span class="p">:</span>
@@ -621,7 +659,7 @@
 
 <div class="viewcode-block" id="CFACreateMixin._accumulate_attrs">
 <a class="viewcode-back" href="../../creator.html#cfapyx.creator.CFACreateMixin._accumulate_attrs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_accumulate_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_accumulate_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ncattrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">concats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Accumulate attributes from the new source and the existing set.</span>
 <span class="sd">        Ignore fill value attributes as these are handled elsewhere.</span>
@@ -650,6 +688,7 @@
                 <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;add_offset&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                 <span class="k">continue</span>
 
+            <span class="n">concat</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="n">attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">first_time</span><span class="p">:</span>
                     <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
@@ -657,21 +696,30 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s1">&#39;AttributeWarning: Attribute &quot;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s1">&quot; not present in all files&#39;</span>
                     <span class="p">)</span>
-                    <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_msg</span>
+                    <span class="n">concat</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="n">concat</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">],</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)):</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">],</span> <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]):</span>
-                        <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_msg</span>
-                    <span class="k">continue</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ncattrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
-                        <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_msg</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">concat</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ncattrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
+                            <span class="n">concat</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">concat</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="c1"># Typically numpy array comparisons fail here.</span>
-                    <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">concat_msg</span>
-        <span class="k">return</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">dtype_override</span></div>
+
+            <span class="k">if</span> <span class="n">concat</span><span class="p">:</span>
+                <span class="n">concats</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]]</span>
+                <span class="c1"># Combine all in a list to concatenate later.</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ncattrs</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">dtype_override</span><span class="p">,</span> <span class="n">concats</span></div>
 </div>
 
 
@@ -1020,18 +1068,22 @@
         <span class="n">updates</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">removals</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">concat_attributes</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform the operations and passes needed to accumulate the set of</span>
 <span class="sd">        variable/dimension info and attributes to then construct a CFA-netCDF</span>
-<span class="sd">        file.&quot;&quot;&quot;</span>
+<span class="sd">        file.</span>
+
+<span class="sd">        Now able to specify attributes to concatenate rather than just collate to</span>
+<span class="sd">        a list of values.&quot;&quot;&quot;</span>
 
         <span class="n">updates</span> <span class="o">=</span> <span class="n">updates</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">removals</span> <span class="o">=</span> <span class="n">removals</span> <span class="ow">or</span> <span class="p">[]</span>
 
         <span class="c1"># First pass collect info</span>
         <span class="n">arranged_files</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_pass</span><span class="p">(</span>
-            <span class="n">agg_dims</span><span class="o">=</span><span class="n">agg_dims</span>
+            <span class="n">agg_dims</span><span class="o">=</span><span class="n">agg_dims</span><span class="p">,</span> <span class="n">concat_attributes</span><span class="o">=</span><span class="n">concat_attributes</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_extend</span><span class="p">:</span>

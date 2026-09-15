@@ -164,10 +164,10 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_cfa_options</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">substitutions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">decode_cfa</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">chunks</span><span class="o">=</span><span class="p">{},</span>
-        <span class="n">chunk_limits</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">substitutions</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">decode_cfa</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">chunks</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk_limits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to set cfa options.</span>
@@ -183,7 +183,7 @@
 <span class="sd">        :param chunk_limits:    (dict) Not implemented in 2024.9.0</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunks</span> <span class="o">=</span> <span class="n">chunks</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_substitutions</span> <span class="o">=</span> <span class="n">substitutions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_decode_cfa</span> <span class="o">=</span> <span class="n">decode_cfa</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_limits</span> <span class="o">=</span> <span class="n">chunk_limits</span>
@@ -339,14 +339,17 @@
                 <span class="n">fragment_info</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">][</span><span class="s2">&quot;format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cformat</span><span class="p">[</span><span class="n">frag_pos</span><span class="p">]</span>
 
         <span class="c1"># Apply string substitutions to the fragment filenames</span>
-        <span class="k">if</span> <span class="n">substitutions</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fragment_info</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
-                        <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]:</span>
-                            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">substitutions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
+
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">fragment_info</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">loc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">sub</span><span class="p">)</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
+                    <span class="p">]</span>
 
         <span class="k">return</span> <span class="n">fragment_info</span><span class="p">,</span> <span class="n">fragment_space</span>
 

@@ -361,7 +361,7 @@ class CFACreateMixin:
                 attrs[attr] = ncattr_obj.getncattr(attr)
 
         if info[id] != {}:
-            concats = info[id].get("concats")
+            concats = info[id].get("concats", {})
 
             info[id]["attrs"], dtype_override, concats = self._accumulate_attrs(
                 info[id]["attrs"], attrs, concats

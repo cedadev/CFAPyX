@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 2026.9.16
+-----------------------
+- Minor bug with concats default value when none provided.
+
 Release Notes 2026.9.14
 -----------------------
 Github Copilot sanity checks identified specific bugs in the package:

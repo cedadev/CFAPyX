@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 2026.9.23
+-----------------------
+- Minor bug with units comparison in specific instances.
+
 Release Notes 2026.9.16
 -----------------------
 - Minor bug with concats default value when none provided.

@@ -326,9 +326,13 @@ class CFACreateMixin:
         # Aggregated dimension information (starts/ends)
         array = np.array(list(ds[d]), dtype=ds[d].dtype)
 
-        if prime_units is not None and ds[d].units != prime_units:
-            logger.debug(f'Conforming units from "{ds[d].units}" to "{prime_units}"')
-            array = conform_data_to_units(array, ds[d].units, prime_units)
+        if prime_units is not None:
+            if ds[d].units != prime_units:
+                logger.debug(
+                    f'Conforming units from "{ds[d].units}" to "{prime_units}"'
+                )
+
+                array = conform_data_to_units(array, ds[d].units, prime_units)
 
         start = array[0]
         size = len(array)

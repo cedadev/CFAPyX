@@ -9,6 +9,7 @@ import netCDF4
 import numpy as np
 from xarray.backends import NetCDF4DataStore
 from xarray.coding.variables import pop_to
+from xarray.core import indexing
 from xarray.core.utils import FrozenDict
 from xarray.core.variable import Variable
 
@@ -67,6 +68,8 @@ class CFADataStore(NetCDF4DataStore):
             "decode_cfa": self._decode_cfa,
             "chunks": self.chunks,
             "chunk_limits": self._chunk_limits,
+            "max_request_block": self._max_request_block,
+            "batch_request_size": self._batch_request_size,
         }
 
     @cfa_options.setter
@@ -79,6 +82,8 @@ class CFADataStore(NetCDF4DataStore):
         decode_cfa: bool = True,
         chunks: dict | None = None,
         chunk_limits: bool = True,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
     ):
         """
         Method to set cfa options.
@@ -98,6 +103,8 @@ class CFADataStore(NetCDF4DataStore):
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
+        self._max_request_block = max_request_block
+        self._batch_request_size = batch_request_size
 
     def _acquire(self, needs_lock=True):
         """
@@ -424,16 +431,18 @@ class CFADataStore(NetCDF4DataStore):
                 attributes[k] = var.getncattr(k)
 
         ## Array-like object
-        data = self.wrapper(
-            fragment_info,
-            fragment_space,
-            shape=array_shape,
-            units=units,
-            dtype=var.dtype,
-            cfa_options=self.cfa_options,
-            named_dims=dimensions,
-            mask_and_scale=self.mask_and_scale,
-        ).__array__()
+        data = indexing.LazilyIndexedArray(
+            self.wrapper(
+                fragment_info,
+                fragment_space,
+                shape=array_shape,
+                units=units,
+                dtype=var.dtype,
+                cfa_options=self.cfa_options,
+                named_dims=dimensions,
+                mask_and_scale=self.mask_and_scale,
+            )
+        )
 
         encoding = {}
         if isinstance(var.datatype, netCDF4.EnumType):

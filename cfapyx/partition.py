@@ -97,7 +97,7 @@ class SuperLazyArrayLike(ArrayLike):
         'Super-Lazily' to the data.
         """
 
-        self._extent = [slice(0, i) for i in shape]
+        self._extents = [[slice(0, i) for i in shape]]
 
         self.named_dims = named_dims
 
@@ -110,7 +110,18 @@ class SuperLazyArrayLike(ArrayLike):
         loads dask chunks lazily, but a further lazy approach is required when
         applying Active methods.
         """
+
         return self.copy(extent=selection)
+
+    @property
+    def _extent(self):
+        """
+        Most recent extent selection"""
+        return self._extents[-1]
+
+    @_extent.setter
+    def _extent(self, value):
+        self._extents.append(value)
 
     @property
     def shape(self):
@@ -122,8 +133,7 @@ class SuperLazyArrayLike(ArrayLike):
         the current ``extent``.
         """
         current_shape = []
-        if not self._extent:
-            return self._shape
+
         for d, e in enumerate(self._extent):
             if isinstance(e, int):
                 continue
@@ -155,6 +165,7 @@ class SuperLazyArrayLike(ArrayLike):
         Replace values of None within each provided slice of the extent with integer
         values derived from the current shape.
         """
+
         if len(extent) != self.ndim:
             raise ValueError("Direct assignment of truncated extent is not supported.")
 
@@ -180,9 +191,7 @@ class SuperLazyArrayLike(ArrayLike):
         """
         kwargs = self.get_kwargs()
         if extent:
-            kwargs["extent"] = combine_slices(
-                self.shape, list(self.get_extent()), extent
-            )
+            kwargs["extent"] = self._extents + [extent]
 
         new_instance = SuperLazyArrayLike(self.shape, **kwargs)
         return new_instance
@@ -208,9 +217,11 @@ class ArrayPartition(SuperLazyArrayLike):
         address: str,
         shape: Union[tuple, None] = None,
         position: Union[tuple, None] = None,
-        extent: Union[tuple, None] = None,
+        extents: Union[tuple, None] = None,
         format: Union[str, None] = None,
         mask_and_scale: bool = False,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
         **kwargs,
     ):
         """
@@ -261,6 +272,9 @@ class ArrayPartition(SuperLazyArrayLike):
         self.format = format
         self.position = position
 
+        self._max_request_block = max_request_block
+        self._batch_request_size = batch_request_size
+
         self.mask_and_scale = mask_and_scale
 
         if shape is None:
@@ -269,9 +283,8 @@ class ArrayPartition(SuperLazyArrayLike):
 
         super().__init__(shape, **kwargs)
 
-        if extent:
-            # Apply a specific extent if given by the initiator
-            self.set_extent(extent)
+        if extents:
+            self._extents = extents
 
     def __array__(self, *args, **kwargs) -> np.ndarray:
         """
@@ -369,8 +382,10 @@ class ArrayPartition(SuperLazyArrayLike):
             self.address,
             dtype=self.dtype,
             named_dims=self.named_dims,
-            extent=self._extent,
+            extents=self._extents,
             remote=remote,
+            max_request_block=self._max_request_block,
+            batch_request_size=self._batch_request_size,
         )
 
     def get_kwargs(self):
@@ -381,7 +396,7 @@ class ArrayPartition(SuperLazyArrayLike):
         return {
             "shape": self.shape,
             "position": self.position,
-            "extent": self._extent,
+            "extents": self._extents,
             "format": self.format,
         } | super().get_kwargs()
 
@@ -397,9 +412,7 @@ class ArrayPartition(SuperLazyArrayLike):
         """
         kwargs = self.get_kwargs()
         if extent:
-            kwargs["extent"] = combine_slices(
-                self.shape, list(self.get_extent()), extent
-            )
+            kwargs["extents"] = self._extents + [extent]
 
         new_instance = ArrayPartition(
             self.filename,
@@ -449,6 +462,7 @@ class ArrayPartition(SuperLazyArrayLike):
                 else:
                     raise ValueError(f"Unrecognised format '{self.format}'")
             except Exception as e:
+                raise (e)
                 errs.append(f"{filename}: {e}")
         if errs:
             for e in errs:

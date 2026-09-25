@@ -14,12 +14,11 @@ from dask.base import tokenize
 from cfapyx.partition import (
     ArrayLike,
     ArrayPartition,
-    combine_slices,
     get_chunk_positions,
     get_dask_chunks,
     normalize_partition_chunks,
 )
-from cfapyx.utils import conform_data_to_units, logstream
+from cfapyx.utils import conform_data_to_units, logstream, slice_to_shape
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logstream)
@@ -88,12 +87,8 @@ class CFAPartition(ArrayPartition):
             kwargs.pop("units")
 
         if extent:
-            kwargs["extent"] = combine_slices(
-                self.shape, list(self.get_extent()), extent
-            )
-            kwargs["global_extent"] = combine_slices(
-                self.shape, list(self.global_extent), extent
-            )
+            kwargs["extents"] = self._extents + [extent]
+            kwargs["global_extent"] = self.global_extent
 
         new = CFAPartition(self.filename, self.address, **kwargs)
         return new
@@ -196,6 +191,25 @@ class FragmentArrayWrapper(ArrayLike):
 
         self.__array_function__ = self.__array__
 
+    def __getitem__(self, selection):
+        """
+        Non-lazy retrieval of the dask array when this object is indexed.
+        """
+        arr = self.__array__()
+
+        # Enforce correct reshaping - dask array here can sometimes not
+        # auto-drop dimensions so reshaping is enforced.
+        new_shape = []
+        for aix in range(len(arr.shape)):
+            sdim = selection[aix]
+            if isinstance(sdim, slice):
+                ns = slice_to_shape(sdim, arr.shape[aix])
+                if ns is not None:
+                    new_shape.append(ns)
+        new_shape = tuple(new_shape)
+        d = da.reshape(arr[tuple(selection)], new_shape)
+        return d
+
     def __array__(self):
         """
         Non-lazy array construction, this will occur as soon as the instance is
@@ -259,6 +273,8 @@ class FragmentArrayWrapper(ArrayLike):
         decode_cfa: bool = False,
         chunks: dict | None = None,
         chunk_limits: bool = False,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
         **kwargs,
     ):
         """
@@ -272,6 +288,8 @@ class FragmentArrayWrapper(ArrayLike):
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
         self.chunks = chunks or {}
+        self._max_request_block = max_request_block
+        self._batch_request_size = batch_request_size
 
     def _get_fragments(self) -> dict:
         """
@@ -308,7 +326,7 @@ class FragmentArrayWrapper(ArrayLike):
                 filename,
                 address,
                 dtype=dtype,
-                extent=extent,
+                extents=[extent],
                 shape=fragment_shape,
                 position=fragment_position,
                 aggregated_units=units,
@@ -317,6 +335,8 @@ class FragmentArrayWrapper(ArrayLike):
                 named_dims=self.named_dims,
                 global_extent=global_extent,
                 mask_and_scale=self.mask_and_scale,
+                max_request_block=self._max_request_block,
+                batch_request_size=self._batch_request_size,
             )
 
             fragments[pos] = fragment
@@ -462,7 +482,7 @@ class FragmentArrayWrapper(ArrayLike):
                 getter,
                 p_identifier,
                 part.get_extent(),
-                True,
+                False,
                 getattr(part, "_lock", False),  # Check version cf-python
             )
         return dsk

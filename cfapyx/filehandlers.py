@@ -7,7 +7,7 @@ import numpy as np
 import pyfive
 from dask.utils import SerializableLock
 
-from cfapyx.utils import correct_slice, logstream
+from cfapyx.utils import logstream
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +27,22 @@ class NumpyDatasetHandler:
         address: str,
         dtype: object,
         named_dims: tuple,
-        extent: tuple | None = None,
+        extents: list | None = None,
         remote: bool = False,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
     ):
         """
         Wrapper method for opening
         """
 
+        self.max_request_block = max_request_block
+        self.batch_request_size = batch_request_size or 100
+
         self.filename = filename
         self.address = address
         self.dtype = dtype
-        self.extent = extent
+        self.extents = extents
 
         self.named_dims = named_dims
 
@@ -80,15 +85,9 @@ class NumpyDatasetHandler:
         if hasattr(array, "units"):
             self.units = array.units
 
-        # Apply extent
-        if len(array.shape) != len(self.extent):
-            # Extract named dims from pyfive variable
+        array = array[tuple(self.extents[-1])]
 
-            self.extent = correct_slice(
-                self.extent, array.shape, self.named_dims, array.dimensions
-            )
-
-        var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+        var = np.array(array, dtype=self.dtype)
         ds.close()
 
         self._array = var
@@ -97,12 +96,13 @@ class NumpyDatasetHandler:
 
         with fs.open(self.filename, "rb") as fh:
             # Coming with new pyfive version
-            # max_request_block = os.environ.get('PYFIVE_REQUEST_MAX')
-            # batch_request_size = os.environ.get('PYFIVE_REQUEST_BATCH', 150)
 
             try:
-                ds = pyfive.File(fh)  # , max_request_block=max_request_block,
-                # batch_request_size=batch_request_size)
+                ds = pyfive.File(
+                    fh,
+                    max_request_block=self.max_request_block,
+                    batch_request_size=self.batch_request_size,
+                )
             except pyfive.core.InvalidHDF5File:
                 raise ValueError(
                     "Remote access unavailable for non-HDF5 files. "
@@ -118,21 +118,13 @@ class NumpyDatasetHandler:
             else:
                 array = ds[self.address]
 
-            # Apply extent
-            if len(array.shape) != len(self.extent):
-                # Extract named dims from pyfive variable
-                dims = tuple([dim[0].name.split("/")[-1] for dim in array.dims])
-
-                self.extent = correct_slice(
-                    self.extent, array.shape, self.named_dims, dims
-                )
-
             # Correct handling of units
             if hasattr(array, "attrs"):
                 if "units" in array.attrs:
                     self.units = str(np.array(array.attrs.get("units"), dtype=str))
 
-            var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+            # Apply last extent - concatenated by xarray LazilyIndexedArray
+            var = np.array(array[tuple(self.extents[-1])], dtype=self.dtype)
             ds.close()
 
             self._array = var

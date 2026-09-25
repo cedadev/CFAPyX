@@ -2,6 +2,10 @@
 Release History
 ===============
 
+Release Notes 2026.9.25
+-----------------------
+- Fixed issue with calendar migrations between fragment files
+
 Release Notes 2026.9.23
 -----------------------
 - Minor bug with units comparison in specific instances.

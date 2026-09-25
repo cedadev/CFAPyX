@@ -75,12 +75,24 @@ def supported_by_pint(unit: str):
         return False
 
 
-def conform_data_to_units(data: np.ndarray, units: str, prime_units: str):
+def conform_data_to_units(
+    data: np.ndarray,
+    units: str,
+    prime_units: str,
+    old_calendar: str | None = None,
+    new_calendar: str | None = None,
+):
 
-    if supported_by_cftime(units) and supported_by_cftime(prime_units):
+    if supported_by_cftime(units, calendar=old_calendar) and supported_by_cftime(
+        prime_units, calendar=new_calendar
+    ):
         import cftime
 
-        return cftime.date2num(cftime.num2date(data, units=units), units=prime_units)
+        return cftime.date2num(
+            cftime.num2date(data, units=units, calendar=old_calendar),
+            units=prime_units,
+            calendar=new_calendar,
+        )
 
     elif supported_by_pint(units) and supported_by_pint(prime_units):
         from pint import UnitRegistry

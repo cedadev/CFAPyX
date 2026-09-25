@@ -135,6 +135,7 @@
         <span class="n">global_attrs</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">prime_units</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">prime_calendars</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="n">global_concats</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -220,7 +221,8 @@
                     <span class="n">coord_variables</span><span class="p">,</span>
                     <span class="n">agg_dims</span><span class="o">=</span><span class="n">agg_dims</span><span class="p">,</span>
                     <span class="n">first_time</span><span class="o">=</span><span class="n">first_time</span><span class="p">,</span>
-                    <span class="n">prime_units</span><span class="o">=</span><span class="n">prime_units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">prime_unit</span><span class="o">=</span><span class="n">prime_units</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">prime_calendar</span><span class="o">=</span><span class="n">prime_calendars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">new_info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;coord&quot;</span><span class="p">:</span>
@@ -246,10 +248,13 @@
 
                 <span class="k">if</span> <span class="n">arr_components</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">first_time</span><span class="p">:</span>
+                        <span class="n">prime_units</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="n">prime_calendars</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
                         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">],</span> <span class="s2">&quot;units&quot;</span><span class="p">):</span>
                             <span class="n">prime_units</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">prime_units</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">],</span> <span class="s2">&quot;calendar&quot;</span><span class="p">):</span>
+                            <span class="n">prime_calendars</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">calendar</span>
 
                         <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">arr_components</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                             <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">][</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">arr_components</span><span class="p">[</span><span class="n">attr</span><span class="p">]]</span>
@@ -312,6 +317,13 @@
 
             <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="n">units</span><span class="p">})</span>
+
+        <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">calendar</span> <span class="ow">in</span> <span class="n">prime_calendars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;attrs&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">]:</span>
+                <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">if</span> <span class="n">calendar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dim_info</span><span class="p">[</span><span class="n">d</span><span class="p">][</span><span class="s2">&quot;attrs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;calendar&quot;</span><span class="p">:</span> <span class="n">calendar</span><span class="p">})</span>
 
         <span class="k">for</span> <span class="n">concat_a</span> <span class="ow">in</span> <span class="n">concat_attributes</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;.&quot;</span> <span class="ow">in</span> <span class="n">concat_a</span><span class="p">:</span>
@@ -382,7 +394,8 @@
         <span class="n">coord_variables</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
         <span class="n">agg_dims</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">first_time</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">prime_units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prime_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">prime_calendar</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Collect new info about each dimension. The collected attributes</span>
@@ -423,13 +436,17 @@
         <span class="c1"># Aggregated dimension information (starts/ends)</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">prime_units</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">prime_units</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s1">&#39;Conforming units from &quot;</span><span class="si">{</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">&quot; to &quot;</span><span class="si">{</span><span class="n">prime_units</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
-                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">prime_unit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">prime_unit</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Conforming units from &quot;</span><span class="si">{</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">&quot; to &quot;</span><span class="si">{</span><span class="n">prime_unit</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
-                <span class="n">array</span> <span class="o">=</span> <span class="n">conform_data_to_units</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">prime_units</span><span class="p">)</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="n">conform_data_to_units</span><span class="p">(</span>
+                    <span class="n">array</span><span class="p">,</span>
+                    <span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>
+                    <span class="n">prime_unit</span><span class="p">,</span>
+                    <span class="n">old_calendar</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">d</span><span class="p">],</span> <span class="s2">&quot;calendar&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">new_calendar</span><span class="o">=</span><span class="n">prime_calendar</span><span class="p">,</span>
+                <span class="p">)</span>
 
         <span class="n">start</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -1554,9 +1571,12 @@
 <span class="sd">        Example:</span>
 <span class="sd">        &#39;/badc/cmip6&#39;:&#39;https://esgf.ceda.ac.uk/badc/cmip6&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_location</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">sub</span><span class="p">,</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">substitutions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">loc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
+                <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                <span class="n">new_location</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_location</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">,</span> <span class="n">removals</span><span class="p">,</span> <span class="n">global_attrs</span><span class="p">,</span> <span class="n">var_info</span><span class="p">,</span> <span class="n">dim_info</span><span class="p">):</span>

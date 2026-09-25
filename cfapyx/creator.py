@@ -44,6 +44,7 @@ class CFACreateMixin:
         global_attrs = None
 
         prime_units = {}
+        prime_calendars = {}
 
         global_concats = {}
 
@@ -130,6 +131,7 @@ class CFACreateMixin:
                     agg_dims=agg_dims,
                     first_time=first_time,
                     prime_units=prime_units.get(d, None),
+                    prime_calendars=prime_calendars.get(d, None),
                 )
 
                 if new_info["type"] == "coord":
@@ -155,10 +157,13 @@ class CFACreateMixin:
 
                 if arr_components is not None:
                     if first_time:
+                        prime_units[d] = None
+                        prime_calendars[d] = None
                         if hasattr(ds[d], "units"):
                             prime_units[d] = ds[d].units
-                        else:
-                            prime_units[d] = None
+
+                        if hasattr(ds[d], "calendar"):
+                            prime_calendars[d] = ds[d].calendar
 
                         for attr in arr_components.keys():
                             dim_info[d][attr] = [arr_components[attr]]
@@ -221,6 +226,13 @@ class CFACreateMixin:
 
             if units is not None:
                 dim_info[d]["attrs"].update({"units": units})
+
+        for d, calendar in prime_calendars.items():
+            if "attrs" not in dim_info[d]:
+                dim_info[d]["attrs"] = {}
+
+            if calendar is not None:
+                dim_info[d]["attrs"].update({"calendar": calendar})
 
         for concat_a in concat_attributes:
             if "." in concat_a:
@@ -285,7 +297,8 @@ class CFACreateMixin:
         coord_variables: list,
         agg_dims: list = None,
         first_time: bool = False,
-        prime_units: str | None = None,
+        prime_unit: str | None = None,
+        prime_calendar: str | None = None,
     ):
         """
         Collect new info about each dimension. The collected attributes
@@ -326,13 +339,17 @@ class CFACreateMixin:
         # Aggregated dimension information (starts/ends)
         array = np.array(list(ds[d]), dtype=ds[d].dtype)
 
-        if prime_units is not None:
-            if ds[d].units != prime_units:
-                logger.debug(
-                    f'Conforming units from "{ds[d].units}" to "{prime_units}"'
-                )
+        if prime_unit is not None:
+            if ds[d].units != prime_unit:
+                logger.debug(f'Conforming units from "{ds[d].units}" to "{prime_unit}"')
 
-                array = conform_data_to_units(array, ds[d].units, prime_units)
+                array = conform_data_to_units(
+                    array,
+                    ds[d].units,
+                    prime_unit,
+                    old_calendar=getattr(ds[d], "calendar", None),
+                    new_calendar=prime_calendar,
+                )
 
         start = array[0]
         size = len(array)

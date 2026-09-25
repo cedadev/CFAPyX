@@ -27,7 +27,8 @@ class NumpyDatasetHandler:
         address: str,
         dtype: object,
         named_dims: tuple,
-        extent: tuple | None = None,
+        extents: list | None = None,
+        drops: list | None = None,
         remote: bool = False,
     ):
         """
@@ -37,7 +38,7 @@ class NumpyDatasetHandler:
         self.filename = filename
         self.address = address
         self.dtype = dtype
-        self.extent = extent
+        self.extents = extents
 
         self.named_dims = named_dims
 
@@ -80,15 +81,11 @@ class NumpyDatasetHandler:
         if hasattr(array, "units"):
             self.units = array.units
 
-        # Apply extent
-        if len(array.shape) != len(self.extent):
-            # Extract named dims from pyfive variable
+        # Apply all slice operations sequentially
+        for extent in self.extents:
+            array = array[tuple(extent)]
 
-            self.extent = correct_slice(
-                self.extent, array.shape, self.named_dims, array.dimensions
-            )
-
-        var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+        var = np.array(array, dtype=self.dtype)
         ds.close()
 
         self._array = var

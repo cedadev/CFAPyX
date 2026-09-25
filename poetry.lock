@@ -2300,17 +2300,18 @@ files = [
 
 [[package]]
 name = "pyfive"
-version = "1.1.2"
+version = "1.2.1"
 description = "A pure python HDF5 reader"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "pyfive-1.1.2-py3-none-any.whl", hash = "sha256:85caa1c7eaa39bb27a4dcab1dc9dd020361cf47773d0ca7b6382c03e6199b7d4"},
-    {file = "pyfive-1.1.2.tar.gz", hash = "sha256:907bc24b81b0437584aaa5908da1ebb6d0276b5dd1476c5a6c6f96b729bdd49e"},
+    {file = "pyfive-1.2.1-py3-none-any.whl", hash = "sha256:c5ab3e1a3f04512077aeb75a402d55a4bdf1f92d3246a471e4dac3638b0397bd"},
+    {file = "pyfive-1.2.1.tar.gz", hash = "sha256:d44149120bc0d21c1c0dbbc9d84ea2d2fef4be7ae4e15b7fac69eb627c1d11ce"},
 ]
 
 [package.dependencies]
+fsspec = "*"
 numpy = ">=2"
 typing-extensions = "*"
 

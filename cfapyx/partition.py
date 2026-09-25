@@ -39,8 +39,6 @@ class ArrayLike:
         self.dtype = dtype
         self.units = units
 
-        self.drops = []
-
         if not source_shape:
             # First time instantiation - all other copies will not use this.
             source_shape = shape

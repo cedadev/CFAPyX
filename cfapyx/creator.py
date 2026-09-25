@@ -130,8 +130,8 @@ class CFACreateMixin:
                     coord_variables,
                     agg_dims=agg_dims,
                     first_time=first_time,
-                    prime_units=prime_units.get(d, None),
-                    prime_calendars=prime_calendars.get(d, None),
+                    prime_unit=prime_units.get(d, None),
+                    prime_calendar=prime_calendars.get(d, None),
                 )
 
                 if new_info["type"] == "coord":

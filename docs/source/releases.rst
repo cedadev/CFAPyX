@@ -5,8 +5,9 @@ Release History
 Release Notes 2026.9.26
 -----------------------
 - Reverted to using xarray lazilyIndexedArray wrapper around dask due to lazy loading issues
-- Refactored so that `extents` is now the list of selections as they need to be applied. `Shape` is based on just the last extent as this should reflect the final shape of the array, and should also not be needed in most cases.
-- Reverted to getter loadarray False in dask to prevent loading issues.
+- Refactored so that `extents` is now the list of selections as they need to be applied - but in practice only the last extent is applied as this comes from xarray's lazilyIndexedArray which automatically concatenates successive sel/isel operations. `Shape` is based on just the last extent as this should reflect the final shape of the array, and should also not be needed in most cases.
+- Reverted to getter loadarray False in dask to prevent loading issues. 
+- Added support for pyfive `max_block` and `batch_size` properties as `cfa_options` (see documentation)
 
 Release Notes 2026.9.25
 -----------------------

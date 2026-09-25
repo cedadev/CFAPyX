@@ -7,7 +7,7 @@ import numpy as np
 import pyfive
 from dask.utils import SerializableLock
 
-from cfapyx.utils import correct_slice, logstream
+from cfapyx.utils import logstream
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,7 @@ class NumpyDatasetHandler:
         if hasattr(array, "units"):
             self.units = array.units
 
-        # Apply all slice operations sequentially
-        for extent in self.extents:
-            array = array[tuple(extent)]
+        array = array[tuple(self.extents[-1])]
 
         var = np.array(array, dtype=self.dtype)
         ds.close()
@@ -120,21 +118,13 @@ class NumpyDatasetHandler:
             else:
                 array = ds[self.address]
 
-            # Apply extent
-            if len(array.shape) != len(self.extent):
-                # Extract named dims from pyfive variable
-                dims = tuple([dim[0].name.split("/")[-1] for dim in array.dims])
-
-                self.extent = correct_slice(
-                    self.extent, array.shape, self.named_dims, dims
-                )
-
             # Correct handling of units
             if hasattr(array, "attrs"):
                 if "units" in array.attrs:
                     self.units = str(np.array(array.attrs.get("units"), dtype=str))
 
-            var = np.array(array[tuple(self.extent)], dtype=self.dtype)
+            # Apply last extent - concatenated by xarray LazilyIndexedArray
+            var = np.array(array[tuple(self.extents[-1])], dtype=self.dtype)
             ds.close()
 
             self._array = var

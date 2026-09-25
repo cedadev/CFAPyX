@@ -50,7 +50,11 @@
 <li class="toctree-l1"><a class="reference internal" href="inspiration.html">Inspiration for CFA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Xarray Engine Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fragments.html">Fragments, Partitions and Chunks</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">cfapyx Usage and Options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cfapyx Usage and Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#new-from-sept-2026"><strong>New from Sept 2026</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-use">General Use</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Release Notes</a></li>
 </ul>
@@ -89,6 +93,14 @@
              
   <section id="cfapyx-usage-and-options">
 <h1>cfapyx Usage and Options<a class="headerlink" href="#cfapyx-usage-and-options" title="Link to this heading"></a></h1>
+<section id="new-from-sept-2026">
+<h2><strong>New from Sept 2026</strong><a class="headerlink" href="#new-from-sept-2026" title="Link to this heading"></a></h2>
+<p>The CFA engine now utilises the attributes <code class="docutils literal notranslate"><span class="pre">max_request_block</span></code> and <code class="docutils literal notranslate"><span class="pre">batch_request_size</span></code> to customise how requests are made to remote servers in the pyfive backend. Add these to the other <code class="docutils literal notranslate"><span class="pre">cfa_options</span></code> to enable when reading remote files.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">batch_request_size</span></code> specifies the number of individual requests that can be made asynchronously in parallel by the backend session. Some remote services providing data access have limits applied to the rate of requests, such that if you attempt to make more than a certain number of requests simultaneously (or if you have more than that number of open/pending requests) you may be denied further requests with a <code class="docutils literal notranslate"><span class="pre">HTTP</span> <span class="pre">429:</span> <span class="pre">Too</span> <span class="pre">Many</span> <span class="pre">Requests</span></code> error. If you encounter this problem, it may be effective to simply limit the requests your own client can make concurrently.</p>
+<p>In addition to the above limit, it may be more efficient for you to make fewer requests in general as each request will require some time for handling on the server end. If you use the <code class="docutils literal notranslate"><span class="pre">max_request_block</span></code> parameter, the backend part of the pyfive client will attempt to combine requests that represent a continuous block of memory, so instead of making many requests you can just make one larger request and reduce the overheads. Range-requests will be combined up to the limit you set here (10 Megabytes in the example above). For maximum efficiency, consider the bandwidth available to you, in relation to the maximum request size and the number of concurrent requests. The above example of 80 requests at 10MB per request, when combined with a typical non-fibre bandwidth of 30 Mbps would mean the whole batch would take 200 seconds which may be more than the timeout limit for the session, so you may want to reduce the number of requests or the block size for your situation.</p>
+</section>
+<section id="general-use">
+<h2>General Use<a class="headerlink" href="#general-use" title="Link to this heading"></a></h2>
 <p>The cfapyx engine ‘CFA’ is enabled using the <code class="docutils literal notranslate"><span class="pre">engine</span></code> keyword to Xarray as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">cfa_file</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;CFA&#39;</span><span class="p">)</span>
 </pre></div>
@@ -120,6 +132,7 @@ regime including Fragment extents. See the diagram in <a class="reference intern
 chunks option, where the chunk size is automatically calculated by dask, then shifted such that the number of chunks approaches
 a power of 2. This has significant computational performance benefits.</p>
 </div>
+</section>
 </section>
 
 

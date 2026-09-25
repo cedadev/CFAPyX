@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-26">Release Notes 2026.9.26</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-25">Release Notes 2026.9.25</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-23">Release Notes 2026.9.23</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-16">Release Notes 2026.9.16</a></li>
@@ -103,6 +104,15 @@
              
   <section id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Link to this heading"></a></h1>
+<section id="release-notes-2026-9-26">
+<h2>Release Notes 2026.9.26<a class="headerlink" href="#release-notes-2026-9-26" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Reverted to using xarray lazilyIndexedArray wrapper around dask due to lazy loading issues</p></li>
+<li><p>Refactored so that <cite>extents</cite> is now the list of selections as they need to be applied - but in practice only the last extent is applied as this comes from xarray’s lazilyIndexedArray which automatically concatenates successive sel/isel operations. <cite>Shape</cite> is based on just the last extent as this should reflect the final shape of the array, and should also not be needed in most cases.</p></li>
+<li><p>Reverted to getter loadarray False in dask to prevent loading issues.</p></li>
+<li><p>Added support for pyfive <cite>max_block</cite> and <cite>batch_size</cite> properties as <cite>cfa_options</cite> (see documentation)</p></li>
+</ul>
+</section>
 <section id="release-notes-2026-9-25">
 <h2>Release Notes 2026.9.25<a class="headerlink" href="#release-notes-2026-9-25" title="Link to this heading"></a></h2>
 <ul class="simple">

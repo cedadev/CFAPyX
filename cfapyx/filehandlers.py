@@ -28,12 +28,16 @@ class NumpyDatasetHandler:
         dtype: object,
         named_dims: tuple,
         extents: list | None = None,
-        drops: list | None = None,
         remote: bool = False,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
     ):
         """
         Wrapper method for opening
         """
+
+        self.max_request_block = max_request_block
+        self.batch_request_size = batch_request_size or 100
 
         self.filename = filename
         self.address = address
@@ -94,12 +98,13 @@ class NumpyDatasetHandler:
 
         with fs.open(self.filename, "rb") as fh:
             # Coming with new pyfive version
-            # max_request_block = os.environ.get('PYFIVE_REQUEST_MAX')
-            # batch_request_size = os.environ.get('PYFIVE_REQUEST_BATCH', 150)
 
             try:
-                ds = pyfive.File(fh)  # , max_request_block=max_request_block,
-                # batch_request_size=batch_request_size)
+                ds = pyfive.File(
+                    fh,
+                    max_request_block=self.max_request_block,
+                    batch_request_size=self.batch_request_size,
+                )
             except pyfive.core.InvalidHDF5File:
                 raise ValueError(
                     "Remote access unavailable for non-HDF5 files. "

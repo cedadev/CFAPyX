@@ -220,6 +220,8 @@ class ArrayPartition(SuperLazyArrayLike):
         extents: Union[tuple, None] = None,
         format: Union[str, None] = None,
         mask_and_scale: bool = False,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
         **kwargs,
     ):
         """
@@ -269,6 +271,9 @@ class ArrayPartition(SuperLazyArrayLike):
         self.address = address
         self.format = format
         self.position = position
+
+        self._max_request_block = max_request_block
+        self._batch_request_size = batch_request_size
 
         self.mask_and_scale = mask_and_scale
 
@@ -379,6 +384,8 @@ class ArrayPartition(SuperLazyArrayLike):
             named_dims=self.named_dims,
             extents=self._extents,
             remote=remote,
+            max_request_block=self._max_request_block,
+            batch_request_size=self._batch_request_size,
         )
 
     def get_kwargs(self):

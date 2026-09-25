@@ -68,6 +68,8 @@ class CFADataStore(NetCDF4DataStore):
             "decode_cfa": self._decode_cfa,
             "chunks": self.chunks,
             "chunk_limits": self._chunk_limits,
+            "max_request_block": self._max_request_block,
+            "batch_request_size": self._batch_request_size,
         }
 
     @cfa_options.setter
@@ -80,6 +82,8 @@ class CFADataStore(NetCDF4DataStore):
         decode_cfa: bool = True,
         chunks: dict | None = None,
         chunk_limits: bool = True,
+        max_request_block: int | None = None,
+        batch_request_size: int | None = None,
     ):
         """
         Method to set cfa options.
@@ -99,6 +103,8 @@ class CFADataStore(NetCDF4DataStore):
         self._substitutions = substitutions
         self._decode_cfa = decode_cfa
         self._chunk_limits = chunk_limits
+        self._max_request_block = max_request_block
+        self._batch_request_size = batch_request_size
 
     def _acquire(self, needs_lock=True):
         """

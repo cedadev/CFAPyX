@@ -487,7 +487,7 @@ class CFACreateMixin:
 
         logger.debug("Assembling the uris variable")
 
-        # Define the location space
+        # Define the location space - same for everything at this stage.
         location_space = tuple(i for i in self.fragment_space if i > 1)
         if self.max_files > 1:
             location_space = location_space + (self.max_files,)
@@ -502,8 +502,16 @@ class CFACreateMixin:
         for coord in arranged_files.keys():
             new_coord = []
             for x, c in enumerate(coord):
-                if self.fragment_space[x] > 1:
+                # Only calculate the fragmented dimensions in location space.
+
+                if dim_info[named_cdims[x]]["f_size"] > 1:
                     new_coord.append(dim_info[named_cdims[x]]["starts"].index(c))
+
+            if not new_coord:
+                raise ValueError(
+                    "Unable to map location coords, "
+                    "coordinate dimensions are not fragmented"
+                )
 
             location[tuple(new_coord)] = arranged_files[coord]
 

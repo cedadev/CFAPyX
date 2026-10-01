@@ -628,6 +628,8 @@ class CFACreateMixin:
 
             if concat:
                 concats[attr] = True
+                if attr not in attrs:
+                    attrs[attr] = []
                 if not isinstance(attrs[attr], list):
                     attrs[attr] = [attrs[attr]]
                 # Combine all in a list to concatenate later.

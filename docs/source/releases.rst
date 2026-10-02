@@ -2,6 +2,11 @@
 Release History
 ===============
 
+Release Notes 2026.10.2
+-----------------------
+- Fixed the location definition to be the same for all fragment spaces.
+- Fixed attribute concatenation when a new attribute appears halfway through a fileset.
+
 Release Notes 2026.9.26
 -----------------------
 - Reverted to using xarray lazilyIndexedArray wrapper around dask due to lazy loading issues

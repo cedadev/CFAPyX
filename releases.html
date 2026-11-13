@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="options.html">cfapyx Usage and Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creator_use.html">CFA Creator Usage</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-11-13">Release Notes 2026.11.13</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-10-2">Release Notes 2026.10.2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-26">Release Notes 2026.9.26</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#release-notes-2026-9-25">Release Notes 2026.9.25</a></li>
@@ -105,6 +106,13 @@
              
   <section id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Link to this heading"></a></h1>
+<section id="release-notes-2026-11-13">
+<h2>Release Notes 2026.11.13<a class="headerlink" href="#release-notes-2026-11-13" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Fixed lazy loading issue with decoding time-based variables (e.g time_bnds) - CFAPyX now uses a custom CFDatetimeDecoder to handle loading an example value from FragmentArrays by sampling the available time dimension and calendar information rather than loading the fragment.</p></li>
+<li><p>Upgraded vulnerable dependencies.</p></li>
+</ul>
+</section>
 <section id="release-notes-2026-10-2">
 <h2>Release Notes 2026.10.2<a class="headerlink" href="#release-notes-2026-10-2" title="Link to this heading"></a></h2>
 <ul class="simple">

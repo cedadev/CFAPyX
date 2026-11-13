@@ -2,6 +2,11 @@
 Release History
 ===============
 
+Release Notes 2026.11.13
+------------------------
+- Fixed lazy loading issue with decoding time-based variables (e.g time_bnds) - CFAPyX now uses a custom CFDatetimeDecoder to handle loading an example value from FragmentArrays by sampling the available time dimension and calendar information rather than loading the fragment.
+- Upgraded vulnerable dependencies.
+
 Release Notes 2026.10.2
 -----------------------
 - Fixed the location definition to be the same for all fragment spaces.

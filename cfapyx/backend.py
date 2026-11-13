@@ -280,6 +280,10 @@ class CFADatetimeCoder(CFDatetimeCoder):
         return example_value
 
     def decode(self, variable: Variable, name=None) -> Variable:
+        """
+        Custom Datetime decoder, defaults to CFDatetimeCoder.decode where
+        not using a CFA FragmentArrayWrapper for a variable."""
+
         units = variable.attrs.get("units", None)
         if not (isinstance(units, str) and "since" in units):
             return variable

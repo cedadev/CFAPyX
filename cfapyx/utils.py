@@ -45,11 +45,11 @@ def correct_slice(extent: tuple, shape: tuple, named_dims: tuple, array_dims: tu
     return new_extent
 
 
-def supported_by_cftime(unit: str, calendar: str = "standard"):
+def supported_by_cftime(unit: str, calendar: str | None = "standard"):
     try:
         import cftime
 
-        cftime.num2date(0, unit, calendar=calendar)
+        cftime.num2date(0, unit, calendar=calendar or "standard")
         return True
     except ImportError:
         logger.error(
@@ -82,16 +82,18 @@ def conform_data_to_units(
     old_calendar: str | None = None,
     new_calendar: str | None = None,
 ):
+    old_cal = old_calendar or "standard"
+    new_cal = new_calendar or "standard"
 
-    if supported_by_cftime(units, calendar=old_calendar) and supported_by_cftime(
-        prime_units, calendar=new_calendar
+    if supported_by_cftime(units, calendar=old_cal) and supported_by_cftime(
+        prime_units, calendar=new_cal
     ):
         import cftime
 
         return cftime.date2num(
-            cftime.num2date(data, units=units, calendar=old_calendar),
+            cftime.num2date(data, units=units, calendar=old_cal),
             units=prime_units,
-            calendar=new_calendar,
+            calendar=new_cal,
         )
 
     elif supported_by_pint(units) and supported_by_pint(prime_units):

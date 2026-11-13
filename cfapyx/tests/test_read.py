@@ -118,6 +118,8 @@ class TestCFARead:
 
         print("Integration tests: Read(pure) - complete")
 
+
+class TestLaziness:
     def test_lazy_time_bnds_no_fragment_fetch_on_open(self):
         """
         Opening a CFA dataset with ``time_bnds`` must not open or fetch any

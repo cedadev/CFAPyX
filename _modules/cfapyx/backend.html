@@ -90,15 +90,26 @@
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2024 United Kingdom Research and Innovation&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">conventions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackendEntrypoint</span><span class="p">,</span> <span class="n">StoreBackendEntrypoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.backends.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractDataStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coders</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFDatetimeCoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.times</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_cf_datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.coding.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">lazy_elemwise_func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">indexing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.formatting</span><span class="w"> </span><span class="kn">import</span> <span class="n">first_n_items</span><span class="p">,</span> <span class="n">last_item</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.core.variable</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xarray.namedarray.pycompat</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_numpy</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.datastore</span><span class="w"> </span><span class="kn">import</span> <span class="n">CFADataStore</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">logstream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">conform_data_to_units</span><span class="p">,</span> <span class="n">logstream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cfapyx.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">FragmentArrayWrapper</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -234,6 +245,250 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_cfa_lazy_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if ``data`` is backed by a lazy CFA ``FragmentArrayWrapper``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="k">while</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="s2">&quot;array&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">FragmentArrayWrapper</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="n">curr</span><span class="o">.</span><span class="n">array</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr</span><span class="p">,</span> <span class="n">FragmentArrayWrapper</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CFADatetimeCoder">
+<a class="viewcode-back" href="../../backend.html#cfapyx.backend.CFADatetimeCoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CFADatetimeCoder</span><span class="p">(</span><span class="n">CFDatetimeCoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    CFA-aware extension of Xarray&#39;s ``CFDatetimeCoder``.</span>
+
+<span class="sd">    Xarray&#39;s default ``CFDatetimeCoder`` decodes an ``example_value`` assembled</span>
+<span class="sd">    from the first and last items of a variable&#39;s array in order to infer the</span>
+<span class="sd">    decoded datetime dtype (e.g. ``datetime64[ns]`` vs ``object`` for</span>
+<span class="sd">    ``cftime.datetime``). For CFA-aggregated variables such as ``time_bnds``,</span>
+<span class="sd">    fetching those items forces remote fragment files to be opened at dataset</span>
+<span class="sd">    open time even when the variable is never accessed.</span>
+
+<span class="sd">    ``CFADatetimeCoder`` bypasses fragment fetching for CFA-aggregated variables</span>
+<span class="sd">    by generating ``example_value`` from the corresponding non-aggregated</span>
+<span class="sd">    coordinate variable (such as ``time``) already stored in the CFA dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">variables</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Variable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_cftime</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">time_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ns&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">use_cftime</span><span class="o">=</span><span class="n">use_cftime</span><span class="p">,</span> <span class="n">time_unit</span><span class="o">=</span><span class="n">time_unit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coord_candidates</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_cfa_lazy_data</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">_data</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_coord_candidates</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">v</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span>
+                        <span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">attrs</span><span class="p">),</span>
+                        <span class="n">v</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+                        <span class="n">v</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_time_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find a non-aggregated CF time coordinate variable corresponding to</span>
+<span class="sd">        ``variable`` via CF ``bounds``/``climatology`` attributes or shared</span>
+<span class="sd">        dimensions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cand_name</span><span class="p">,</span> <span class="n">cand_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_candidates</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">cand_attrs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cand_info</span>
+                <span class="n">cand_units</span> <span class="o">=</span> <span class="n">cand_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">)</span>
+                <span class="n">has_date_units</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cand_units</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;since&quot;</span> <span class="ow">in</span> <span class="n">cand_units</span>
+                <span class="k">if</span> <span class="n">has_date_units</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="n">cand_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bounds&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">name</span>
+                    <span class="ow">or</span> <span class="n">cand_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;climatology&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">name</span>
+                <span class="p">):</span>
+                    <span class="k">return</span> <span class="n">cand_name</span><span class="p">,</span> <span class="n">cand_info</span>
+
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_candidates</span><span class="p">:</span>
+                <span class="n">cand_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_candidates</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">cand_attrs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cand_info</span>
+                <span class="n">cand_units</span> <span class="o">=</span> <span class="n">cand_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cand_units</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;since&quot;</span> <span class="ow">in</span> <span class="n">cand_units</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">dim</span><span class="p">,</span> <span class="n">cand_info</span>
+
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_example_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">coord_info</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a 1D ``example_value`` array from the first and last elements</span>
+<span class="sd">        of the non-aggregated coordinate variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coord_data</span><span class="p">,</span> <span class="n">coord_attrs</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">coord_size</span> <span class="o">=</span> <span class="n">coord_info</span>
+
+        <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">coord_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="n">coord_values</span> <span class="o">=</span> <span class="n">indexing</span><span class="o">.</span><span class="n">ImplicitToExplicitIndexingAdapter</span><span class="p">(</span>
+            <span class="n">indexing</span><span class="o">.</span><span class="n">as_indexable</span><span class="p">(</span><span class="n">coord_data</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">example_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">to_numpy</span><span class="p">(</span><span class="n">first_n_items</span><span class="p">(</span><span class="n">coord_values</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                <span class="n">to_numpy</span><span class="p">(</span><span class="n">last_item</span><span class="p">(</span><span class="n">coord_values</span><span class="p">)),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;scale_factor&quot;</span> <span class="ow">in</span> <span class="n">coord_attrs</span> <span class="ow">or</span> <span class="s2">&quot;add_offset&quot;</span> <span class="ow">in</span> <span class="n">coord_attrs</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">coord_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scale_factor&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">coord_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;add_offset&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">example_value</span> <span class="o">=</span> <span class="n">example_value</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">+</span> <span class="n">offset</span>
+
+        <span class="n">var_units</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">)</span>
+        <span class="n">var_calendar</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;calendar&quot;</span><span class="p">)</span>
+        <span class="n">coord_units</span> <span class="o">=</span> <span class="n">coord_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">)</span>
+        <span class="n">coord_calendar</span> <span class="o">=</span> <span class="n">coord_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;calendar&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">example_value</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coord_units</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var_units</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span>
+                <span class="n">coord_units</span> <span class="o">!=</span> <span class="n">var_units</span>
+                <span class="ow">or</span> <span class="p">(</span><span class="n">coord_calendar</span> <span class="ow">or</span> <span class="s2">&quot;standard&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">var_calendar</span> <span class="ow">or</span> <span class="s2">&quot;standard&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">example_value</span> <span class="o">=</span> <span class="n">conform_data_to_units</span><span class="p">(</span>
+                <span class="n">example_value</span><span class="p">,</span>
+                <span class="n">coord_units</span><span class="p">,</span>
+                <span class="n">var_units</span><span class="p">,</span>
+                <span class="n">old_calendar</span><span class="o">=</span><span class="n">coord_calendar</span> <span class="ow">or</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+                <span class="n">new_calendar</span><span class="o">=</span><span class="n">var_calendar</span> <span class="ow">or</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">example_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">example_value</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="n">example_value</span> <span class="o">=</span> <span class="n">example_value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">example_value</span>
+
+<div class="viewcode-block" id="CFADatetimeCoder.decode">
+<a class="viewcode-back" href="../../backend.html#cfapyx.backend.CFADatetimeCoder.decode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Variable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Custom Datetime decoder, defaults to CFDatetimeCoder.decode where</span>
+<span class="sd">        not using a CFA FragmentArrayWrapper for a variable.&quot;&quot;&quot;</span>
+
+        <span class="n">units</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;since&quot;</span> <span class="ow">in</span> <span class="n">units</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">variable</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_cfa_lazy_data</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">_data</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">coord_name</span><span class="p">,</span> <span class="n">coord_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_time_coord</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">coord_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">example_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_example_value</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">coord_info</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Bypassing fragment fetch for &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; using coordinate &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">coord_name</span><span class="si">}</span><span class="s2">&#39; example_value=</span><span class="si">{</span><span class="n">example_value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">sample_var</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;time_sample&quot;</span><span class="p">,),</span> <span class="n">example_value</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">encoding</span>
+        <span class="p">)</span>
+        <span class="n">decoded_sample</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sample_var</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">decoded_sample</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="s2">&quot;func&quot;</span><span class="p">):</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">decoded_sample</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">func</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transform</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">decode_cf_datetime</span><span class="p">,</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">decoded_sample</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">),</span>
+                <span class="n">calendar</span><span class="o">=</span><span class="n">decoded_sample</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;calendar&quot;</span><span class="p">),</span>
+                <span class="n">use_cftime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_cftime</span><span class="p">,</span>
+                <span class="n">time_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_unit</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">lazy_elemwise_func</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">decoded_sample</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Variable</span><span class="p">(</span>
+            <span class="n">variable</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">decoded_sample</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
+            <span class="n">decoded_sample</span><span class="o">.</span><span class="n">encoding</span><span class="p">,</span>
+            <span class="n">fastpath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_cfa_decode_times</span><span class="p">(</span><span class="n">decode_times</span><span class="p">,</span> <span class="n">use_cftime</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrap truthy ``decode_times`` specifications with ``CFADatetimeCoder`` so</span>
+<span class="sd">    CFA-aggregated lazy time variables generate ``example_value`` from their</span>
+<span class="sd">    coordinate dimension rather than fetching remote fragments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">decode_times</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">decode_times</span><span class="p">,</span> <span class="n">use_cftime</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decode_times</span><span class="p">,</span> <span class="n">CFDatetimeCoder</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_cftime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decode_times</span><span class="p">,</span> <span class="n">use_cftime</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">CFADatetimeCoder</span><span class="p">(</span>
+                <span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                <span class="n">use_cftime</span><span class="o">=</span><span class="n">decode_times</span><span class="o">.</span><span class="n">use_cftime</span><span class="p">,</span>
+                <span class="n">time_unit</span><span class="o">=</span><span class="n">decode_times</span><span class="o">.</span><span class="n">time_unit</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decode_times</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="n">dt_k</span> <span class="o">=</span> <span class="n">decode_times</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">uc_k</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">use_cftime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_cftime</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">use_cftime</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">dt_k</span><span class="p">:</span>
+                <span class="n">resolved</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dt_k</span><span class="p">,</span> <span class="n">CFDatetimeCoder</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">uc_k</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">decode_times</span><span class="p">,</span> <span class="n">use_cftime</span>
+                <span class="n">resolved</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">CFADatetimeCoder</span><span class="p">(</span>
+                    <span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                    <span class="n">use_cftime</span><span class="o">=</span><span class="n">dt_k</span><span class="o">.</span><span class="n">use_cftime</span><span class="p">,</span>
+                    <span class="n">time_unit</span><span class="o">=</span><span class="n">dt_k</span><span class="o">.</span><span class="n">time_unit</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">resolved</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">CFADatetimeCoder</span><span class="p">(</span>
+                    <span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                    <span class="n">use_cftime</span><span class="o">=</span><span class="n">uc_k</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">resolved</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_cftime</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">CFADatetimeCoder</span><span class="p">(</span>
+                <span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                <span class="n">use_cftime</span><span class="o">=</span><span class="n">use_cftime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variables</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">resolved</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">CFADatetimeCoder</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span> <span class="n">use_cftime</span><span class="o">=</span><span class="n">use_cftime</span><span class="p">),</span> <span class="kc">None</span>
+
+
 <div class="viewcode-block" id="CFAStoreBackendEntrypoint">
 <a class="viewcode-back" href="../../backend.html#cfapyx.backend.CFAStoreBackendEntrypoint">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CFAStoreBackendEntrypoint</span><span class="p">(</span><span class="n">StoreBackendEntrypoint</span><span class="p">):</span>
@@ -274,15 +529,19 @@
         <span class="nb">vars</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">cfa_xarray_store</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
         <span class="n">encoding</span> <span class="o">=</span> <span class="n">cfa_xarray_store</span><span class="o">.</span><span class="n">get_encoding</span><span class="p">()</span>
 
+        <span class="n">cfa_decode_times</span><span class="p">,</span> <span class="n">cfa_use_cftime</span> <span class="o">=</span> <span class="n">_resolve_cfa_decode_times</span><span class="p">(</span>
+            <span class="n">decode_times</span><span class="p">,</span> <span class="n">use_cftime</span><span class="p">,</span> <span class="nb">vars</span>
+        <span class="p">)</span>
+
         <span class="c1"># Ensures variables/attributes comply with CF conventions.</span>
         <span class="nb">vars</span><span class="p">,</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">coord_names</span> <span class="o">=</span> <span class="n">conventions</span><span class="o">.</span><span class="n">decode_cf_variables</span><span class="p">(</span>
             <span class="nb">vars</span><span class="p">,</span>
             <span class="n">attrs</span><span class="p">,</span>
-            <span class="n">decode_times</span><span class="o">=</span><span class="n">decode_times</span><span class="p">,</span>
+            <span class="n">decode_times</span><span class="o">=</span><span class="n">cfa_decode_times</span><span class="p">,</span>
             <span class="n">concat_characters</span><span class="o">=</span><span class="n">concat_characters</span><span class="p">,</span>
             <span class="n">decode_coords</span><span class="o">=</span><span class="n">decode_coords</span><span class="p">,</span>
             <span class="n">drop_variables</span><span class="o">=</span><span class="n">drop_variables</span><span class="p">,</span>
-            <span class="n">use_cftime</span><span class="o">=</span><span class="n">use_cftime</span><span class="p">,</span>
+            <span class="n">use_cftime</span><span class="o">=</span><span class="n">cfa_use_cftime</span><span class="p">,</span>
             <span class="n">decode_timedelta</span><span class="o">=</span><span class="n">decode_timedelta</span><span class="p">,</span>
         <span class="p">)</span>
 
